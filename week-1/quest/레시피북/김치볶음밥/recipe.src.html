@@ -1,0 +1,675 @@
+<title>버터 신김치볶음밥</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Song+Myung&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+  :root{
+    --bg:#F2F2F0;
+    --surface:#FFFFFF;
+    --surface-2:#EAE9E5;
+    --ink:#171412;
+    --ink-2:#5C554F;
+    --ink-3:#8B837B;
+    --line:#DEDBD5;
+    --line-strong:#C7C2BA;
+    --accent:#B32B1E;
+    --accent-soft:#F6E7E4;
+    --gold:#C4841A;
+    --gold-soft:#F7EEDC;
+    --scrim:rgba(14,11,9,.55);
+    --shadow:0 1px 2px rgba(23,20,18,.06),0 8px 24px -12px rgba(23,20,18,.18);
+    --radius:4px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#141210;
+      --surface:#1D1A17;
+      --surface-2:#252119;
+      --ink:#F1ECE5;
+      --ink-2:#ABA298;
+      --ink-3:#857C72;
+      --line:#302B25;
+      --line-strong:#453E36;
+      --accent:#E2604A;
+      --accent-soft:#2C1D19;
+      --gold:#DCA33F;
+      --gold-soft:#2A2117;
+      --scrim:rgba(8,6,5,.5);
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#141210;
+    --surface:#1D1A17;
+    --surface-2:#252119;
+    --ink:#F1ECE5;
+    --ink-2:#ABA298;
+    --ink-3:#857C72;
+    --line:#302B25;
+    --line-strong:#453E36;
+    --accent:#E2604A;
+    --accent-soft:#2C1D19;
+    --gold:#DCA33F;
+    --gold-soft:#2A2117;
+    --scrim:rgba(8,6,5,.5);
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"IBM Plex Sans KR",-apple-system,BlinkMacSystemFont,"Malgun Gothic",sans-serif;
+    font-weight:400;
+    font-size:16.5px;
+    line-height:1.72;
+    -webkit-font-smoothing:antialiased;
+    word-break:keep-all;
+  }
+  img{max-width:100%;display:block}
+  h1,h2,h3{text-wrap:balance;margin:0}
+  p{margin:0}
+  ::selection{background:var(--accent);color:#fff}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:2px}
+
+  .wrap{max-width:min(100% - 2.4rem, 46rem);margin-inline:auto}
+
+  /* ── hero ───────────────────────────────── */
+  .hero{position:relative;isolation:isolate;background:#0F0C0A}
+  .hero img{width:100%;height:clamp(19rem,58vh,32rem);object-fit:cover;opacity:.9}
+  .hero::after{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(178deg,rgba(10,8,6,.42) 0%,rgba(10,8,6,.05) 34%,rgba(10,8,6,.72) 76%,rgba(10,8,6,.94) 100%);
+  }
+  .hero-copy{
+    position:absolute;inset-inline:0;bottom:0;z-index:1;
+    padding-block:0 clamp(1.5rem,4vw,2.6rem);
+  }
+  .eyebrow{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:.72rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
+    color:#E8B9A8;
+  }
+  .hero h1{
+    font-family:"Song Myung","Nanum Myeongjo",serif;
+    font-weight:400;
+    font-size:clamp(2.5rem,9vw,4.1rem);
+    line-height:1.08;
+    letter-spacing:-.015em;
+    color:#FCF8F3;
+    margin-top:.5rem;
+  }
+  .hero h1 em{font-style:normal;color:#F0A98C}
+  .hero .dek{margin-top:.9rem;color:#DBCFC5;max-width:30rem;font-size:1rem;line-height:1.6}
+
+  .facts{
+    display:flex;flex-wrap:wrap;gap:0 1.1rem;margin-top:1.3rem;
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:.78rem;letter-spacing:.04em;color:#C9BAAE;
+    font-variant-numeric:tabular-nums;
+  }
+  .facts span{display:inline-flex;gap:.45rem;align-items:baseline}
+  .facts b{color:#FCF8F3;font-weight:500}
+
+  /* ── generic sections ───────────────────── */
+  section{padding-block:clamp(2.8rem,7vw,4.4rem)}
+  .kicker{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:.7rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--accent);
+    display:flex;align-items:center;gap:.7rem;
+  }
+  .kicker::after{content:"";flex:1;height:1px;background:var(--line)}
+  h2{
+    font-family:"Song Myung","Nanum Myeongjo",serif;
+    font-weight:400;font-size:clamp(1.7rem,4.4vw,2.3rem);line-height:1.25;
+    letter-spacing:-.01em;margin-top:.7rem;
+  }
+  .lede{margin-top:1rem;color:var(--ink-2);font-size:1.02rem}
+  .lede strong{color:var(--ink);font-weight:600}
+
+  /* ── flavor layers ──────────────────────── */
+  .layers{display:grid;grid-template-columns:1fr;gap:1rem;margin-top:2rem}
+  @media(min-width:40rem){.layers{grid-template-columns:1fr 1fr;gap:1.1rem}}
+  .stack{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:1.4rem 1.4rem 1.5rem;box-shadow:var(--shadow);
+  }
+  .stack h3{
+    font-family:"Song Myung",serif;font-weight:400;font-size:1.32rem;line-height:1.3;
+  }
+  .stack > p{color:var(--ink-3);font-size:.88rem;margin-top:.3rem;line-height:1.5}
+  .rungs{display:flex;flex-direction:column-reverse;gap:.4rem;margin-top:1.15rem}
+  .rung{
+    display:flex;align-items:baseline;gap:.75rem;
+    padding:.55rem .8rem;border-radius:2px;
+    background:var(--surface-2);
+    border-left:3px solid var(--tone,var(--accent));
+  }
+  .rung i{
+    font-family:"IBM Plex Mono",monospace;font-style:normal;
+    font-size:.7rem;font-weight:600;letter-spacing:.08em;color:var(--tone,var(--accent));
+    flex:none;
+  }
+  .rung span{font-size:.9rem;line-height:1.45}
+  .rung span b{font-weight:600}
+  .stack.gold .rung{--tone:var(--gold)}
+  .stack.gold h3 + p{color:var(--ink-3)}
+
+  /* ── full-bleed image band ──────────────── */
+  .band{position:relative;background:#0F0C0A}
+  .band img{width:100%;height:clamp(14rem,36vh,22rem);object-fit:cover;opacity:.92}
+  .band figcaption{
+    position:absolute;left:0;right:0;bottom:0;padding:2.4rem 0 1rem;
+    background:linear-gradient(to top,rgba(10,8,6,.85),transparent);
+  }
+  .band figcaption p{
+    font-family:"IBM Plex Mono",monospace;font-size:.76rem;letter-spacing:.06em;color:#D8C8BC;
+  }
+
+  /* ── ingredients ────────────────────────── */
+  .card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden;
+  }
+  .servings{
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem;
+    padding:.9rem 1.2rem;border-bottom:1px solid var(--line);background:var(--surface-2);
+  }
+  .servings > label{
+    font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-3);
+  }
+  .seg{display:flex;border:1px solid var(--line-strong);border-radius:3px;overflow:hidden;background:var(--surface)}
+  .seg button{
+    appearance:none;border:0;background:transparent;cursor:pointer;
+    font-family:"IBM Plex Mono",monospace;font-size:.84rem;font-weight:500;color:var(--ink-2);
+    padding:.42rem .82rem;border-right:1px solid var(--line);
+    transition:background .15s ease,color .15s ease;
+  }
+  .seg button:last-child{border-right:0}
+  .seg button:hover{background:var(--accent-soft);color:var(--accent)}
+  .seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+
+  .grp{padding:1.05rem 1.2rem 1.2rem}
+  .grp + .grp{border-top:1px dashed var(--line)}
+  .grp h3{
+    font-family:"IBM Plex Mono",monospace;font-size:.7rem;font-weight:600;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-bottom:.5rem;
+  }
+  ul.items{list-style:none;margin:0;padding:0}
+  ul.items li{border-bottom:1px solid var(--line)}
+  ul.items li:last-child{border-bottom:0}
+  .item{
+    display:flex;align-items:baseline;gap:.7rem;width:100%;
+    padding:.52rem .1rem;cursor:pointer;background:none;border:0;text-align:left;
+    font:inherit;color:inherit;
+  }
+  .item .box{
+    flex:none;width:1.02rem;height:1.02rem;border:1.5px solid var(--line-strong);
+    border-radius:2px;position:relative;top:.18rem;transition:all .15s ease;
+  }
+  .item .box::after{
+    content:"";position:absolute;left:.28rem;top:.06rem;width:.28rem;height:.55rem;
+    border:solid #fff;border-width:0 1.7px 1.7px 0;transform:rotate(42deg) scale(.5);
+    opacity:0;transition:all .15s ease;
+  }
+  .item .nm{flex:1;line-height:1.5}
+  .item .nm small{display:block;color:var(--ink-3);font-size:.78rem;line-height:1.4}
+  .item .qty{
+    font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;
+    font-size:.88rem;color:var(--ink-2);white-space:nowrap;letter-spacing:-.01em;
+  }
+  .item:hover .box{border-color:var(--accent)}
+  .item[aria-pressed="true"] .box{background:var(--accent);border-color:var(--accent)}
+  .item[aria-pressed="true"] .box::after{opacity:1;transform:rotate(42deg) scale(1)}
+  .item[aria-pressed="true"] .nm,
+  .item[aria-pressed="true"] .qty{color:var(--ink-3);text-decoration:line-through;text-decoration-thickness:1px}
+
+  .card-foot{
+    display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap;
+    padding:.85rem 1.2rem;border-top:1px solid var(--line);background:var(--surface-2);
+  }
+  .card-foot p{font-size:.8rem;color:var(--ink-3)}
+  .btn{
+    appearance:none;cursor:pointer;font:inherit;font-size:.82rem;font-weight:500;
+    padding:.42rem .9rem;border-radius:3px;
+    border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);
+    transition:all .15s ease;
+  }
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+
+  /* ── steps ──────────────────────────────── */
+  ol.steps{list-style:none;margin:2.1rem 0 0;padding:0;counter-reset:s}
+  ol.steps > li{
+    counter-increment:s;position:relative;
+    padding:0 0 1.9rem 3.3rem;
+  }
+  ol.steps > li::before{
+    content:counter(s,decimal-leading-zero);
+    position:absolute;left:0;top:-.1rem;
+    font-family:"IBM Plex Mono",monospace;font-size:.92rem;font-weight:600;
+    color:var(--accent);font-variant-numeric:tabular-nums;
+  }
+  ol.steps > li::after{
+    content:"";position:absolute;left:1.02rem;top:1.55rem;bottom:.35rem;width:1px;background:var(--line);
+  }
+  ol.steps > li:last-child{padding-bottom:0}
+  ol.steps > li:last-child::after{display:none}
+  .step-head{display:flex;align-items:baseline;gap:.7rem;flex-wrap:wrap}
+  .step-head h3{
+    font-family:"IBM Plex Sans KR",sans-serif;font-weight:600;font-size:1.06rem;line-height:1.45;
+  }
+  .time{
+    font-family:"IBM Plex Mono",monospace;font-size:.68rem;font-weight:500;letter-spacing:.06em;
+    color:var(--ink-3);border:1px solid var(--line);border-radius:99px;padding:.08rem .5rem;
+    white-space:nowrap;font-variant-numeric:tabular-nums;
+  }
+  .step-body{margin-top:.38rem;color:var(--ink-2);font-size:.97rem}
+  .step-body b{color:var(--ink);font-weight:600}
+  .note{
+    margin-top:.7rem;padding:.6rem .85rem;border-radius:3px;
+    background:var(--gold-soft);border-left:2px solid var(--gold);
+    font-size:.87rem;line-height:1.55;color:var(--ink-2);
+  }
+  .note b{color:var(--ink);font-weight:600}
+  .note.hot{background:var(--accent-soft);border-left-color:var(--accent)}
+
+  /* ── rules / variants ───────────────────── */
+  .rules{display:grid;gap:.8rem;margin-top:1.9rem}
+  .rule{
+    display:flex;gap:1rem;align-items:flex-start;
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:1.05rem 1.2rem;
+  }
+  .rule i{
+    font-family:"IBM Plex Mono",monospace;font-style:normal;font-size:.72rem;font-weight:600;
+    letter-spacing:.1em;color:var(--ink-3);flex:none;padding-top:.28rem;
+  }
+  .rule h3{font-weight:600;font-size:1rem;line-height:1.45}
+  .rule p{color:var(--ink-2);font-size:.91rem;margin-top:.2rem;line-height:1.6}
+
+  .variants{display:grid;gap:.75rem;margin-top:1.9rem}
+  @media(min-width:40rem){.variants{grid-template-columns:1fr 1fr}}
+  .variant{border-top:2px solid var(--line-strong);padding-top:.85rem}
+  .variant h3{font-weight:600;font-size:.98rem}
+  .variant h3 span{color:var(--accent);font-family:"IBM Plex Mono",monospace;font-size:.76rem;font-weight:500;margin-left:.4rem}
+  .variant p{color:var(--ink-2);font-size:.89rem;margin-top:.15rem;line-height:1.6}
+
+  /* ── footer ─────────────────────────────── */
+  footer{
+    border-top:1px solid var(--line);background:var(--surface);
+    padding-block:2.6rem 3rem;text-align:center;
+  }
+  footer .sig{font-family:"Song Myung",serif;font-size:1.35rem;line-height:1.4}
+  footer p{color:var(--ink-3);font-size:.85rem;margin-top:.5rem}
+  footer .made{
+    margin-top:1.6rem;font-family:"IBM Plex Mono",monospace;font-size:.68rem;
+    letter-spacing:.1em;color:var(--ink-3);text-transform:uppercase;
+  }
+  .toast{
+    position:fixed;left:50%;bottom:1.4rem;transform:translate(-50%,1.2rem);
+    background:var(--ink);color:var(--bg);font-size:.84rem;
+    padding:.55rem 1.1rem;border-radius:99px;box-shadow:var(--shadow);
+    opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease;z-index:9;
+  }
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition-duration:.01ms !important;animation-duration:.01ms !important}
+  }
+</style>
+
+<header class="hero">
+  <img src="{{HERO}}" alt="반숙 계란프라이를 올린 김치볶음밥 한 그릇">
+  <div class="hero-copy">
+    <div class="wrap">
+      <p class="eyebrow">한 팬 · 집밥</p>
+      <h1>고소하고<br>감칠맛 나는<br><em>버터 김치볶음밥</em></h1>
+      <p class="dek">김치를 지겨울 만큼 볶고, 간장은 팬 가장자리에 지지고, 참기름은 불을 끈 뒤에. 이 세 가지만 지키면 늘 먹던 김치볶음밥의 맛이 아예 달라집니다.</p>
+      <p class="facts">
+        <span>2인분</span><span>·</span><span><b>20</b>분</span><span>·</span><span>난이도 <b>쉬움</b></span><span>·</span><span>프라이팬 1개</span>
+      </p>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <p class="kicker">맛의 설계</p>
+    <h2>고소함과 감칠맛은<br>따로 쌓아 올린다</h2>
+    <p class="lede">김치볶음밥이 밋밋해지는 이유는 대개 하나입니다. 재료를 한꺼번에 넣고 같이 볶아서, 맛이 <strong>섞이기만 하고 쌓이지 않기</strong> 때문이죠. 이 레시피는 고소함과 감칠맛을 각각 세 번에 나눠 넣습니다. 아래 순서는 뒤에 나오는 조리 단계와 그대로 이어집니다.</p>
+
+    <div class="layers">
+      <div class="stack gold">
+        <h3>고소함 3단</h3>
+        <p>기름은 온도마다 향이 다르게 열립니다</p>
+        <div class="rungs">
+          <div class="rung"><i>1단</i><span><b>버터 절반</b> — 밥을 볶을 때. 유지방이 밥알을 코팅해 겉이 매끈해집니다</span></div>
+          <div class="rung"><i>2단</i><span><b>남은 버터 + 참기름</b> — 불을 끈 뒤. 열에 향이 날아가기 전에 넣습니다</span></div>
+          <div class="rung"><i>3단</i><span><b>통깨와 김가루</b> — 접시에 담고 나서. 씹을 때 터지는 고소함</span></div>
+        </div>
+      </div>
+      <div class="stack">
+        <h3>감칠맛 3단</h3>
+        <p>발효 · 마이야르 · 아미노산, 결이 다른 셋</p>
+        <div class="rungs">
+          <div class="rung"><i>1단</i><span><b>잘 익은 신김치와 김치국물</b> — 발효가 만든 산미와 깊이</span></div>
+          <div class="rung"><i>2단</i><span><b>팬 가장자리에 지진 간장</b> — 눌어붙으며 나는 불맛</span></div>
+          <div class="rung"><i>3단</i><span><b>굴소스 ½작은술</b> — 티 나지 않게 바닥을 받쳐줍니다</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<figure class="band" style="margin:0">
+  <img src="{{INGREDIENTS}}" alt="김치볶음밥 재료를 위에서 내려다본 사진">
+  <figcaption><div class="wrap"><p>재료는 흔합니다. 순서가 전부입니다.</p></div></figcaption>
+</figure>
+
+<section>
+  <div class="wrap">
+    <p class="kicker">재료</p>
+    <h2>장 볼 것</h2>
+    <p class="lede">인분을 바꾸면 계량이 함께 바뀝니다. 이름을 눌러 체크하면 장보기 목록으로 쓸 수 있어요.</p>
+
+    <div class="card" style="margin-top:1.7rem">
+      <div class="servings">
+        <label id="svlabel">인분</label>
+        <div class="seg" role="group" aria-labelledby="svlabel">
+          <button type="button" data-sv="1" aria-pressed="false">1인분</button>
+          <button type="button" data-sv="2" aria-pressed="true">2인분</button>
+          <button type="button" data-sv="3" aria-pressed="false">3인분</button>
+          <button type="button" data-sv="4" aria-pressed="false">4인분</button>
+        </div>
+      </div>
+
+      <div class="grp">
+        <h3>기본</h3>
+        <ul class="items">
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">찬밥<small>갓 지은 밥이면 넓게 펼쳐 5분 식히기</small></span><span class="qty"><span data-base="400" data-unit="g"></span> · <span data-base="2" data-unit="공기"></span></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">잘 익은 신김치<small>1cm 폭으로 송송</small></span><span class="qty" data-base="250" data-unit="g"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">김치국물</span><span class="qty" data-base="3" data-unit="큰술"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">삼겹살<small>스팸 · 참치 · 베이컨으로 대체 가능</small></span><span class="qty" data-base="120" data-unit="g"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">계란</span><span class="qty" data-base="2" data-unit="개"></span></button></li>
+        </ul>
+      </div>
+
+      <div class="grp">
+        <h3>양념</h3>
+        <ul class="items">
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">다진 마늘</span><span class="qty" data-base="1" data-unit="작은술"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">설탕<small>신맛을 눌러주는 용도, 단맛은 나지 않습니다</small></span><span class="qty" data-base="1" data-unit="작은술"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">고춧가루<small>맛보다 색을 위해</small></span><span class="qty" data-base="1" data-unit="작은술"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">진간장</span><span class="qty" data-base="1" data-unit="큰술"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">굴소스<small>없으면 참치액 같은 양</small></span><span class="qty" data-base="0.5" data-unit="작은술"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">식용유</span><span class="qty" data-base="1" data-unit="큰술"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">버터<small>가염 버터 기준</small></span><span class="qty" data-base="15" data-unit="g"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">참기름</span><span class="qty" data-base="1" data-unit="작은술"></span></button></li>
+        </ul>
+      </div>
+
+      <div class="grp">
+        <h3>마무리</h3>
+        <ul class="items">
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">통깨<small>손으로 비벼서 뿌리면 향이 훨씬 셉니다</small></span><span class="qty" data-base="1" data-unit="작은술"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">김가루</span><span class="qty" data-base="2" data-unit="큰술"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">쪽파</span><span class="qty" data-base="2" data-unit="대"></span></button></li>
+        </ul>
+      </div>
+
+      <div class="card-foot">
+        <p id="cf-msg">체크한 항목은 이 브라우저에 저장됩니다</p>
+        <div style="display:flex;gap:.5rem">
+          <button type="button" class="btn" id="copy">장보기 목록 복사</button>
+          <button type="button" class="btn" id="reset">초기화</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<figure class="band" style="margin:0">
+  <img src="{{COOKING}}" alt="센 불 위 웍에서 김치볶음밥을 볶아 올리는 장면">
+  <figcaption><div class="wrap"><p>불은 계속 세게. 팬이 식으면 볶음밥이 아니라 비빔밥이 됩니다.</p></div></figcaption>
+</figure>
+
+<section>
+  <div class="wrap">
+    <p class="kicker">만드는 법</p>
+    <h2>스무 번의 실패에서<br>남은 여덟 단계</h2>
+
+    <ol class="steps">
+      <li>
+        <div class="step-head"><h3>재료 손질하고 밥 풀기</h3><span class="time">5분</span></div>
+        <p class="step-body">김치는 국물을 꼭 짜지 말고 가볍게 털어 <b>1cm 폭</b>으로 썹니다. 짜낸 국물은 버리지 말고 따로 3큰술 받아두세요. 찬밥은 손으로 비벼 <b>덩어리를 미리 풀어둡니다</b>. 팬 위에서 푸는 순간 밥알이 뭉개져요.</p>
+      </li>
+      <li>
+        <div class="step-head"><h3>삼겹살만 먼저, 기름을 낸다</h3><span class="time">3분</span></div>
+        <p class="step-body">기름 없이 달군 팬에 삼겹살을 넣고 <b>노릇하게 지집니다</b>. 나온 기름은 그대로 두세요. 이게 이 요리의 진짜 육수입니다. 스팸이나 참치를 쓴다면 식용유 1큰술을 두르고 겉만 노릇하게 굽습니다.</p>
+      </li>
+      <li>
+        <div class="step-head"><h3>김치를 지겨울 때까지 볶기</h3><span class="time">5~6분</span></div>
+        <p class="step-body">김치, 다진 마늘, 설탕, 고춧가루를 넣고 중강불에서 볶습니다. 김치가 투명해지고 <b>가장자리가 살짝 갈색으로 눌어붙을 때</b>가 신호입니다. 대부분 여기서 2분쯤 일찍 멈춥니다.</p>
+        <p class="note hot"><b>여기가 전부입니다.</b> 김치를 덜 볶으면 아무리 양념을 더해도 뾰족한 신맛만 남습니다. 충분히 볶은 김치는 신맛이 단맛 쪽으로 넘어가면서 깊어져요.</p>
+      </li>
+      <li>
+        <div class="step-head"><h3>김치국물 넣고 졸이기</h3><span class="time">1분</span></div>
+        <p class="step-body">받아둔 김치국물을 붓고 <b>수분이 거의 날아갈 때까지</b> 졸입니다. 팬 바닥을 긁으면 자국이 천천히 메워지는 정도가 적당해요. 국물이 남은 채로 밥을 넣으면 질척해집니다.</p>
+      </li>
+      <li>
+        <div class="step-head"><h3>밥과 버터 절반</h3><span class="time">3분</span></div>
+        <p class="step-body">불을 세게 올리고 밥과 <b>버터 절반</b>을 넣습니다. 뒤적이지 말고 주걱 등으로 <b>눌러 펴고 뒤집기</b>를 반복하세요. 밥알에 김치 양념이 고르게 입혀지면서 겉이 마릅니다.</p>
+      </li>
+      <li>
+        <div class="step-head"><h3>간장은 팬 가장자리에</h3><span class="time">30초</span></div>
+        <p class="step-body">밥 위가 아니라 <b>달궈진 팬의 빈 가장자리</b>에 간장을 둘러 5초쯤 지진 뒤 섞습니다. 치익 소리와 함께 올라오는 향이 불맛의 정체예요. 굴소스도 이때 넣습니다.</p>
+        <p class="note"><b>왜 가장자리인가</b> — 밥 위에 부으면 간장이 그냥 스며들어 짠맛만 남습니다. 뜨거운 쇠에 닿아야 당과 아미노산이 타면서 향이 만들어져요.</p>
+      </li>
+      <li>
+        <div class="step-head"><h3>불 끄고 남은 버터와 참기름</h3><span class="time">30초</span></div>
+        <p class="step-body"><b>불을 완전히 끈 뒤</b> 남은 버터와 참기름을 넣고 잔열로만 섞습니다. 참기름은 센 불에서 3초면 향이 날아가요. 마지막에 넣는 이유가 이겁니다.</p>
+      </li>
+      <li>
+        <div class="step-head"><h3>반숙 계란프라이 올리기</h3><span class="time">2분</span></div>
+        <p class="step-body">기름을 넉넉히 두른 팬에 <b>센 불로</b> 계란을 지져 가장자리를 레이스처럼 바삭하게 만들고 노른자는 흐르게 둡니다. 볶음밥을 그릇에 담고 계란, 김가루, 통깨, 쪽파 순으로 올려 완성.</p>
+        <p class="note"><b>누룽지 옵션</b> — 담기 전에 볶음밥을 팬 바닥에 납작하게 눌러 중불로 1분 30초 그대로 두면 바닥이 눌어붙습니다. 긁어서 함께 담으세요.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section style="background:var(--surface-2);border-block:1px solid var(--line)">
+  <div class="wrap">
+    <p class="kicker">자주 나는 사고</p>
+    <h2>망했다 싶을 때</h2>
+    <div class="rules">
+      <div class="rule">
+        <i>A</i>
+        <div>
+          <h3>밥이 질척거린다</h3>
+          <p>수분 관리 실패입니다. 밥을 넣기 전 김치국물이 다 졸았는지 확인하세요. 이미 넣었다면 불을 최대로 올리고 <b>뒤적이지 말고</b> 30초씩 눌러 구우면서 수분을 날립니다.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <i>B</i>
+        <div>
+          <h3>신맛만 튄다</h3>
+          <p>김치를 덜 볶았습니다. 지금이라도 밥을 한쪽으로 밀고 김치만 팬 바닥에서 2분 더 볶아주세요. 설탕 ½작은술과 버터 조금을 추가하면 신맛이 둥글어집니다.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <i>C</i>
+        <div>
+          <h3>김치가 안 익었다</h3>
+          <p>겉절이나 갓 담근 김치라면 발효 감칠맛이 없습니다. 김치를 볶는 단계에서 <b>식초 1작은술과 설탕 1작은술</b>을 함께 넣어 신김치 흉내를 내고, 굴소스를 1작은술로 늘리세요.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <i>D</i>
+        <div>
+          <h3>맛이 밍밍하다</h3>
+          <p>소금부터 넣지 마세요. 십중팔구 부족한 건 짠맛이 아니라 <b>지방과 불맛</b>입니다. 버터 5g을 더 넣고, 간장 ½큰술을 팬 가장자리에 다시 지져 섞어보세요.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="kicker">응용</p>
+    <h2>같은 베이스, 다른 얼굴</h2>
+    <div class="variants">
+      <div class="variant">
+        <h3>참치 김치볶음밥 <span>+2분</span></h3>
+        <p>삼겹살 대신 기름 뺀 참치 1캔. 3단계 김치를 다 볶은 뒤에 넣어야 살이 부서지지 않습니다.</p>
+      </div>
+      <div class="variant">
+        <h3>치즈 김치볶음밥 <span>+3분</span></h3>
+        <p>완성한 볶음밥을 팬에 편 뒤 모짜렐라 한 줌, 뚜껑 덮고 약불 2분. 계란은 스크램블로 바꾸면 더 어울려요.</p>
+      </div>
+      <div class="variant">
+        <h3>날치알 주먹밥 <span>+5분</span></h3>
+        <p>식힌 볶음밥에 날치알 2큰술과 마요네즈 1작은술을 섞어 동그랗게. 도시락이나 술안주로 좋습니다.</p>
+      </div>
+      <div class="variant">
+        <h3>해장용 국물 버전 <span>+7분</span></h3>
+        <p>4단계에서 김치국물 대신 멸치육수 1컵. 국물이 자작할 때 밥을 넣고 눌지 않게 저으면 김치죽밥이 됩니다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p class="sig">잘 익은 김치 한 포기면<br>충분한 저녁</p>
+    <p>링크를 그대로 보내면 친구도 인분을 바꿔가며 볼 수 있어요.</p>
+    <p class="made">Recipe &amp; photographs · 2026</p>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  var FR = {0:"",0.25:"¼",0.5:"½",0.75:"¾",0.33:"⅓",0.67:"⅔"};
+  var SPOON = {"큰술":1,"작은술":1,"컵":1};
+  var COUNT = {"개":1,"대":1,"공기":1,"쪽":1};
+
+  function fmtFrac(v){
+    var whole = Math.floor(v + 1e-9);
+    var rest = Math.round((v - whole) * 4) / 4;
+    if (rest === 1){ whole += 1; rest = 0; }
+    var f = FR[rest] || "";
+    if (whole === 0 && f === "") return "0";
+    if (whole === 0) return f;
+    return whole + f;
+  }
+  function fmt(base, unit, k){
+    var v = base * k;
+    if (unit === "g" || unit === "ml"){
+      var r = v >= 100 ? Math.round(v/10)*10 : Math.round(v/5)*5;
+      return Math.max(r, 5) + unit;
+    }
+    if (SPOON[unit] || COUNT[unit]){
+      var step = COUNT[unit] ? 0.5 : 0.25;
+      var q = Math.max(Math.round(v/step)*step, step);
+      return fmtFrac(q) + unit;
+    }
+    return (Math.round(v*10)/10) + unit;
+  }
+
+  var qtys = [].slice.call(document.querySelectorAll("[data-base]"));
+  function render(sv){
+    var k = sv / 2;
+    qtys.forEach(function(el){
+      el.textContent = fmt(parseFloat(el.getAttribute("data-base")), el.getAttribute("data-unit"), k);
+    });
+  }
+
+  var segBtns = [].slice.call(document.querySelectorAll(".seg button"));
+  var servings = 2;
+  segBtns.forEach(function(b){
+    b.addEventListener("click", function(){
+      servings = parseInt(b.getAttribute("data-sv"), 10);
+      segBtns.forEach(function(o){ o.setAttribute("aria-pressed", String(o === b)); });
+      render(servings);
+      save();
+    });
+  });
+
+  var items = [].slice.call(document.querySelectorAll(".item"));
+  var KEY = "kbb-state-v1";
+
+  function save(){
+    try{
+      localStorage.setItem(KEY, JSON.stringify({
+        sv: servings,
+        checked: items.map(function(i){ return i.getAttribute("aria-pressed") === "true"; })
+      }));
+    }catch(e){}
+  }
+  function load(){
+    try{
+      var raw = localStorage.getItem(KEY);
+      if (!raw) return;
+      var s = JSON.parse(raw);
+      if (s && s.sv){
+        servings = s.sv;
+        segBtns.forEach(function(o){
+          o.setAttribute("aria-pressed", String(parseInt(o.getAttribute("data-sv"),10) === servings));
+        });
+      }
+      if (s && Array.isArray(s.checked)){
+        s.checked.forEach(function(v, i){ if (items[i]) items[i].setAttribute("aria-pressed", v ? "true" : "false"); });
+      }
+    }catch(e){}
+  }
+
+  items.forEach(function(it){
+    it.addEventListener("click", function(){
+      it.setAttribute("aria-pressed", it.getAttribute("aria-pressed") === "true" ? "false" : "true");
+      save();
+    });
+  });
+
+  var toast = document.getElementById("toast"), tid;
+  function say(msg){
+    toast.textContent = msg;
+    toast.classList.add("on");
+    clearTimeout(tid);
+    tid = setTimeout(function(){ toast.classList.remove("on"); }, 2200);
+  }
+
+  document.getElementById("copy").addEventListener("click", function(){
+    var lines = ["김치볶음밥 장보기 (" + servings + "인분)"];
+    items.forEach(function(it){
+      if (it.getAttribute("aria-pressed") === "true") return;
+      var nm = it.querySelector(".nm").firstChild.textContent.trim();
+      var q = it.querySelector(".qty").textContent.trim();
+      lines.push("- " + nm + " " + q);
+    });
+    var text = lines.join("\n");
+    if (lines.length === 1){ say("남은 항목이 없어요"); return; }
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ say("장보기 목록을 복사했어요"); },
+        function(){ document.getElementById("cf-msg").textContent = "복사가 막혀 있어요. 목록을 직접 옮겨 적어주세요"; });
+    } else {
+      document.getElementById("cf-msg").textContent = "이 브라우저에서는 복사가 지원되지 않아요";
+    }
+  });
+
+  document.getElementById("reset").addEventListener("click", function(){
+    items.forEach(function(i){ i.setAttribute("aria-pressed", "false"); });
+    save();
+    say("체크를 모두 지웠어요");
+  });
+
+  load();
+  render(servings);
+})();
+</script>

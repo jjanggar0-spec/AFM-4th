@@ -1,0 +1,1035 @@
+<title>매콤달달 닭발</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gothic+A1:wght@300;400;500;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+  /* ── dark-first: 포장마차의 밤이 기본값 ───────── */
+  :root{
+    --bg:#12100E;
+    --surface:#1B1714;
+    --surface-2:#241E19;
+    --ink:#F6F0E7;
+    --ink-2:#B3A697;
+    --ink-3:#82766A;
+    --line:#2F2823;
+    --line-strong:#463C33;
+    --fire:#FF6B3D;
+    --fire-soft:#2E1811;
+    --ember:#F0A93C;
+    --ember-soft:#2A2013;
+    --on-fire:#1A0B05;
+    --scrim-a:rgba(8,6,5,.30);
+    --scrim-b:rgba(8,6,5,.94);
+    --shadow:0 1px 2px rgba(0,0,0,.45),0 10px 30px -14px rgba(0,0,0,.75);
+    --radius:5px;
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --bg:#F3F0EB;
+      --surface:#FFFFFF;
+      --surface-2:#EAE5DD;
+      --ink:#17130F;
+      --ink-2:#574E45;
+      --ink-3:#857A6D;
+      --line:#DED8CE;
+      --line-strong:#C4BBAE;
+      --fire:#C63A17;
+      --fire-soft:#FAEAE3;
+      --ember:#9C6912;
+      --ember-soft:#F6EEDB;
+      --on-fire:#FFFFFF;
+      --shadow:0 1px 2px rgba(23,19,15,.06),0 10px 28px -16px rgba(23,19,15,.28);
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#F3F0EB;
+    --surface:#FFFFFF;
+    --surface-2:#EAE5DD;
+    --ink:#17130F;
+    --ink-2:#574E45;
+    --ink-3:#857A6D;
+    --line:#DED8CE;
+    --line-strong:#C4BBAE;
+    --fire:#C63A17;
+    --fire-soft:#FAEAE3;
+    --ember:#9C6912;
+    --ember-soft:#F6EEDB;
+    --on-fire:#FFFFFF;
+    --shadow:0 1px 2px rgba(23,19,15,.06),0 10px 28px -16px rgba(23,19,15,.28);
+  }
+
+  *{box-sizing:border-box}
+  html{
+    -webkit-text-size-adjust:100%;text-size-adjust:100%;
+    scroll-behavior:smooth;
+  }
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Gothic A1",-apple-system,BlinkMacSystemFont,"Malgun Gothic",sans-serif;
+    font-weight:400;
+    font-size:16.5px;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+    word-break:keep-all;
+    overflow-x:hidden;
+    overflow-x:clip; /* clip은 sticky를 깨지 않음. 미지원 브라우저는 위 hidden으로 */
+    -webkit-tap-highlight-color:transparent;
+  }
+  img{max-width:100%;display:block}
+  h1,h2,h3{text-wrap:balance;margin:0}
+  p{margin:0}
+  ::selection{background:var(--fire);color:var(--on-fire)}
+  :focus-visible{outline:2px solid var(--fire);outline-offset:3px;border-radius:2px}
+
+  .wrap{width:100%;max-width:48.4rem;margin-inline:auto;padding-inline:clamp(1.05rem,4.5vw,1.2rem)}
+  .sign{font-family:"Black Han Sans","Gothic A1",sans-serif;font-weight:400;letter-spacing:-.01em}
+  .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+
+  /* ── hero ─────────────────────────────────── */
+  .hero{position:relative;isolation:isolate;background:#0B0907}
+  .hero img{width:100%;height:clamp(19rem,60vh,34rem);object-fit:cover;opacity:.88}
+  @supports (height:1svh){ .hero img{height:clamp(19rem,62svh,34rem)} }
+  .hero::after{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(177deg,var(--scrim-a) 0%,rgba(8,6,5,.04) 30%,rgba(8,6,5,.74) 74%,var(--scrim-b) 100%);
+  }
+  .hero-copy{position:absolute;inset-inline:0;bottom:0;z-index:1;padding-bottom:clamp(1.5rem,4vw,2.6rem)}
+  .eyebrow{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:.71rem;font-weight:500;letter-spacing:.22em;text-transform:uppercase;
+    color:#F5B98A;
+  }
+  .hero h1{
+    font-family:"Black Han Sans","Gothic A1",sans-serif;font-weight:400;
+    font-size:clamp(2.9rem,11vw,5rem);line-height:1.02;letter-spacing:-.02em;
+    color:#FDF8F1;margin-top:.55rem;
+    text-shadow:0 2px 30px rgba(0,0,0,.5);
+  }
+  .hero h1 em{font-style:normal;color:#FF7A44}
+  .hero .dek{margin-top:1rem;color:#DACCC0;max-width:31rem;font-size:1rem;line-height:1.65}
+  .hero .dek strong{color:#FDF8F1;font-weight:700}
+  .facts{
+    display:flex;flex-wrap:wrap;gap:.1rem 1rem;margin-top:1.4rem;
+    font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;
+    font-size:.77rem;letter-spacing:.04em;color:#BFAE9F;
+  }
+  .facts span{display:inline-flex;gap:.4rem;align-items:baseline}
+  .facts b{color:#FDF8F1;font-weight:500}
+  .facts i{font-style:normal;color:#5E5045}
+
+  /* ── 스티키 바로가기 (모바일에서 특히 유용) ── */
+  .jump{
+    position:sticky;top:0;z-index:8;
+    background:var(--bg);
+    border-bottom:1px solid var(--line);
+    -webkit-backdrop-filter:saturate(1.4) blur(10px);backdrop-filter:saturate(1.4) blur(10px);
+  }
+  .jump-track{
+    display:flex;gap:.35rem;overflow-x:auto;scroll-snap-type:x proximity;
+    padding:.42rem clamp(.75rem,4vw,1.2rem);
+    scrollbar-width:none;-ms-overflow-style:none;
+    -webkit-overflow-scrolling:touch;
+  }
+  .jump-track::-webkit-scrollbar{display:none}
+  .jump-track a{
+    flex:none;scroll-snap-align:start;text-decoration:none;
+    font-size:.83rem;font-weight:500;line-height:1;color:var(--ink-2);
+    padding:.6rem .78rem;border-radius:99px;border:1px solid transparent;
+    white-space:nowrap;transition:color .15s ease,background .15s ease,border-color .15s ease;
+  }
+  .jump-track a:hover{color:var(--fire)}
+  .jump-track a[aria-current="true"]{
+    color:var(--fire);background:var(--fire-soft);border-color:var(--fire);font-weight:700;
+  }
+
+  /* ── sections ─────────────────────────────── */
+  section{padding-block:clamp(2.9rem,7vw,4.5rem);scroll-margin-top:3.1rem}
+  .kicker{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:.69rem;font-weight:500;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--fire);display:flex;align-items:center;gap:.7rem;
+  }
+  .kicker::after{content:"";flex:1;height:1px;background:var(--line)}
+  h2{
+    font-family:"Black Han Sans","Gothic A1",sans-serif;font-weight:400;
+    font-size:clamp(1.75rem,5vw,2.5rem);line-height:1.28;letter-spacing:-.02em;margin-top:.8rem;
+  }
+  .lede{margin-top:1rem;color:var(--ink-2);font-size:1.02rem}
+  .lede strong{color:var(--ink);font-weight:700}
+
+  /* ── flavor layers ────────────────────────── */
+  .layers{display:grid;grid-template-columns:1fr;gap:1rem;margin-top:2rem}
+  @media(min-width:40rem){.layers{grid-template-columns:1fr 1fr;gap:1.1rem}}
+  .stack{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:1.4rem 1.4rem 1.55rem;box-shadow:var(--shadow);
+  }
+  .stack h3{font-family:"Black Han Sans","Gothic A1",sans-serif;font-weight:400;font-size:1.3rem;line-height:1.3}
+  .stack > p{color:var(--ink-3);font-size:.87rem;margin-top:.35rem;line-height:1.5}
+  .rungs{display:flex;flex-direction:column;gap:.42rem;margin-top:1.15rem}
+  .rung{
+    display:flex;align-items:baseline;gap:.75rem;padding:.58rem .82rem;border-radius:3px;
+    background:var(--surface-2);border-left:3px solid var(--tone,var(--fire));
+  }
+  .rung i{
+    font-family:"IBM Plex Mono",monospace;font-style:normal;
+    font-size:.68rem;font-weight:600;letter-spacing:.08em;color:var(--tone,var(--fire));flex:none;
+  }
+  .rung span{font-size:.89rem;line-height:1.5}
+  .rung span b{font-weight:700}
+  .stack.sweet .rung{--tone:var(--ember)}
+
+  /* ── chew table ───────────────────────────── */
+  .tablewrap{overflow-x:auto;margin-top:1.9rem;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+  table.chew{border-collapse:collapse;width:100%;min-width:30rem;font-size:.9rem}
+  table.chew th,table.chew td{padding:.68rem .95rem;text-align:left;border-bottom:1px solid var(--line)}
+  table.chew thead th{
+    font-family:"IBM Plex Mono",monospace;font-size:.66rem;font-weight:600;
+    letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);background:var(--surface-2);
+  }
+  table.chew tbody tr:last-child th,table.chew tbody tr:last-child td{border-bottom:0}
+  table.chew tbody th{font-weight:500;color:var(--ink)}
+  table.chew td.t{
+    font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;
+    color:var(--fire);font-weight:500;white-space:nowrap;
+  }
+  table.chew td.d{color:var(--ink-2);font-size:.85rem}
+
+  /* ── image band ───────────────────────────── */
+  .band{position:relative;background:#0B0907;margin:0}
+  .band img{width:100%;height:clamp(14rem,38vh,23rem);object-fit:cover;opacity:.9}
+  .band figcaption{
+    position:absolute;left:0;right:0;bottom:0;padding:2.6rem 0 1.1rem;
+    background:linear-gradient(to top,rgba(8,6,5,.88),transparent);
+  }
+  .band figcaption p{font-family:"IBM Plex Mono",monospace;font-size:.75rem;letter-spacing:.05em;color:#D6C4B6}
+
+  /* ── ingredient card ──────────────────────── */
+  .card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden;margin-top:1.8rem;
+  }
+  .dials{border-bottom:1px solid var(--line);background:var(--surface-2)}
+  .dial{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.7rem;padding:.85rem 1.2rem}
+  .dial + .dial{border-top:1px dashed var(--line)}
+  .dial > label{
+    font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--ink-3);
+  }
+  .seg{display:flex;border:1px solid var(--line-strong);border-radius:4px;overflow:hidden;background:var(--surface)}
+  .seg button{
+    appearance:none;border:0;background:transparent;cursor:pointer;font:inherit;
+    font-size:.83rem;font-weight:500;color:var(--ink-2);
+    padding:.4rem .8rem;border-right:1px solid var(--line);
+    transition:background .15s ease,color .15s ease;white-space:nowrap;
+  }
+  .seg button:last-child{border-right:0}
+  .seg button:hover{background:var(--fire-soft);color:var(--fire)}
+  .seg button[aria-pressed="true"]{background:var(--fire);color:var(--on-fire);font-weight:700}
+  .seg.sv button{font-family:"IBM Plex Mono",monospace}
+
+  .heatline{
+    display:flex;align-items:center;gap:.6rem;padding:.55rem 1.2rem .9rem;
+    border-top:1px dashed var(--line);
+  }
+  .flames{display:flex;gap:.22rem;flex:none}
+  .flames i{
+    width:.42rem;height:1.05rem;border-radius:99px 99px 3px 3px;
+    background:var(--line-strong);transition:background .18s ease,transform .18s ease;
+  }
+  .flames i.lit{background:var(--fire);transform:scaleY(1.12)}
+  #heatnote{font-size:.85rem;color:var(--ink-2);line-height:1.5}
+  #heatnote b{color:var(--ink);font-weight:700}
+
+  .grp{padding:1.05rem 1.2rem 1.25rem}
+  .grp + .grp{border-top:1px solid var(--line)}
+  .grp > h3{
+    font-family:"IBM Plex Mono",monospace;font-size:.68rem;font-weight:600;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-bottom:.15rem;
+  }
+  .grp > h3 + p{font-size:.82rem;color:var(--ink-3);margin-bottom:.45rem;line-height:1.5}
+  ul.items{list-style:none;margin:0;padding:0}
+  ul.items li{border-bottom:1px solid var(--line)}
+  ul.items li:last-child{border-bottom:0}
+  .item{
+    display:flex;align-items:baseline;gap:.7rem;width:100%;
+    padding:.54rem .1rem;cursor:pointer;background:none;border:0;text-align:left;font:inherit;color:inherit;
+  }
+  .item .box{
+    flex:none;width:1.02rem;height:1.02rem;border:1.5px solid var(--line-strong);
+    border-radius:3px;position:relative;top:.2rem;transition:all .15s ease;
+  }
+  .item .box::after{
+    content:"";position:absolute;left:.28rem;top:.05rem;width:.28rem;height:.55rem;
+    border:solid var(--on-fire);border-width:0 1.7px 1.7px 0;transform:rotate(42deg) scale(.5);
+    opacity:0;transition:all .15s ease;
+  }
+  .item .nm{flex:1;line-height:1.55}
+  .item .nm small{display:block;color:var(--ink-3);font-size:.77rem;line-height:1.45}
+  .item .qty{
+    font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;
+    font-size:.87rem;color:var(--ink-2);white-space:nowrap;letter-spacing:-.01em;
+  }
+  .item .qty.hot{color:var(--fire);font-weight:500}
+  .item:hover .box{border-color:var(--fire)}
+  .item[aria-pressed="true"] .box{background:var(--fire);border-color:var(--fire)}
+  .item[aria-pressed="true"] .box::after{opacity:1;transform:rotate(42deg) scale(1)}
+  .item[aria-pressed="true"] .nm,
+  .item[aria-pressed="true"] .qty{color:var(--ink-3);text-decoration:line-through;text-decoration-thickness:1px}
+  li.off{opacity:.42}
+  li.off .item{cursor:default}
+
+  .card-foot{
+    display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap;
+    padding:.85rem 1.2rem;border-top:1px solid var(--line);background:var(--surface-2);
+  }
+  .card-foot p{font-size:.79rem;color:var(--ink-3)}
+  .foot-actions{display:flex;gap:.5rem}
+  .btn{
+    appearance:none;cursor:pointer;font:inherit;font-size:.81rem;font-weight:500;
+    padding:.42rem .9rem;border-radius:4px;
+    border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);
+    transition:border-color .15s ease,color .15s ease,background .15s ease;
+  }
+  .btn:hover{border-color:var(--fire);color:var(--fire)}
+  .btn.solid{background:var(--fire);border-color:var(--fire);color:var(--on-fire);font-weight:700}
+  .btn.solid:hover{background:var(--ember);border-color:var(--ember);color:var(--on-fire)}
+
+  /* ── steps ────────────────────────────────── */
+  ol.steps{list-style:none;margin:2.1rem 0 0;padding:0;counter-reset:s}
+  ol.steps > li{counter-increment:s;position:relative;padding:0 0 1.95rem 3.3rem}
+  ol.steps > li::before{
+    content:counter(s,decimal-leading-zero);
+    position:absolute;left:0;top:-.05rem;
+    font-family:"IBM Plex Mono",monospace;font-size:.92rem;font-weight:600;
+    color:var(--fire);font-variant-numeric:tabular-nums;
+  }
+  ol.steps > li::after{content:"";position:absolute;left:1.02rem;top:1.6rem;bottom:.35rem;width:1px;background:var(--line)}
+  ol.steps > li:last-child{padding-bottom:0}
+  ol.steps > li:last-child::after{display:none}
+  .step-head{display:flex;align-items:baseline;gap:.65rem;flex-wrap:wrap}
+  .step-head h3{font-family:"Gothic A1",sans-serif;font-weight:700;font-size:1.06rem;line-height:1.45}
+  .time{
+    font-family:"IBM Plex Mono",monospace;font-size:.67rem;font-weight:500;letter-spacing:.05em;
+    color:var(--ink-3);border:1px solid var(--line);border-radius:99px;padding:.1rem .55rem;
+    white-space:nowrap;font-variant-numeric:tabular-nums;
+  }
+  .step-body{margin-top:.4rem;color:var(--ink-2);font-size:.97rem}
+  .step-body b{color:var(--ink);font-weight:700}
+  .note{
+    margin-top:.75rem;padding:.65rem .9rem;border-radius:4px;
+    background:var(--ember-soft);border-left:2px solid var(--ember);
+    font-size:.87rem;line-height:1.6;color:var(--ink-2);
+  }
+  .note b{color:var(--ink);font-weight:700}
+  .note.hot{background:var(--fire-soft);border-left-color:var(--fire)}
+
+  /* ── rules / variants ─────────────────────── */
+  .rules{display:grid;gap:.8rem;margin-top:1.9rem}
+  .rule{
+    display:flex;gap:1rem;align-items:flex-start;
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:1.05rem 1.2rem;
+  }
+  .rule i{
+    font-family:"IBM Plex Mono",monospace;font-style:normal;font-size:.71rem;font-weight:600;
+    letter-spacing:.1em;color:var(--ink-3);flex:none;padding-top:.32rem;
+  }
+  .rule h3{font-weight:700;font-size:1rem;line-height:1.45}
+  .rule p{color:var(--ink-2);font-size:.9rem;margin-top:.22rem;line-height:1.62}
+  .rule p b{color:var(--ink);font-weight:700}
+
+  .variants{display:grid;gap:.8rem;margin-top:1.9rem}
+  @media(min-width:40rem){.variants{grid-template-columns:1fr 1fr}}
+  .variant{border-top:2px solid var(--line-strong);padding-top:.85rem}
+  .variant h3{font-weight:700;font-size:.98rem}
+  .variant h3 span{color:var(--fire);font-family:"IBM Plex Mono",monospace;font-size:.75rem;font-weight:500;margin-left:.4rem}
+  .variant p{color:var(--ink-2);font-size:.89rem;margin-top:.18rem;line-height:1.62}
+
+  /* ── share ────────────────────────────────── */
+  .share{
+    margin-top:1.9rem;background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--radius);padding:1.3rem 1.3rem 1.4rem;box-shadow:var(--shadow);
+  }
+  .share h3{font-family:"Black Han Sans","Gothic A1",sans-serif;font-weight:400;font-size:1.25rem}
+  .share p{color:var(--ink-2);font-size:.9rem;margin-top:.35rem;line-height:1.6}
+  .share .row{display:flex;gap:.55rem;flex-wrap:wrap;margin-top:1.05rem}
+
+  /* ── footer ───────────────────────────────── */
+  footer{
+    border-top:1px solid var(--line);background:var(--surface);text-align:center;
+    padding-block:2.7rem calc(3rem + env(safe-area-inset-bottom));
+  }
+  footer .sig{font-family:"Black Han Sans","Gothic A1",sans-serif;font-weight:400;font-size:1.5rem;line-height:1.35}
+  footer > .wrap > p{color:var(--ink-3);font-size:.85rem;margin-top:.55rem}
+  footer .made{
+    margin-top:1.7rem;font-family:"IBM Plex Mono",monospace;font-size:.66rem;
+    letter-spacing:.11em;color:var(--ink-3);text-transform:uppercase;
+  }
+
+  .toast{
+    position:fixed;left:50%;bottom:calc(1.4rem + env(safe-area-inset-bottom));
+    transform:translate(-50%,1.2rem);
+    background:var(--ink);color:var(--bg);font-size:.84rem;font-weight:500;
+    padding:.58rem 1.15rem;border-radius:99px;box-shadow:var(--shadow);
+    max-width:calc(100vw - 2rem);text-align:center;line-height:1.45;
+    opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease;z-index:9;
+  }
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+
+  /* ── 모바일 (≤34rem) ──────────────────────── */
+  @media (max-width:34rem){
+    body{font-size:16px}
+
+    .hero .dek{font-size:.95rem;line-height:1.62;margin-top:.85rem}
+    .facts{font-size:.73rem;gap:.1rem .7rem;margin-top:1.1rem}
+
+    /* 식감 표 → 카드로 재배치. 가로 스크롤 없앰 */
+    .tablewrap{border:0;background:transparent;overflow:visible;margin-top:1.5rem}
+    table.chew{display:block;width:100%;min-width:0;font-size:.95rem}
+    table.chew thead{display:none}
+    table.chew tbody{display:block}
+    table.chew tbody tr{
+      display:grid;grid-template-columns:auto 1fr auto;
+      grid-template-areas:"kind chew time" "desc desc desc";
+      align-items:baseline;column-gap:.45rem;
+      background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+      padding:.8rem .95rem .85rem;margin-bottom:.55rem;
+    }
+    table.chew tbody tr:last-child{margin-bottom:0}
+    table.chew tbody th,table.chew tbody td{display:block;padding:0;border-bottom:0}
+    table.chew tbody th{grid-area:kind;font-weight:700}
+    table.chew tbody td:nth-of-type(1){grid-area:chew;color:var(--ink-2);font-size:.92rem}
+    table.chew tbody td:nth-of-type(1)::before{content:"·";margin-right:.4rem;color:var(--ink-3)}
+    table.chew td.t{grid-area:time;text-align:right;font-size:1.02rem;font-weight:600}
+    table.chew td.d{grid-area:desc;margin-top:.35rem;font-size:.85rem;line-height:1.55}
+
+    /* 인분·맵기 다이얼: 세로로 풀고 4등분 큰 버튼 */
+    .dial{flex-direction:column;align-items:stretch;gap:.5rem;padding:.85rem 1rem}
+    .seg{display:grid;grid-template-columns:repeat(4,1fr)}
+    .seg button{padding:.68rem .25rem;font-size:.83rem;line-height:1.2;text-align:center}
+    .heatline{padding:.6rem 1rem .95rem;align-items:flex-start}
+    .flames i{height:1rem}
+    #heatnote{font-size:.86rem}
+
+    /* 재료 체크: 손가락으로 누를 수 있는 크기로 */
+    .grp{padding:1rem 1rem 1.15rem}
+    .item{padding:.72rem .1rem;min-height:2.9rem}
+    .item .box{width:1.18rem;height:1.18rem;top:.24rem}
+    .item .box::after{left:.33rem;top:.1rem;width:.3rem;height:.62rem}
+    .item .qty{font-size:.88rem}
+
+    /* 버튼: 전체 너비, 최소 높이 확보 */
+    .card-foot{flex-direction:column;align-items:stretch;padding:.9rem 1rem 1rem}
+    .foot-actions{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+    .btn{padding:.7rem .8rem;min-height:2.8rem;font-size:.85rem}
+    .share{padding:1.15rem 1.1rem 1.25rem}
+    .share .row{display:grid;grid-template-columns:1fr;gap:.5rem}
+
+    /* 단계: 번호 들여쓰기 축소 */
+    ol.steps{margin-top:1.8rem}
+    ol.steps > li{padding:0 0 1.7rem 2.45rem}
+    ol.steps > li::after{left:.55rem}
+    .step-body{font-size:.95rem}
+    .note{padding:.7rem .85rem;font-size:.86rem}
+
+    .stack{padding:1.2rem 1.1rem 1.35rem}
+    .rule{padding:1rem 1.05rem;gap:.8rem}
+    .band img{height:clamp(12rem,30vh,20rem)}
+    .band figcaption{padding:2.2rem 0 .9rem}
+    .band figcaption p{font-size:.71rem}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto}
+    *{transition-duration:.01ms !important;animation-duration:.01ms !important}
+  }
+
+  @media print{
+    .hero img,.band,.jump{display:none}
+    .hero::after{display:none}
+    .hero-copy{position:static;padding:0}
+    .hero h1,.hero .dek,.facts,.facts b{color:#000}
+    .eyebrow{color:#555}
+    .dial,.card-foot,.share,.toast{display:none}
+    .heatline{border-top:0}
+    section{padding-block:1.2rem;break-inside:avoid}
+    body{background:#fff;color:#000;font-size:11pt}
+  }
+</style>
+
+<header class="hero">
+  <img src="{{HERO}}" alt="검은 무쇠팬에 담긴 새빨간 매콤달달 닭발과 통깨, 대파 고명">
+  <div class="hero-copy">
+    <div class="wrap">
+      <p class="eyebrow">포장마차 · 야식 · 안주</p>
+      <h1>매콤달달<br><em>닭발</em></h1>
+      <p class="dek">고춧가루를 처음부터 넣으면 텁텁해지고, 물엿을 일찍 넣으면 딱딱해집니다. 양념을 조림용과 마무리용으로 <strong>둘로 쪼개는 것</strong>. 집에서 만든 닭발이 가게 맛에 못 미치는 이유는 대개 이 하나입니다.</p>
+      <p class="facts">
+        <span>2인분</span><i>·</i><span><b>1</b>시간 <b>10</b>분</span><i>·</i><span>난이도 <b>보통</b></span><i>·</i><span>냄비 1 + 팬 1</span>
+      </p>
+    </div>
+  </div>
+</header>
+
+<nav class="jump" aria-label="섹션 바로가기">
+  <div class="jump-track">
+    <a href="#design">맛의 설계</a>
+    <a href="#shop">재료</a>
+    <a href="#steps">만드는 법</a>
+    <a href="#fix">망했을 때</a>
+    <a href="#sides">곁들임</a>
+  </div>
+</nav>
+
+<section id="design">
+  <div class="wrap">
+    <p class="kicker">맛의 설계</p>
+    <h2>매운맛과 단맛은<br>같은 타이밍에 넣지 않는다</h2>
+    <p class="lede">닭발 양념은 재료 목록이 아니라 <strong>투입 순서</strong>입니다. 오래 끓여야 배어드는 맛과, 끓이면 사라지는 맛이 한 냄비에 섞여 있거든요. 아래 두 축을 각각 세 번에 나눠 넣습니다. 뒤에 나오는 조리 단계와 그대로 이어집니다.</p>
+
+    <div class="layers">
+      <div class="stack">
+        <h3>매운맛 3단</h3>
+        <p>매운맛은 종류마다 혀에 닿는 위치가 다릅니다</p>
+        <div class="rungs">
+          <div class="rung"><i>1단</i><span><b>고추장</b> — 조림 초반. 둥근 매움과 발효 감칠맛이 살에 배어듭니다</span></div>
+          <div class="rung"><i>2단</i><span><b>고춧가루</b> — 불을 줄이고 마지막 1분. 색과 향이 여기서 살아납니다</span></div>
+          <div class="rung"><i>3단</i><span><b>청양고추</b> — 불 끄기 직전. 목 뒤를 때리는 뾰족한 끝맛</span></div>
+        </div>
+      </div>
+      <div class="stack sweet">
+        <h3>단맛 3단</h3>
+        <p>배어드는 단맛과 코팅하는 단맛은 다릅니다</p>
+        <div class="rungs">
+          <div class="rung"><i>1단</i><span><b>설탕</b> — 조림 초반. 입자가 작아 살 안쪽까지 들어갑니다</span></div>
+          <div class="rung"><i>2단</i><span><b>양파와 청주</b> — 조림 내내. 티 나지 않게 바닥을 받치는 은은한 단맛</span></div>
+          <div class="rung"><i>3단</i><span><b>물엿</b> — 불 끄기 직전. 겉을 감싸는 윤기, 일찍 넣으면 굳습니다</span></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="kicker" style="margin-top:2.6rem">식감</p>
+    <h2>쫄깃함은 삶는 시간이<br>혼자 결정합니다</h2>
+    <p class="lede">닭발은 거의 전부가 콜라겐입니다. 덜 삶으면 질기고, 넘기면 뼈에서 살이 흘러내려요. <strong>원하는 식감과 닭발 종류로 시간을 먼저 정하고</strong> 시작하세요. 아래는 데친 다음, 본격적으로 삶는 시간입니다.</p>
+    <div class="tablewrap">
+      <table class="chew">
+        <thead>
+          <tr><th scope="col">닭발</th><th scope="col">원하는 식감</th><th scope="col">삶는 시간</th><th scope="col">이렇게 나옵니다</th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">무뼈</th><td>쫄깃</td><td class="t">12분</td><td class="d">씹는 맛이 남습니다. 술안주라면 이쪽</td></tr>
+          <tr><th scope="row">무뼈</th><td>부드럽게</td><td class="t">20분</td><td class="d">입에서 뭉개집니다. 맵기 3단 이상이면 이쪽이 편해요</td></tr>
+          <tr><th scope="row">뼈 있는</th><td>쫄깃</td><td class="t">25분</td><td class="d">발라 먹는 재미. 정통 포장마차 스타일</td></tr>
+          <tr><th scope="row">뼈 있는</th><td>부드럽게</td><td class="t">40분</td><td class="d">뼈에서 살이 쏙 빠집니다</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note" style="max-width:none"><b>기준은 이 레시피 = 무뼈 12분.</b> 아래 재료와 단계는 무뼈닭발 쫄깃 버전으로 적혀 있습니다. 뼈 있는 닭발을 쓴다면 3단계 시간만 바꾸면 나머지는 그대로예요.</p>
+  </div>
+</section>
+
+<figure class="band">
+  <img src="{{INGREDIENTS}}" loading="lazy" decoding="async" alt="닭발과 고춧가루, 고추장, 물엿, 마늘, 생강 등 양념 재료를 위에서 내려다본 사진">
+  <figcaption><div class="wrap"><p>양념은 흔합니다. 나눠 넣는 순서가 전부입니다.</p></div></figcaption>
+</figure>
+
+<section id="shop">
+  <div class="wrap">
+    <p class="kicker">재료</p>
+    <h2>장 볼 것</h2>
+    <p class="lede">인분과 맵기를 바꾸면 계량이 함께 바뀝니다. <strong>맵기는 고춧가루·청양고추·물엿을 동시에 조정</strong>해요. 매울수록 단맛을 조금 줄여야 맛이 뭉개지지 않습니다. 이름을 눌러 체크하면 장보기 목록으로 쓸 수 있어요.</p>
+
+    <div class="card">
+      <div class="dials">
+        <div class="dial">
+          <label id="svlabel">인분</label>
+          <div class="seg sv" role="group" aria-labelledby="svlabel">
+            <button type="button" data-sv="1" aria-pressed="false">1인분</button>
+            <button type="button" data-sv="2" aria-pressed="true">2인분</button>
+            <button type="button" data-sv="3" aria-pressed="false">3인분</button>
+            <button type="button" data-sv="4" aria-pressed="false">4인분</button>
+          </div>
+        </div>
+        <div class="dial">
+          <label id="htlabel">맵기</label>
+          <div class="seg ht" role="group" aria-labelledby="htlabel">
+            <button type="button" data-ht="1" aria-pressed="false">순한맛</button>
+            <button type="button" data-ht="2" aria-pressed="true">기본</button>
+            <button type="button" data-ht="3" aria-pressed="false">매운맛</button>
+            <button type="button" data-ht="4" aria-pressed="false">불닭발</button>
+          </div>
+        </div>
+        <div class="heatline">
+          <span class="flames" id="flames" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          <p id="heatnote"></p>
+        </div>
+      </div>
+
+      <div class="grp">
+        <h3>주재료</h3>
+        <ul class="items">
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">무뼈닭발<small>냉동이면 냉장실에서 하루 해동. 뼈 있는 것도 같은 양</small></span><span class="qty" data-base="500" data-unit="g"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">양파<small>반은 양념에, 반은 곁들임으로</small></span><span class="qty" data-base="0.5" data-unit="개"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">대파<small>흰 부분은 조림에, 파란 부분은 고명에</small></span><span class="qty" data-base="1" data-unit="대"></span></button></li>
+        </ul>
+      </div>
+
+      <div class="grp">
+        <h3>밑작업</h3>
+        <p>닭발 씻고 데치는 데만 쓰고 전부 버립니다</p>
+        <ul class="items">
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">굵은소금<small>밀가루와 함께 문질러 씻는 용도</small></span><span class="qty" data-base="1" data-unit="큰술"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">밀가루</span><span class="qty" data-base="2" data-unit="큰술"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">청주 또는 소주<small>데침물용</small></span><span class="qty" data-base="3" data-unit="큰술"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">생강<small>엄지 한 마디 크기</small></span><span class="qty" data-base="1" data-unit="톨"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">통후추</span><span class="qty" data-base="10" data-unit="알"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">월계수잎<small>없으면 생략 가능</small></span><span class="qty" data-base="2" data-unit="장"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">인스턴트 커피가루<small>잡내를 가장 확실하게 잡아줍니다</small></span><span class="qty" data-base="1" data-unit="작은술"></span></button></li>
+        </ul>
+      </div>
+
+      <div class="grp">
+        <h3>조림 양념 — 처음부터 넣는 것</h3>
+        <p>닭발과 함께 졸이며 살 안쪽까지 배어들 맛</p>
+        <ul class="items">
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">닭발 삶은 물<small>없으면 생수. 3단계에서 남겨둡니다</small></span><span class="qty" data-base="200" data-unit="ml"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">고추장</span><span class="qty" data-base="2" data-unit="큰술"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">진간장</span><span class="qty" data-base="2" data-unit="큰술"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">설탕</span><span class="qty" data-base="1.5" data-unit="큰술"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">청주 또는 미림</span><span class="qty" data-base="2" data-unit="큰술"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">다진 마늘<small>아끼지 마세요. 닭발은 마늘 맛으로도 먹습니다</small></span><span class="qty" data-base="1.5" data-unit="큰술"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">다진 생강<small>또는 생강가루 조금</small></span><span class="qty" data-base="0.5" data-unit="작은술"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">후춧가루</span><span class="qty" data-base="0.3" data-unit="작은술"></span></button></li>
+        </ul>
+      </div>
+
+      <div class="grp">
+        <h3>마무리 양념 — 불 끄기 직전에 넣는 것</h3>
+        <p>맵기 단계에 따라 양이 바뀝니다</p>
+        <ul class="items">
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">고춧가루<small>고운 것과 굵은 것을 반씩 섞으면 색과 질감이 다 삽니다</small></span><span class="qty hot" data-heat="2|3|4|5" data-unit="큰술"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">청양고추<small>어슷썰기. 씨를 털면 매움이 절반으로 줄어요</small></span><span class="qty hot" data-heat="0|2|4|6" data-unit="개"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">베트남 고추<small>불닭발 단계에서만. 통째로 넣고 마지막에 건져냅니다</small></span><span class="qty hot" data-heat="0|0|0|5" data-unit="개"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">물엿 또는 올리고당</span><span class="qty hot" data-heat="2.5|2|1.5|1.5" data-unit="큰술"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">참기름<small>불을 완전히 끈 뒤에</small></span><span class="qty" data-base="1" data-unit="큰술"></span></button></li>
+          <li><button type="button" class="item" aria-pressed="false"><span class="box"></span><span class="nm">통깨<small>손으로 비벼 뿌리면 향이 훨씬 셉니다</small></span><span class="qty" data-base="1" data-unit="큰술"></span></button></li>
+        </ul>
+      </div>
+
+      <div class="card-foot">
+        <p id="cf-msg">인분·맵기·체크는 이 브라우저에 저장됩니다</p>
+        <div class="foot-actions">
+          <button type="button" class="btn" id="copy">장보기 목록 복사</button>
+          <button type="button" class="btn" id="reset">체크 초기화</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<figure class="band">
+  <img src="{{COOKING}}" loading="lazy" decoding="async" alt="센 불 위 웍에서 붉은 양념과 함께 졸아드는 닭발">
+  <figcaption><div class="wrap"><p>국물이 ⅓로 줄 때까지. 여기서 멈추면 양념이 겉돕니다.</p></div></figcaption>
+</figure>
+
+<section id="steps">
+  <div class="wrap">
+    <p class="kicker">만드는 법</p>
+    <h2>여덟 단계</h2>
+    <p class="lede">앞의 절반은 잡내를 빼는 일이고, 뒤의 절반은 양념을 입히는 일입니다. 둘 사이에 <strong>물기를 제대로 터는 짧은 순간</strong>이 있는데, 거기서 성패가 갈립니다.</p>
+
+    <ol class="steps">
+      <li>
+        <div class="step-head"><h3>닭발 손질하고 핏물 빼기</h3><span class="time">10분 + 30분</span></div>
+        <p class="step-body">발톱이 남아 있으면 가위로 <b>한 마디씩 잘라냅니다</b>. 굵은소금과 밀가루를 뿌려 손으로 박박 문지른 뒤 흐르는 물에 헹구세요. 밀가루가 기름기와 표면의 불순물을 잡아 데침물이 훨씬 깨끗해집니다. 씻은 닭발은 찬물에 담가 <b>30분</b> 핏물을 뺍니다.</p>
+        <p class="note"><b>시간이 없다면</b> 미지근한 물에 소금 1작은술을 풀어 10분만 담가도 대부분 빠집니다. 다만 이 단계를 아예 건너뛰면 뒤에서 무엇을 해도 특유의 냄새가 남아요.</p>
+      </li>
+      <li>
+        <div class="step-head"><h3>향신채 넣고 애벌 데치기</h3><span class="time">7분</span></div>
+        <p class="step-body">넉넉한 물에 청주, 생강, 대파 파란 부분, 통후추, 월계수잎, <b>커피가루 1작은술</b>을 넣고 팔팔 끓입니다. 닭발을 넣고 <b>5분</b> 센 불로 데친 뒤 체에 밭쳐 <b>찬물에 깨끗이 헹구세요</b>. 뿌연 거품과 기름이 함께 빠져나갑니다. 이 물은 버립니다.</p>
+        <p class="note hot"><b>커피가 왜 들어가나요</b> — 커피의 쓴맛 성분이 닭 껍질 특유의 누린내와 결합해 함께 날아갑니다. 색은 어차피 고추장에 덮이고 맛도 남지 않아요. 된장 1큰술로 대체해도 됩니다.</p>
+      </li>
+      <li>
+        <div class="step-head"><h3>본격적으로 삶기</h3><span class="time">12분</span></div>
+        <p class="step-body">새 물을 붓고 대파 흰 부분과 양파 반쪽을 넣어 다시 끓입니다. 끓기 시작하면 <b>무뼈닭발 기준 12분</b>. 앞의 식감 표에서 고른 시간을 그대로 쓰세요. 다 되면 건져내고, <b>삶은 물 200ml는 반드시 남겨둡니다</b>. 이게 조림 국물의 바탕이에요.</p>
+      </li>
+      <li>
+        <div class="step-head"><h3>물기 털기</h3><span class="time">2분</span></div>
+        <p class="step-body">체에 밭쳐 두어 번 흔들고 <b>키친타월로 겉물을 닦아냅니다</b>. 귀찮아 보이지만 이 30초를 건너뛰면 양념이 닭발 표면에서 미끄러져 끝까지 겉돌아요. 완성했는데 양념이 안 밴 것 같다면 대개 여기서 갈립니다.</p>
+      </li>
+      <li>
+        <div class="step-head"><h3>조림 양념 먼저 끓이기</h3><span class="time">3분</span></div>
+        <p class="step-body">넓은 팬에 삶은 물 200ml와 <b>조림 양념 전부</b>를 넣고 중불에서 끓입니다. 고추장 덩어리가 완전히 풀리고 설탕이 녹을 때까지 저어주세요. <b>고춧가루와 물엿은 아직 넣지 않습니다.</b> 채 썬 양파도 이때 함께 들어갑니다.</p>
+      </li>
+      <li>
+        <div class="step-head"><h3>닭발 넣고 졸이기</h3><span class="time">10분</span></div>
+        <p class="step-body">닭발을 넣고 중불에서 졸입니다. 3~4분에 한 번씩 뒤집어 고루 입히세요. <b>국물이 처음의 ⅓</b>이 되고, 주걱으로 팬 바닥을 그었을 때 자국이 천천히 메워지면 다음 단계입니다.</p>
+        <p class="note"><b>뚜껑은 덮지 마세요.</b> 수분이 빠져나가면서 양념이 농축되는 구간입니다. 덮으면 물이 도로 떨어져 아무리 기다려도 졸지 않아요.</p>
+      </li>
+      <li>
+        <div class="step-head"><h3>마무리 양념, 딱 1분</h3><span class="time">1분</span></div>
+        <p class="step-body">불을 <b>약불로 낮추고</b> 고춧가루, 물엿, 청양고추를 넣어 <b>1분만</b> 섞습니다. 색이 탁한 갈색에서 선명한 붉은색으로 확 바뀌는 게 보일 거예요. 여기서 더 끓이면 고춧가루가 타면서 텁텁해지고 물엿이 굳기 시작합니다.</p>
+        <p class="note hot"><b>이 한 단계가 이 레시피의 전부입니다.</b> 고춧가루를 처음부터 넣고 10분 끓인 닭발과, 마지막에 1분 넣은 닭발은 같은 재료로 만든 다른 음식입니다. 색도 향도 맵기도 전부 달라져요.</p>
+      </li>
+      <li>
+        <div class="step-head"><h3>불 끄고, 불맛 입히기</h3><span class="time">2분</span></div>
+        <p class="step-body">불을 완전히 끈 뒤 참기름을 둘러 잔열로만 섞습니다. 참기름은 센 불에서 몇 초면 향이 날아가요. 토치가 있다면 <b>표면을 20초</b> 훑어 군데군데 그을립니다. 없으면 넓은 팬에 펴 담고 <b>센 불로 30초</b> 눌러 구우세요. 통깨와 대파 파란 부분을 뿌려 완성.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section id="fix" style="background:var(--surface-2);border-block:1px solid var(--line)">
+  <div class="wrap">
+    <p class="kicker">자주 나는 사고</p>
+    <h2>망했다 싶을 때</h2>
+    <div class="rules">
+      <div class="rule">
+        <i>A</i>
+        <div>
+          <h3>너무 매워서 못 먹겠다</h3>
+          <p>물을 더 붓지 마세요. 양념이 묽어지면서 맛만 사라집니다. <b>물엿 1큰술과 참기름 ½큰술</b>을 추가해 잔열로 섞으면 캡사이신이 지방에 붙잡혀 체감 맵기가 눈에 띄게 내려갑니다. 계란찜을 곁들이는 게 가장 확실한 해법이고요.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <i>B</i>
+        <div>
+          <h3>질겨서 안 씹힌다</h3>
+          <p>삶는 시간이 부족했습니다. <b>물 ½컵을 붓고 뚜껑을 덮어 약불에서 10분</b> 더 익히세요. 그다음 뚜껑을 열고 다시 졸이면 됩니다. 마무리 양념은 그 뒤에 넣고요.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <i>C</i>
+        <div>
+          <h3>흐물흐물 다 풀어졌다</h3>
+          <p>반대로 너무 오래 삶았습니다. 지금은 <b>센 불로 2분 졸여</b> 겉을 조여주는 정도가 최선이에요. 다음에는 삶는 시간을 5분 줄이고, 데친 뒤 찬물에 헹구는 단계를 꼭 넣으세요. 급랭이 표면을 잡아줍니다.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <i>D</i>
+        <div>
+          <h3>양념이 겉돌고 안 밴다</h3>
+          <p>십중팔구 <b>물기를 안 털었습니다</b>(4단계). 이미 넣었다면 불을 올려 국물을 더 날리고, 마지막에 팬째로 2분 두어 바닥에 살짝 눌어붙게 하세요. 눌은 부분을 긁어 섞으면 양념이 붙습니다.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <i>E</i>
+        <div>
+          <h3>색이 칙칙하고 맛이 텁텁하다</h3>
+          <p>고춧가루를 처음부터 넣고 오래 끓인 경우입니다. 되돌릴 수는 없지만, <b>고춧가루 1큰술을 새로 넣고 30초</b>만 더 섞으면 색은 어느 정도 살아납니다. 다음부터는 7단계를 지켜주세요.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <i>F</i>
+        <div>
+          <h3>아직도 냄새가 난다</h3>
+          <p>핏물 빼기나 데치기를 건너뛴 경우입니다. 지금 할 수 있는 건 <b>다진 마늘 1큰술과 후추를 더 넣고 2분</b> 볶는 것. 다음에는 1·2단계를 다 하되, 특히 데친 뒤 <b>찬물 헹굼</b>을 빠뜨리지 마세요.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<figure class="band">
+  <img src="{{TABLE}}" loading="lazy" decoding="async" alt="닭발과 계란찜, 주먹밥, 오이, 맥주가 함께 차려진 나무 테이블">
+  <figcaption><div class="wrap"><p>닭발은 혼자 먹는 음식이 아닙니다. 곁들임까지가 레시피예요.</p></div></figcaption>
+</figure>
+
+<section id="sides">
+  <div class="wrap">
+    <p class="kicker">곁들임</p>
+    <h2>매운 걸 견디게<br>해주는 것들</h2>
+    <p class="lede">맵기 3단 이상으로 갔다면 곁들임은 선택이 아닙니다. 셋 다 닭발이 졸아드는 <strong>10분 사이에 만들 수 있어요</strong>.</p>
+    <div class="variants">
+      <div class="variant">
+        <h3>계란찜 <span>10분</span></h3>
+        <p>계란 3개에 물 200ml, 소금 ½작은술, 새우젓 ½작은술. 뚝배기에 붓고 중약불에서 저어가며 몽글해지면 뚜껑 덮고 3분. 맵기를 가장 크게 눌러주는 건 유지방과 단백질입니다.</p>
+      </div>
+      <div class="variant">
+        <h3>주먹밥 <span>5분</span></h3>
+        <p>밥 2공기에 참기름 1큰술, 소금 조금, 김가루 3큰술, 통깨. 동그랗게 쥔 다음 <b>남은 닭발 양념에 살짝 굴리면</b> 이게 진짜입니다.</p>
+      </div>
+      <div class="variant">
+        <h3>콩나물 무침 <span>8분</span></h3>
+        <p>콩나물 200g을 뚜껑 덮고 5분 삶아 찬물에 헹구고, 소금·다진마늘·참기름·통깨로 무칩니다. 아삭한 것과 물기가 매운맛을 씻어내요.</p>
+      </div>
+      <div class="variant">
+        <h3>차가운 오이 <span>2분</span></h3>
+        <p>오이를 두껍게 썰어 얼음물에 담갔다 냅니다. 아무 양념도 하지 마세요. 입을 리셋하는 용도라 밍밍할수록 좋습니다.</p>
+      </div>
+    </div>
+
+    <p class="kicker" style="margin-top:2.6rem">응용</p>
+    <h2>같은 양념, 다른 얼굴</h2>
+    <div class="variants">
+      <div class="variant">
+        <h3>국물닭발 <span>+5분</span></h3>
+        <p>6단계에서 졸이지 말고 <b>물 1컵을 더</b> 붓습니다. 자작하게 끓이다 마무리 양념을 넣고, 소면을 삶아 말아 드세요. 해장으로 이만한 게 없습니다.</p>
+      </div>
+      <div class="variant">
+        <h3>치즈닭발 <span>+3분</span></h3>
+        <p>완성한 닭발을 팬에 펴고 모짜렐라 한 줌, 뚜껑 덮어 약불 2~3분. 맵기 4단으로 만들었다가 감당이 안 될 때의 비상 탈출구이기도 합니다.</p>
+      </div>
+      <div class="variant">
+        <h3>닭발 볶음밥 <span>+5분</span></h3>
+        <p>닭발을 다 먹고 남은 양념에 찬밥 1공기, 김가루, 참기름, 계란 하나. 팬에 눌러가며 볶습니다. 양념을 남겨야 하는 유일한 이유예요.</p>
+      </div>
+      <div class="variant">
+        <h3>에어프라이어 마무리 <span>+6분</span></h3>
+        <p>토치가 없다면 8단계 대신 <b>200℃에서 5분</b>. 겉이 살짝 마르면서 쫀득해지고 그을린 향도 조금 납니다. 종이호일을 꼭 깔아주세요.</p>
+      </div>
+    </div>
+
+    <div class="share">
+      <h3>친구한테 보내기</h3>
+      <p>이 페이지 주소를 그대로 보내면 친구도 인분과 맵기를 바꿔가며 볼 수 있어요. 카톡에 통째로 붙여넣고 싶다면 아래 버튼을 쓰세요. 지금 맞춰둔 인분과 맵기 그대로 텍스트가 만들어집니다.</p>
+      <div class="row">
+        <button type="button" class="btn solid" id="copyall">레시피 전체 복사</button>
+        <button type="button" class="btn" id="copylink">페이지 주소 복사</button>
+        <button type="button" class="btn" id="printit">인쇄 · PDF로 저장</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p class="sig">고춧가루는 마지막에,<br>물엿은 불을 끄고 나서</p>
+    <p>이 두 줄만 기억하면 나머지는 취향입니다.</p>
+    <p class="made">Recipe &amp; photographs · 2026</p>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  var FR = {0:"",0.25:"¼",0.5:"½",0.75:"¾"};
+  var STEP_HALF = {"개":1,"대":1,"공기":1,"쪽":1,"장":1,"톨":1,"알":1};
+  var SPOON = {"큰술":1,"작은술":1,"컵":1};
+
+  var HEAT_NOTES = [
+    "<b>순한맛</b> — 청양고추 없이 고춧가루만. 아이도 먹을 수 있는 정도의, 달달함이 앞에 오는 맛입니다.",
+    "<b>기본</b> — 가게에서 파는 보통 닭발. 맵지만 계속 손이 가는, 이 레시피의 기준점이에요.",
+    "<b>매운맛</b> — 청양고추가 두 배. 물 없이는 못 먹습니다. 계란찜을 꼭 곁들이세요.",
+    "<b>불닭발</b> — 베트남 고추까지. 다음 날까지 각오해야 하는 단계입니다. 우유를 미리 꺼내두세요."
+  ];
+
+  function fmtFrac(v){
+    var whole = Math.floor(v + 1e-9);
+    var rest = Math.round((v - whole) * 4) / 4;
+    if (rest === 1){ whole += 1; rest = 0; }
+    var f = FR[rest] || "";
+    if (whole === 0 && f === "") return "0";
+    if (whole === 0) return f;
+    return whole + f;
+  }
+  function fmt(base, unit, k){
+    var v = base * k;
+    if (v === 0) return "—";
+    if (unit === "g" || unit === "ml"){
+      var r = v >= 100 ? Math.round(v/10)*10 : Math.round(v/5)*5;
+      return Math.max(r, 5) + unit;
+    }
+    if (SPOON[unit] || STEP_HALF[unit]){
+      var step = STEP_HALF[unit] ? 0.5 : 0.25;
+      var q = Math.max(Math.round(v/step)*step, step);
+      return fmtFrac(q) + unit;
+    }
+    return (Math.round(v*10)/10) + unit;
+  }
+
+  var qtys = [].slice.call(document.querySelectorAll("[data-base],[data-heat]"));
+  var flames = [].slice.call(document.querySelectorAll("#flames i"));
+  var heatnote = document.getElementById("heatnote");
+
+  function render(){
+    var k = servings / 2;
+    qtys.forEach(function(el){
+      var base, heat = el.getAttribute("data-heat");
+      if (heat){
+        base = parseFloat(heat.split("|")[heatLevel - 1]);
+      } else {
+        base = parseFloat(el.getAttribute("data-base"));
+      }
+      el.textContent = fmt(base, el.getAttribute("data-unit"), k);
+      var li = el.closest("li");
+      if (li) li.classList.toggle("off", base === 0);
+    });
+    flames.forEach(function(f, i){ f.classList.toggle("lit", i < heatLevel); });
+    heatnote.innerHTML = HEAT_NOTES[heatLevel - 1];
+  }
+
+  var svBtns = [].slice.call(document.querySelectorAll(".seg.sv button"));
+  var htBtns = [].slice.call(document.querySelectorAll(".seg.ht button"));
+  var servings = 2, heatLevel = 2;
+
+  function bind(btns, attr, set){
+    btns.forEach(function(b){
+      b.addEventListener("click", function(){
+        set(parseInt(b.getAttribute(attr), 10));
+        btns.forEach(function(o){ o.setAttribute("aria-pressed", String(o === b)); });
+        render();
+        save();
+      });
+    });
+  }
+  bind(svBtns, "data-sv", function(v){ servings = v; });
+  bind(htBtns, "data-ht", function(v){ heatLevel = v; });
+
+  var items = [].slice.call(document.querySelectorAll(".item"));
+  var KEY = "dakbal-state-v1";
+
+  function save(){
+    try{
+      localStorage.setItem(KEY, JSON.stringify({
+        sv: servings,
+        ht: heatLevel,
+        checked: items.map(function(i){ return i.getAttribute("aria-pressed") === "true"; })
+      }));
+    }catch(e){}
+  }
+  function load(){
+    try{
+      var raw = localStorage.getItem(KEY);
+      if (!raw) return;
+      var s = JSON.parse(raw);
+      if (s && s.sv){
+        servings = s.sv;
+        svBtns.forEach(function(o){ o.setAttribute("aria-pressed", String(parseInt(o.getAttribute("data-sv"),10) === servings)); });
+      }
+      if (s && s.ht){
+        heatLevel = s.ht;
+        htBtns.forEach(function(o){ o.setAttribute("aria-pressed", String(parseInt(o.getAttribute("data-ht"),10) === heatLevel)); });
+      }
+      if (s && Array.isArray(s.checked)){
+        s.checked.forEach(function(v, i){ if (items[i]) items[i].setAttribute("aria-pressed", v ? "true" : "false"); });
+      }
+    }catch(e){}
+  }
+
+  items.forEach(function(it){
+    it.addEventListener("click", function(){
+      if (it.closest("li").classList.contains("off")) return;
+      it.setAttribute("aria-pressed", it.getAttribute("aria-pressed") === "true" ? "false" : "true");
+      save();
+    });
+  });
+
+  var toast = document.getElementById("toast"), tid;
+  function say(msg){
+    toast.textContent = msg;
+    toast.classList.add("on");
+    clearTimeout(tid);
+    tid = setTimeout(function(){ toast.classList.remove("on"); }, 2400);
+  }
+  function put(text, okMsg){
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(
+        function(){ say(okMsg); },
+        function(){ say("복사가 막혀 있어요. 길게 눌러 직접 복사해주세요"); }
+      );
+    } else {
+      say("이 브라우저에서는 복사가 지원되지 않아요");
+    }
+  }
+  function heatName(){ return htBtns[heatLevel - 1].textContent.trim(); }
+
+  document.getElementById("copy").addEventListener("click", function(){
+    var lines = ["닭발 장보기 (" + servings + "인분 · " + heatName() + ")", ""];
+    var n = 0;
+    items.forEach(function(it){
+      if (it.getAttribute("aria-pressed") === "true") return;
+      if (it.closest("li").classList.contains("off")) return;
+      var nm = it.querySelector(".nm").firstChild.textContent.trim();
+      var q = it.querySelector(".qty").textContent.trim();
+      lines.push("□ " + nm + " " + q);
+      n++;
+    });
+    if (n === 0){ say("남은 항목이 없어요"); return; }
+    put(lines.join("\n"), n + "개 항목을 복사했어요");
+  });
+
+  document.getElementById("reset").addEventListener("click", function(){
+    items.forEach(function(i){ i.setAttribute("aria-pressed", "false"); });
+    save();
+    say("체크를 모두 지웠어요");
+  });
+
+  document.getElementById("copyall").addEventListener("click", function(){
+    var L = ["매콤달달 닭발 — " + servings + "인분 · " + heatName(), "조리시간 약 1시간 10분", ""];
+    [].slice.call(document.querySelectorAll(".card .grp")).forEach(function(g){
+      L.push("[" + g.querySelector("h3").textContent.trim() + "]");
+      [].slice.call(g.querySelectorAll("li")).forEach(function(li){
+        if (li.classList.contains("off")) return;
+        var nm = li.querySelector(".nm").firstChild.textContent.trim();
+        L.push("· " + nm + " " + li.querySelector(".qty").textContent.trim());
+      });
+      L.push("");
+    });
+    L.push("[만드는 법]");
+    [].slice.call(document.querySelectorAll("ol.steps > li")).forEach(function(li, i){
+      var h = li.querySelector("h3").textContent.trim();
+      var t = li.querySelector(".time").textContent.trim();
+      L.push((i + 1) + ". " + h + " (" + t + ")");
+      L.push("   " + li.querySelector(".step-body").textContent.replace(/\s+/g, " ").trim());
+    });
+    L.push("");
+    L.push("※ 고춧가루는 마지막 1분에, 물엿은 불을 끄기 직전에.");
+    put(L.join("\n"), "레시피를 통째로 복사했어요");
+  });
+
+  document.getElementById("copylink").addEventListener("click", function(){
+    var url = "";
+    try { url = window.location.href; } catch(e){}
+    if (!url || url.indexOf("http") !== 0){
+      say("주소창의 링크를 복사해서 보내주세요");
+      return;
+    }
+    put(url, "페이지 주소를 복사했어요");
+  });
+
+  document.getElementById("printit").addEventListener("click", function(){
+    window.print();
+  });
+
+  /* 스티키 바로가기 — 지금 보고 있는 섹션 표시 */
+  var jumpLinks = [].slice.call(document.querySelectorAll(".jump-track a"));
+  if (jumpLinks.length){
+    var targets = jumpLinks.map(function(a){ return document.querySelector(a.getAttribute("href")); });
+    var track = jumpLinks[0].parentNode;
+    var cur = -2, ticking = false;
+
+    function spy(){
+      ticking = false;
+      var idx = -1;
+      for (var i = 0; i < targets.length; i++){
+        if (targets[i] && targets[i].getBoundingClientRect().top <= 90) idx = i;
+      }
+      if (idx === cur) return;
+      cur = idx;
+      jumpLinks.forEach(function(a, i){
+        if (i === idx) a.setAttribute("aria-current", "true");
+        else a.removeAttribute("aria-current");
+      });
+      var on = jumpLinks[idx];
+      if (on && track.scrollWidth > track.clientWidth + 4){
+        var want = Math.max(0, on.offsetLeft - (track.clientWidth - on.offsetWidth) / 2);
+        if (track.scrollTo) track.scrollTo({left: want, behavior: "smooth"});
+        else track.scrollLeft = want;
+      }
+    }
+
+    addEventListener("scroll", function(){
+      if (!ticking){ ticking = true; requestAnimationFrame(spy); }
+    }, {passive: true});
+    spy();
+  }
+
+  load();
+  render();
+})();
+</script>

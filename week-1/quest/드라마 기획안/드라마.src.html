@@ -1,0 +1,578 @@
+<title>잘 끝내는 법</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700&family=Barlow+Condensed:wght@400;500;600&display=swap">
+
+<style>
+  :root{
+    --bg:#EAE7EE; --bg-2:#F4F2F7; --bg-3:#DDD8E5; --scrim:#14121B;
+    --tx:#1B1823; --tx-2:#5C5570; --tx-3:#7E7691;
+    --rule:#CFC9D8; --rule-soft:#DFDAE6;
+    --accent:#9A6413; --accent-soft:#C89A4E; --accent-2:#4A5190;
+    --shadow:0 1px 0 rgba(27,24,35,.05);
+    --f-disp:"Gowun Batang","Nanum Myeongjo",Batang,serif;
+    --f-body:"Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+    --f-util:"Barlow Condensed","Noto Sans KR",sans-serif;
+    --col:min(100% - 2.6rem, 63rem);
+    --read:min(100% - 2.6rem, 40rem);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#14121B; --bg-2:#1D1A26; --bg-3:#262232; --scrim:#0C0A11;
+      --tx:#EDE9F2; --tx-2:#A9A2B8; --tx-3:#89829B;
+      --rule:#332E41; --rule-soft:#282334;
+      --accent:#E3A24F; --accent-soft:#8A6A38; --accent-2:#8E95C9;
+      --shadow:0 1px 0 rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14121B; --bg-2:#1D1A26; --bg-3:#262232; --scrim:#0C0A11;
+    --tx:#EDE9F2; --tx-2:#A9A2B8; --tx-3:#89829B;
+    --rule:#332E41; --rule-soft:#282334;
+    --accent:#E3A24F; --accent-soft:#8A6A38; --accent-2:#8E95C9;
+    --shadow:0 1px 0 rgba(0,0,0,.3);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--tx);
+    font-family:var(--f-body); font-weight:300; font-size:16px; line-height:1.85;
+    -webkit-font-smoothing:antialiased; word-break:keep-all; overflow-x:hidden;
+  }
+  p{margin:0 0 1.05em}
+  p:last-child{margin-bottom:0}
+  em{font-style:normal;color:var(--tx-2)}
+
+  .wrap{width:var(--col);margin-inline:auto}
+  .read{width:var(--read);margin-inline:auto}
+
+  .label{
+    font-family:var(--f-util); font-weight:600; font-size:.82rem;
+    letter-spacing:.24em; text-transform:uppercase; color:var(--accent);
+  }
+
+  /* ---------- 포스터 ---------- */
+  .poster{position:relative;min-height:min(92svh,50rem);display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden}
+  .poster img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:52% 42%}
+  .poster::after{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(178deg,rgba(12,10,17,.55) 0%,rgba(12,10,17,.12) 26%,rgba(12,10,17,.72) 66%,rgba(12,10,17,.96) 100%);
+  }
+  .poster > .wrap{position:relative;z-index:2;padding:7rem 0 3.4rem;color:#F2EDE6}
+  .slate{
+    display:flex;flex-wrap:wrap;align-items:center;gap:.55rem .9rem;
+    font-family:var(--f-util);font-size:.86rem;letter-spacing:.2em;text-transform:uppercase;
+    color:#E3A24F;margin-bottom:1.4rem;
+  }
+  .slate span:not(:last-child)::after{content:"·";margin-left:.9rem;color:rgba(226,214,196,.5)}
+  .poster h1{
+    font-family:var(--f-disp);font-weight:700;margin:0;
+    font-size:clamp(3.4rem,13vw,7.6rem);line-height:.96;letter-spacing:-.03em;
+    text-wrap:balance;text-shadow:0 2px 24px rgba(8,6,12,.6);
+  }
+  .romanized{
+    font-family:var(--f-util);font-size:clamp(.9rem,2.3vw,1.15rem);letter-spacing:.42em;
+    text-transform:uppercase;color:rgba(242,237,230,.72);margin:1.2rem 0 0;
+  }
+  .logline{
+    font-family:var(--f-disp);font-size:clamp(1.05rem,2.6vw,1.4rem);line-height:1.75;
+    color:#EFE7DC;max-width:34rem;margin:2rem 0 0;border-top:1px solid rgba(227,162,79,.45);padding-top:1.4rem;
+  }
+
+  /* ---------- 기획안 헤더 ---------- */
+  .factbar{border-bottom:1px solid var(--rule);background:var(--bg-2)}
+  .factbar .wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr));gap:1.6rem 2rem;padding:2.2rem 0}
+  .fact dt{font-family:var(--f-util);font-size:.78rem;letter-spacing:.22em;text-transform:uppercase;color:var(--tx-3);margin-bottom:.3rem}
+  .fact dd{margin:0;font-size:.98rem;line-height:1.5;color:var(--tx)}
+  .fact dd b{font-weight:500}
+
+  /* ---------- 섹션 ---------- */
+  section{padding:5.5rem 0}
+  section.tight{padding:4rem 0}
+  .rule-top{border-top:1px solid var(--rule-soft)}
+  h2{
+    font-family:var(--f-disp);font-weight:700;font-size:clamp(1.9rem,4.6vw,2.9rem);
+    line-height:1.25;letter-spacing:-.02em;margin:.5rem 0 1.8rem;text-wrap:balance;
+  }
+  h3{font-family:var(--f-disp);font-weight:700;font-size:1.28rem;margin:0 0 .5rem;letter-spacing:-.01em}
+  .lede{font-size:1.06rem;color:var(--tx-2);line-height:1.9}
+
+  /* ---------- 시즌 아크 ---------- */
+  .arc{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);margin-top:2.6rem}
+  .arc div{background:var(--bg);padding:1.5rem 1.35rem}
+  .arc dt{font-family:var(--f-util);font-size:.8rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:.55rem}
+  .arc dd{margin:0;font-family:var(--f-disp);font-size:1.02rem;line-height:1.6}
+  .arc dd small{display:block;font-family:var(--f-body);font-size:.85rem;color:var(--tx-3);margin-top:.35rem;line-height:1.6}
+
+  /* ---------- 인물 ---------- */
+  .cast{display:grid;grid-template-columns:repeat(auto-fit,minmax(17rem,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);margin-top:2.4rem}
+  .who{background:var(--bg);padding:1.7rem 1.5rem}
+  .who.lead{background:var(--bg-2)}
+  .who .role{font-family:var(--f-util);font-size:.78rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent-2);margin-bottom:.7rem}
+  .who .name{font-family:var(--f-disp);font-weight:700;font-size:1.35rem;letter-spacing:-.01em}
+  .who .name span{font-family:var(--f-util);font-size:.95rem;letter-spacing:.06em;color:var(--tx-3);margin-left:.5rem;font-variant-numeric:tabular-nums}
+  .who p{font-size:.94rem;line-height:1.82;color:var(--tx-2);margin:.7rem 0 0}
+  .who q{display:block;margin-top:.9rem;font-family:var(--f-disp);font-size:1rem;color:var(--tx);line-height:1.7;quotes:"“" "”"}
+
+  /* ---------- 회차 ---------- */
+  .ep{border-top:1px solid var(--rule);padding:4.2rem 0}
+  .ep-grid{display:grid;grid-template-columns:1fr;gap:2.4rem}
+  @media (min-width:60rem){
+    .ep-grid{grid-template-columns:1.02fr 1fr;gap:3.4rem;align-items:start}
+    .ep:nth-child(even) .still{order:2}
+  }
+  .still{margin:0}
+  .still img{width:100%;height:auto;display:block;filter:saturate(.96)}
+  .still figcaption{
+    font-family:var(--f-util);font-size:.8rem;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--tx-3);margin-top:.7rem;
+  }
+  .ep-no{
+    font-family:var(--f-util);font-weight:600;font-size:.86rem;letter-spacing:.28em;
+    text-transform:uppercase;color:var(--accent);font-variant-numeric:tabular-nums;
+  }
+  .ep h3{font-size:clamp(1.7rem,4.2vw,2.25rem);margin:.55rem 0 .3rem}
+  .ep .beat{font-family:var(--f-disp);color:var(--tx-2);font-size:1.05rem;line-height:1.7;margin:0 0 1.5rem}
+  .ep .body{font-size:.99rem;line-height:1.92}
+
+  /* ---------- 대본 ---------- */
+  .script{
+    margin-top:1.9rem;background:var(--bg-2);border:1px solid var(--rule);
+    border-left:2px solid var(--accent-soft);padding:1.5rem 1.4rem 1.55rem;
+  }
+  .sc-head{
+    font-family:var(--f-util);font-size:.86rem;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent-2);border-bottom:1px solid var(--rule);padding-bottom:.7rem;margin-bottom:1.1rem;
+  }
+  .line{display:grid;grid-template-columns:4.3rem 1fr;gap:.9rem;margin-bottom:.55rem;font-size:.96rem;line-height:1.78}
+  .line b{font-family:var(--f-disp);font-weight:700;color:var(--tx);text-align:right;letter-spacing:-.01em}
+  .dir{color:var(--tx-3);font-size:.92rem;line-height:1.78;margin:.55rem 0 .9rem;padding-left:.1rem}
+  .dir::before{content:"(";}
+  .dir::after{content:")";}
+  .beat-gap{height:.5rem}
+
+  /* ---------- 제작 노트 ---------- */
+  .notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:2.6rem;margin-top:2.4rem}
+  .notes ul{list-style:none;margin:0;padding:0}
+  .notes li{padding:.7rem 0;border-bottom:1px solid var(--rule-soft);font-size:.95rem;line-height:1.75;color:var(--tx-2)}
+  .notes li b{display:block;font-family:var(--f-disp);font-weight:700;color:var(--tx);font-size:1rem;margin-bottom:.15rem}
+  .ost{display:grid;grid-template-columns:auto 1fr;gap:.5rem 1.1rem;font-size:.95rem;align-items:baseline}
+  .ost dt{font-family:var(--f-util);letter-spacing:.14em;text-transform:uppercase;color:var(--tx-3);font-size:.82rem;white-space:nowrap}
+  .ost dd{margin:0;font-family:var(--f-disp);font-size:1.02rem}
+  .ost dd small{font-family:var(--f-body);font-size:.84rem;color:var(--tx-3);margin-left:.5rem}
+
+  /* ---------- 엔딩 ---------- */
+  .ending{background:var(--bg-2);border-top:1px solid var(--rule);text-align:center;padding:6rem 0 5rem}
+  .ending blockquote{
+    margin:0 auto;font-family:var(--f-disp);font-size:clamp(1.25rem,3.4vw,1.75rem);
+    line-height:1.85;letter-spacing:-.01em;max-width:32rem;text-wrap:balance;
+  }
+  .ending .sig{font-family:var(--f-util);letter-spacing:.28em;text-transform:uppercase;font-size:.82rem;color:var(--tx-3);margin-top:2.4rem}
+  footer{padding:2.6rem 0 3.4rem;font-size:.86rem;color:var(--tx-3);text-align:center;line-height:1.8}
+
+  /* ---------- 모션 ---------- */
+  .rev{opacity:0;transform:translateY(14px);transition:opacity .8s ease,transform .8s cubic-bezier(.2,.7,.3,1)}
+  .rev.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){
+    .rev{opacity:1;transform:none;transition:none}
+  }
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+  /* ---------- 인쇄 / PDF ---------- */
+  @page{ size:A4; margin:15mm 14mm; }
+  @media print{
+    /* PDF는 항상 밝은 지면으로 — 화면 테마와 무관하게 */
+    :root, :root[data-theme="dark"], :root:not([data-theme="light"]){
+      --bg:#FFFFFF; --bg-2:#F5F3F8; --bg-3:#EAE6F0;
+      --tx:#171420; --tx-2:#494256; --tx-3:#6E6683;
+      --rule:#C4BDD1; --rule-soft:#D8D2E1;
+      --accent:#8A5810; --accent-soft:#C09A56; --accent-2:#3E4584;
+    }
+    html,body{background:#fff}
+    *{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    body{font-size:10.2pt;line-height:1.68}
+    .rev{opacity:1 !important;transform:none !important;transition:none !important}
+    :root{--col:100%;--read:100%}
+    .wrap,.read{width:100%}
+
+    .poster{height:252mm;min-height:0;break-after:page}
+    .poster > .wrap{padding:0 12mm 14mm}
+    .poster h1{font-size:56pt}
+    .romanized{font-size:11pt;margin-top:6mm}
+    .logline{font-size:13pt;max-width:120mm;margin-top:9mm;padding-top:6mm}
+    .slate{font-size:9.5pt;margin-bottom:6mm}
+
+    .factbar{border-bottom:1px solid var(--rule);break-inside:avoid;break-after:avoid}
+    .factbar .wrap{padding:6mm 0;gap:6mm 8mm}
+    section{padding:9mm 0}
+    section.tight{padding:7mm 0}
+    h2{font-size:19pt;margin:2mm 0 5mm;break-after:avoid}
+    h3{break-after:avoid}
+    .lede{font-size:10.4pt;line-height:1.75}
+
+    .arc{grid-template-columns:repeat(5,1fr);break-inside:avoid}
+    .arc div{padding:4mm 3.5mm}
+    .arc dd{font-size:10.5pt}
+    .arc dd small{font-size:8.6pt}
+
+    .cast{grid-template-columns:1fr 1fr}
+    .who{padding:5mm;break-inside:avoid}
+    .who .name{font-size:13pt}
+    .who p{font-size:9.2pt;line-height:1.68}
+    .who q{font-size:9.8pt}
+
+    /* 회차는 한 회당 한 페이지 */
+    .ep{break-before:page;border-top:0;padding:0}
+    .ep-grid{grid-template-columns:1fr;gap:6mm}
+    .ep:nth-child(even) .still{order:0}
+    /* filter를 남기면 인쇄 엔진이 이미지를 무손실로 다시 굽는다 — PDF가 수십 MB로 불어남 */
+    .still img{max-height:74mm;object-fit:cover;object-position:50% 42%;filter:none}
+    .still figcaption{margin-top:2mm;font-size:8.6pt}
+    .ep h3{font-size:22pt;margin:2mm 0 1mm}
+    .ep .beat{font-size:11pt;margin-bottom:5mm}
+    .ep .body{font-size:10pt;line-height:1.72}
+    .script{break-inside:avoid;margin-top:6mm;padding:5mm 5mm 5.5mm}
+    .sc-head{font-size:9.5pt;padding-bottom:2.5mm;margin-bottom:4mm}
+    .line{font-size:9.6pt;line-height:1.65;margin-bottom:1.6mm;grid-template-columns:16mm 1fr;gap:4mm}
+    .dir{font-size:9pt;margin:2mm 0 3mm}
+
+    .notes{gap:8mm;break-inside:avoid}
+    .notes li{padding:2.2mm 0;font-size:9.3pt;line-height:1.65}
+    .ost dd{font-size:10.2pt}
+
+    .ending{break-before:page;padding:60mm 0 0;border-top:0;background:#fff}
+    .ending blockquote{font-size:17pt;max-width:130mm}
+    footer{padding:10mm 0 0;font-size:8.8pt}
+  }
+</style>
+
+<header class="poster">
+  <img src="{{IMG_01}}" alt="해질녘 야구장에 글러브를 들고 선 남자의 뒷모습">
+  <div class="wrap">
+    <div class="slate"><span>tvN 토일드라마</span><span>전 6부작</span><span>회당 70분</span><span>휴먼 드라마</span></div>
+    <h1>잘 끝내는 법</h1>
+    <p class="romanized">How to End Well</p>
+    <p class="logline">스무 해를 함께한 글러브를 내려놓은 남자가, 남은 스무 해를 무엇으로 채울지 처음부터 다시 배우는 1년.</p>
+  </div>
+</header>
+
+<div class="factbar">
+  <div class="wrap">
+    <dl class="fact"><dt>원작</dt><dd><b>이태훈</b> — 「2026년 회고」</dd></dl>
+    <dl class="fact"><dt>장르</dt><dd>중년 성장 · 가족 · 휴먼</dd></dl>
+    <dl class="fact"><dt>배경</dt><dd>2026년 늦가을 → 2027년 늦가을</dd></dl>
+    <dl class="fact"><dt>주요 무대</dt><dd>사회인야구장 · 골프장 · 예식장 · 회사</dd></dl>
+    <dl class="fact"><dt>한 문장</dt><dd>하나를 잘 끝내고, 하나를 끝까지 밀어붙이고,<br>나머지는 사람에게 쓴 해.</dd></dl>
+  </div>
+</div>
+
+<section class="rev">
+  <div class="read">
+    <p class="label">기획의도</p>
+    <h2>은퇴는 끝이 아니라, 가장 늦게 배우는 기술이다</h2>
+    <p class="lede">우리는 잘 시작하는 법을 배우며 자란다. 첫 출근, 첫 스윙, 첫 아이. 그런데 인생의 절반을 지나면 필요한 기술은 반대쪽으로 바뀐다. 잘 그만두는 법, 잘 넘겨주는 법, 잘 져주는 법.</p>
+    <p class="lede">이 드라마의 주인공은 성공한 사람도, 실패한 사람도 아니다. 20년을 한 자리에서 성실하게 쌓아온, 우리가 아는 그 아저씨다. 그는 올해 20년 하던 야구를 접고, 20년 하던 골프에서 처음으로 언더파를 눈앞에 두고, 친구의 딸을 시집보내고, 건강검진을 예약하고, 그리고 자기 말이 끝난 뒤에 흐르던 3초의 침묵을 뒤늦게 알아챈다.</p>
+    <p class="lede">큰 사건은 없다. 대신 매회 한 가지씩 내려놓고, 한 가지씩 배운다. 6부가 끝날 때 시청자가 가져갔으면 하는 문장은 하나다. <em>세게 말해서 이긴 자리보다, 부드럽게 말해서 남은 사람이 결국 더 크다.</em></p>
+  </div>
+</section>
+
+<section class="tight rev">
+  <div class="wrap">
+    <p class="label">시즌 아크 · 2026</p>
+    <h2>다섯 개의 동사로 굴러가는 1년</h2>
+    <dl class="arc">
+      <div><dt>접은 것</dt><dd>사회인야구 20년<small>후회 없이</small></dd></div>
+      <div><dt>벼른 것</dt><dd>골프 언더파<small>목전까지</small></dd></div>
+      <div><dt>처음 겪은 것</dt><dd>친구 딸의 결혼<small>계절이 바뀌었다</small></dd></div>
+      <div><dt>지키는 것</dt><dd>건강<small>성취가 아니라 잔고</small></dd></div>
+      <div><dt>만드는 것</dt><dd>부드러움<small>이제 1년 차</small></dd></div>
+    </dl>
+  </div>
+</section>
+
+<section class="rule-top rev">
+  <div class="wrap">
+    <p class="label">인물</p>
+    <h2>말이 센 사람, 그리고 그 말을 받아온 사람들</h2>
+    <div class="cast">
+      <div class="who lead">
+        <p class="role">주인공</p>
+        <p class="name">이태훈 <span>52</span></p>
+        <p>사회인야구팀 '청우 이글스'의 20년차 4번타자이자, 같은 20년차 주말 골퍼. 약속한 시간에 나가는 일을 20년간 한 번도 어긴 적이 없다. 옳은 말을 세게 하는 편이고, 틀린 말이 아니었기에 스스로 문제라고 생각해본 적이 없다.</p>
+        <q>좋을 때 접고 싶어. 나중에 이 얘기 하면서 웃고 싶어서.</q>
+      </div>
+      <div class="who">
+        <p class="role">아내</p>
+        <p class="name">김태임 <span>50</span></p>
+        <p>20년간 남편의 토요일 아침을 야구장에 내준 사람. 남편이 은퇴한 첫 주말, 거실에 앉아 있는 그를 보고 반가움보다 낯섦을 먼저 느낀다. 잔소리 대신 질문을 던지는 방식으로 남편을 움직인다.</p>
+        <q>그럼 이제 어디 갈 건데.</q>
+      </div>
+      <div class="who">
+        <p class="role">야구팀 감독 · 포수</p>
+        <p class="name">조두형 <span>55</span></p>
+        <p>태훈의 은퇴를 마지막까지 말린 사람. 자신도 무릎이 다 됐다는 걸 알면서 모르는 척한다. 야구를 접은 뒤에도 매달 국밥집에 모이자는 단톡방을 판다.</p>
+        <q>야, 한 시즌만 더 하자. 딱 한 시즌만.</q>
+      </div>
+      <div class="who">
+        <p class="role">절친 · 신부의 아버지</p>
+        <p class="name">이윤진 <span>52</span></p>
+        <p>30년 친구. 딸의 결혼식 날, 로비에서 태훈의 손을 잡고 아무 말도 못 한다. 이 드라마에서 처음으로 '청첩장 다음에 오는 것'을 입 밖에 꺼내는 인물.</p>
+        <q>태훈아, 나 오늘 좀 이상하다.</q>
+      </div>
+      <div class="who">
+        <p class="role">친구의 딸</p>
+        <p class="name">이지은 <span>28</span></p>
+        <p>태훈이 술자리에서 이름을 지어준 아이. 그 아이가 웨딩드레스를 입고 들어오는 순간, 태훈은 자기 인생의 계절이 바뀌었다는 걸 몸으로 안다.</p>
+        <q>삼촌, 저 이름 삼촌이 지어주신 거 알죠?</q>
+      </div>
+      <div class="who">
+        <p class="role">회사 후배</p>
+        <p class="name">신진영 <span>31</span></p>
+        <p>태훈의 옳은 말에 늘 고개를 끄덕여온 사람. 그 끄덕임이 동의가 아니라 체념이었다는 사실이 5부의 전환점이 된다. 태훈이 처음으로 "이유가 있었어?"라고 물은 상대.</p>
+        <q>…선배님이 저한테 그걸 물어보신 건 처음이에요.</q>
+      </div>
+      <div class="who">
+        <p class="role">골프장 캐디</p>
+        <p class="name">김태은 <span>34</span></p>
+        <p>태훈의 언더파 도전을 가장 가까이서 지켜본 유일한 목격자. 마지막 두세 홀에서 무너지는 그를 여섯 번 봤고, 여섯 번 다 아무 말도 하지 않았다.</p>
+        <q>오늘 진짜 아까웠는데.</q>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="rule-top">
+  <div class="wrap">
+    <p class="label rev">회차별 시놉시스</p>
+    <h2 class="rev">전 6부 — 늦가을에서 다시 늦가을까지</h2>
+
+    <article class="ep rev">
+      <div class="ep-grid">
+        <figure class="still">
+          <img src="{{IMG_02}}" alt="흙먼지 날리는 사회인야구장에서 마지막 타석에 선 타자">
+          <figcaption>EP.01 · 청우구장 마지막 경기</figcaption>
+        </figure>
+        <div>
+          <p class="ep-no">Episode 01</p>
+          <h3>마지막 이닝</h3>
+          <p class="beat">머리로 그린 타구와 몸이 만들어내는 타구 사이가, 3미터쯤 벌어졌다.</p>
+          <div class="body">
+            <p>20년째 같은 그라운드. 태훈은 시즌 마지막 경기 전날 밤, 트렁크에서 스파이크를 꺼내 닦으며 아무에게도 말하지 않은 결정을 이미 내려둔 상태다. 경기는 진다. 태훈의 마지막 타석은 평범한 우익수 뜬공이다.</p>
+            <p>극적인 사건은 끝내 오지 않는다. 대신 경기 후 국밥집에서, 태훈이 소주잔을 내려놓고 담담하게 말한다. 팀원들은 화를 냈다가, 말렸다가, 결국 웃는다. 그날 밤 태훈은 유니폼을 벗어 개면서 '끝났다'가 아니라 '잘 놀았다'는 감각이 먼저 오는 걸 확인한다. 그게 이 드라마의 첫 안도다.</p>
+          </div>
+          <div class="script">
+            <p class="sc-head">S#14. 청우구장 더그아웃 / 해질녘</p>
+            <p class="dir">경기 종료. 태훈, 유니폼 상의를 벗어 무릎 위에서 천천히 갠다. 두형이 옆에 앉는다</p>
+            <div class="line"><b>두형</b><span>야. 한 시즌만 더 하자. 어? 딱 한 시즌만.</span></div>
+            <div class="line"><b>태훈</b><span>두형아. 나 요즘 머릿속으로 친 타구랑 실제로 친 타구가… 한 3미터쯤 차이 나.</span></div>
+            <div class="line"><b>두형</b><span>그거야 나도 그래.</span></div>
+            <div class="line"><b>태훈</b><span>넌 원래 그랬고.</span></div>
+            <p class="dir">둘 다 웃는다. 웃음이 길게 가지는 않는다</p>
+            <div class="line"><b>태훈</b><span>좋을 때 접고 싶어. 나중에 이 얘기 하면서 웃고 싶어서.</span></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="ep rev">
+      <div class="ep-grid">
+        <figure class="still">
+          <img src="{{IMG_05}}" alt="이른 아침 강변길을 혼자 걷는 남자">
+          <figcaption>EP.02 · 토요일 오전 6시 02분</figcaption>
+        </figure>
+        <div>
+          <p class="ep-no">Episode 02</p>
+          <h3>빈 토요일</h3>
+          <p class="beat">20년간 나를 움직이게 한 강제 장치가, 어느 날 사라졌다.</p>
+          <div class="body">
+            <p>은퇴 후 첫 주말. 알람을 껐는데도 여섯 시에 눈이 떠진다. 현관 앞, 20년째 같은 자리에 있던 글러브 가방이 없다. 태훈은 그 빈자리를 한참 본다.</p>
+            <p>거실에서 뉴스를 보다가, 냉장고를 열었다가, 결국 운동화를 신고 나간다. 목적지 없이 걷는 첫 산책. 이 회차에서 태훈은 '운동을 한다'가 아니라 <em>'움직이는 사람으로 남는다'</em>로 목표를 바꾼다. 기록 경신이 목표였던 몸에서, 유지가 목표인 몸으로. 미뤄둔 건강검진을 예약하는 장면이 엔딩이다. 예약 버튼을 누르는 손가락 클로즈업 하나로 회차를 닫는다.</p>
+          </div>
+          <div class="script">
+            <p class="sc-head">S#03. 태훈의 집 거실 / 토요일 오전 6:02</p>
+            <p class="dir">알람 없이 눈이 떠진 태훈. 현관 앞 빈자리를 본다. 부엌에서 태임의 목소리</p>
+            <div class="line"><b>태임</b><span>왜 벌써 일어났어.</span></div>
+            <div class="line"><b>태훈</b><span>…몸이 먼저 일어나네.</span></div>
+            <div class="line"><b>태임</b><span>그럼 이제 어디 갈 건데.</span></div>
+            <p class="dir">태훈, 대답을 찾지 못한다. 사이. 냉장고 돌아가는 소리만</p>
+            <div class="line"><b>태훈</b><span>그러게. 어디 가지.</span></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="ep rev">
+      <div class="ep-grid">
+        <figure class="still">
+          <img src="{{IMG_03}}" alt="이른 아침 골프장 그린 위에서 퍼팅 라인을 보는 남자">
+          <figcaption>EP.03 · 18번 홀, 1미터</figcaption>
+        </figure>
+        <div>
+          <p class="ep-no">Episode 03</p>
+          <h3>립아웃</h3>
+          <p class="beat">숫자를 쫓지 않고 스윙을 다듬으면, 숫자는 알아서 따라온다.</p>
+          <div class="body">
+            <p>야구를 접은 해에, 공교롭게도 20년째인 골프가 인생 최고 지점에 올라선다. 언더파. 20년 동안 한 번도 입 밖에 내지 않았던 숫자가 라운딩마다 손에 잡힐 듯 어른거린다.</p>
+            <p>이 회차는 태훈의 여섯 번의 실패를 몽타주로 압축한다. 마지막 두세 홀에서 무너지고, 1미터 파 퍼트가 홀을 한 바퀴 돌아 나온다. 시청자는 이번엔 되겠지 하고 여섯 번 속는다. 그런데 태훈은 억울해하지 않는다. 야구에서 몸이 마음을 못 따라가는 걸 배웠다면, 골프에서는 <em>마음이 몸을 앞서가면 안 된다</em>는 걸 배운다. 두 개의 20년이 여기서 처음으로 한 문장으로 만난다.</p>
+          </div>
+          <div class="script">
+            <p class="sc-head">S#22. OO CC 18번 홀 그린 / 오후</p>
+            <p class="dir">1미터 파 퍼트. 공이 홀을 한 바퀴 돌아 나온다. 캐디 태은, 숨을 삼킨다</p>
+            <div class="line"><b>태은</b><span>…아, 사장님.</span></div>
+            <p class="dir">태훈, 한참 홀을 내려다본다. 표정이 무너지지 않는다</p>
+            <div class="line"><b>태훈</b><span>괜찮아요.</span></div>
+            <div class="line"><b>태은</b><span>오늘 진짜 아까웠는데.</span></div>
+            <div class="line"><b>태훈</b><span>20년 하니까 알겠더라고요. 기록은 쫓아가면 도망가고, 그냥 하다 보면 뒤에서 걸어와요.</span></div>
+            <p class="dir">공을 집어 그린 밖으로 걸어 나가며</p>
+            <div class="line"><b>태훈</b><span>…근데 오늘은 좀 아깝긴 하네.</span></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="ep rev">
+      <div class="ep-grid">
+        <figure class="still">
+          <img src="{{IMG_04}}" alt="예식장에서 하객으로 앉아 있는 중년 남자들">
+          <figcaption>EP.04 · 예식장 로비, 오후 1시</figcaption>
+        </figure>
+        <div>
+          <p class="ep-no">Episode 04</p>
+          <h3>축의금 봉투</h3>
+          <p class="beat">이제 이런 자리는 늘어날 것이고, 그중엔 청첩장이 아닌 것도 섞일 것이다.</p>
+          <div class="body">
+            <p>올해 가장 낯선 자리. 내 결혼식도 내 자식 결혼식도 아닌데, 친구의 딸이 웨딩드레스를 입고 들어오는 순간 태훈은 이유 없이 목이 멘다. 품에 안겨 있던 아이, 술잔 기울이며 이름을 지어주던 그 아이가 한 사람의 인생을 시작하고 있다.</p>
+            <p>축의금 봉투를 접수대에 내면서 태훈의 머릿속에 조용한 계산이 지나간다. 앞으로 이런 자리는 늘어날 것이고, 그중 일부는 부고장일 것이다. 오랜만에 정장을 입은 친구들이 같은 테이블에 나란히 앉아 서로를 보며 웃는다. 그 웃음의 절반은 대견함이고 절반은 세월이다. 4부는 이 드라마에서 유일하게 눈물이 허용된 회차다.</p>
+          </div>
+          <div class="script">
+            <p class="sc-head">S#09. 웨딩홀 로비 / 낮</p>
+            <p class="dir">드레스 차림의 지은, 아버지 윤진의 팔을 잡고 대기 중. 태훈과 눈이 마주친다</p>
+            <div class="line"><b>지은</b><span>삼촌. 저 이름, 삼촌이 지어주신 거 알죠?</span></div>
+            <p class="dir">태훈, 뭔가 말하려다 목이 멘다</p>
+            <div class="line"><b>태훈</b><span>…알지. 술 마시다 지었어. 그러면 안 되는 거였는데.</span></div>
+            <div class="line"><b>지은</b><span>잘 지으셨어요.</span></div>
+            <p class="dir">입장 음악. 태훈, 자리로 돌아가 앉는다. 정장 입은 친구들이 나란히 앉아 앞을 본다. 아무도 말하지 않는다</p>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="ep rev">
+      <div class="ep-grid">
+        <figure class="still">
+          <img src="{{IMG_06}}" alt="저녁 식탁에서 마주 앉아 조용히 이야기 나누는 두 사람">
+          <figcaption>EP.05 · 회의실, 그리고 탕비실</figcaption>
+        </figure>
+        <div>
+          <p class="ep-no">Episode 05</p>
+          <h3>침묵의 온도</h3>
+          <p class="beat">그 침묵이 동의가 아니라 체념이었다는 걸 알았을 때.</p>
+          <div class="body">
+            <p>가장 어렵고 가장 오래 걸릴 항목. 태훈은 옳은 말을 세게 하는 사람이었고, 틀린 말이 아니었으므로 스스로 문제라고 생각해본 적이 없다.</p>
+            <p>5부는 같은 회의 장면을 두 번 보여준다. 처음엔 태훈의 시점 — 정확한 지적, 수긍하는 후배. 두 번째는 후배 진영의 시점 — 3초의 침묵, 내려간 시선, 닫히는 노트북. 그 3초가 늦은 밤 사무실에서 태훈의 머릿속에 뒤늦게 재생된다. 부드러워진다는 건 무르게 사는 게 아니라, 같은 말을 상대가 받을 수 있는 온도로 바꿔 건네는 일이라는 것. 태훈은 다음 날 아침 탕비실에서 20년 만에 처음으로 지적 대신 질문을 한다.</p>
+          </div>
+          <div class="script">
+            <p class="sc-head">S#31. 탕비실 / 다음 날 아침</p>
+            <p class="dir">태훈, 종이컵 두 개에 커피를 내린다. 하나를 진영에게 건넨다</p>
+            <div class="line"><b>태훈</b><span>진영아. 어제 그거… 그렇게 한 이유가 있었어?</span></div>
+            <p class="dir">진영, 컵을 받다가 멈춘다</p>
+            <div class="line"><b>진영</b><span>…네?</span></div>
+            <div class="line"><b>태훈</b><span>이유 있었을 거 아냐. 나는 그걸 먼저 물어봤어야 했는데.</span></div>
+            <p class="dir">사이. 커피 내려가는 소리</p>
+            <div class="line"><b>진영</b><span>…선배님이 저한테 그걸 물어보신 건, 처음이에요.</span></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="ep rev">
+      <div class="ep-grid">
+        <figure class="still">
+          <img src="{{IMG_07}}" alt="노을 지는 길을 나란히 걸어가는 두 사람의 뒷모습">
+          <figcaption>EP.06 · 강변 산책로, 초저녁 (최종회)</figcaption>
+        </figure>
+        <div>
+          <p class="ep-no">Episode 06 · 최종회</p>
+          <h3>그러다 보면</h3>
+          <p class="beat">무언가를 더 갖는 해보다, 곁에 있는 사람들이 편해지는 해.</p>
+          <div class="body">
+            <p>1년이 지나 다시 늦가을. 태훈은 야구장에 딱 한 번 간다. 뛰러 가는 게 아니라, 후배들 경기를 보러. 두형이 국밥집 단톡방에 사진을 올린다. 골프는 여전히 언더파를 못 쳤다. 대신 스윙이 조용해졌다.</p>
+            <p>마지막 시퀀스는 태훈과 태임이 나란히 걷는 강변 산책로다. 빠르지 않게. 이 드라마는 목표를 달성하는 것으로 끝나지 않는다. 목표를 <em>바꾸는 것</em>으로 끝난다. 20년을 쌓은 두 개의 취미 옆에, 이제 겨우 1년 차인 세 번째 항목이 조용히 놓인다.</p>
+          </div>
+          <div class="script">
+            <p class="sc-head">S#48. 강변 산책로 / 초저녁 (엔딩)</p>
+            <p class="dir">태훈과 태임, 나란히 걷는다. 서두르지 않는 걸음</p>
+            <div class="line"><b>태임</b><span>야구 안 하니까 안 심심해?</span></div>
+            <div class="line"><b>태훈</b><span>심심해. 근데 요즘은 심심한 게 나쁘지 않더라.</span></div>
+            <div class="line"><b>태임</b><span>내년 목표는?</span></div>
+            <div class="line"><b>태훈</b><span>언더파.</span></div>
+            <div class="line"><b>태임</b><span>또 그 소리.</span></div>
+            <p class="dir">사이. 태훈, 걸음을 조금 늦춘다</p>
+            <div class="line"><b>태훈</b><span>아니다. 바꿀게.</span></div>
+            <div class="line"><b>태임</b><span>뭘로.</span></div>
+            <div class="line"><b>태훈</b><span>옆에 있는 사람들이 좀 편해지는 걸로.</span></div>
+            <p class="dir">두 사람, 계속 걷는다. 노을. 멀리 야구장 조명이 하나씩 켜진다. 나레이션 위로 엔딩</p>
+          </div>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="rule-top rev">
+  <div class="wrap">
+    <p class="label">제작 노트</p>
+    <h2>대사보다, 대사 사이의 3초를 남긴다</h2>
+    <div class="notes">
+      <div>
+        <h3>톤 &amp; 매너</h3>
+        <ul>
+          <li><b>카메라</b>삼각대 고정, 긴 호흡. 인물이 프레임 밖으로 나가도 빈 공간을 몇 초 더 본다.</li>
+          <li><b>색</b>흙색과 노을. 실내는 형광등 대신 스탠드 한 개.</li>
+          <li><b>편집</b>감정을 설명하는 컷을 붙이지 않는다. 침묵을 자르지 않는다.</li>
+          <li><b>계절</b>1부 늦가을에서 6부 늦가을로. 1년이 정확히 한 바퀴 돈다.</li>
+          <li><b>금지</b>회상 눈물 샷, 슬로우모션 오열, 병원 반전. 이 드라마엔 없다.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>OST (가제)</h3>
+        <dl class="ost">
+          <dt>Part 1</dt><dd>흙먼지 <small>1부 은퇴 경기 엔딩</small></dd>
+          <dt>Part 2</dt><dd>토요일 여섯 시 <small>2부 빈 현관</small></dd>
+          <dt>Part 3</dt><dd>한 뼘 앞에서 <small>3부 립아웃 몽타주</small></dd>
+          <dt>Part 4</dt><dd>이름을 지어준 사람 <small>4부 입장</small></dd>
+          <dt>Part 5</dt><dd>세 번째 1년 차 <small>6부 엔딩 나레이션</small></dd>
+        </dl>
+        <p style="margin-top:1.4rem;font-size:.92rem;color:var(--tx-2);line-height:1.8">편성은 어쿠스틱 기타와 첼로 중심. 보컬 버전보다 연주 버전을 기본으로 쓰고, 가사는 엔딩 크레딧에서만 들리게 한다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="ending">
+  <div class="wrap">
+    <p class="label" style="margin-bottom:2rem">최종회 엔딩 나레이션</p>
+    <blockquote>무언가를 더 갖는 해보다,<br>곁에 있는 사람들이 편해지는 해였으면 한다.<br>언더파는… 그러다 보면 어느 날 따라올 것이다.</blockquote>
+    <p class="sig">— 이태훈</p>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">「잘 끝내는 법」 · 전 6부작 드라마 기획안<br>원작 — 이태훈 「2026년 회고」</div>
+</footer>
+
+<script>
+  (function () {
+    var items = document.querySelectorAll('.rev');
+    if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      items.forEach(function (el) { el.classList.add('in'); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.06 });
+    items.forEach(function (el) { io.observe(el); });
+  })();
+</script>

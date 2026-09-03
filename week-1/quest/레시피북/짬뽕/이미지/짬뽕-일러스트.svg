@@ -1,0 +1,139 @@
+<svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="매콤 짬뽕 일러스트">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2b1d17"/>
+      <stop offset="100%" stop-color="#160e0b"/>
+    </linearGradient>
+    <linearGradient id="broth" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f0562f"/>
+      <stop offset="55%" stop-color="#d3341a"/>
+      <stop offset="100%" stop-color="#a82310"/>
+    </linearGradient>
+    <linearGradient id="bowlBody" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#33475d"/>
+      <stop offset="100%" stop-color="#141d29"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#ff8a4c" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#ff8a4c" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="brothClip">
+      <ellipse cx="400" cy="352" rx="238" ry="84"/>
+    </clipPath>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <ellipse cx="400" cy="330" rx="330" ry="230" fill="url(#glow)"/>
+
+  <!-- 김 -->
+  <g stroke="#ffe9d6" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.22">
+    <path d="M320 250 C 300 210, 344 190, 322 148 C 308 122, 332 106, 326 84"/>
+    <path d="M400 238 C 378 194, 424 172, 400 128 C 384 100, 410 84, 404 60"/>
+    <path d="M482 252 C 462 212, 506 192, 484 150 C 470 124, 494 108, 488 86"/>
+  </g>
+
+  <!-- 그릇 몸통 -->
+  <path d="M162 352 C 176 486, 268 540, 400 540 C 532 540, 624 486, 638 352 Z" fill="url(#bowlBody)"/>
+  <path d="M186 392 C 206 480, 288 520, 400 520" fill="none" stroke="#4c688a" stroke-width="9" stroke-linecap="round" opacity="0.45"/>
+
+  <!-- 굽 -->
+  <path d="M330 540 L 344 572 L 456 572 L 470 540 Z" fill="#101821"/>
+
+  <!-- 그릇 테두리 -->
+  <ellipse cx="400" cy="352" rx="248" ry="92" fill="#22303f"/>
+  <ellipse cx="400" cy="352" rx="238" ry="84" fill="url(#broth)"/>
+
+  <g clip-path="url(#brothClip)">
+    <!-- 면 -->
+    <g stroke="#f5c65a" stroke-width="9" stroke-linecap="round" fill="none">
+      <path d="M198 336 C 250 300, 316 306, 366 330"/>
+      <path d="M214 366 C 268 336, 342 342, 392 366" stroke="#efb944"/>
+      <path d="M410 322 C 466 296, 540 306, 588 334"/>
+      <path d="M426 358 C 482 332, 552 340, 598 364" stroke="#efb944"/>
+      <path d="M262 398 C 316 374, 386 380, 430 400"/>
+      <path d="M438 396 C 486 376, 546 382, 580 396" stroke="#efb944"/>
+    </g>
+
+    <!-- 고춧가루 -->
+    <g fill="#8e1b0c" opacity="0.75">
+      <circle cx="240" cy="322" r="4"/><circle cx="352" cy="392" r="3.5"/>
+      <circle cx="470" cy="308" r="4"/><circle cx="556" cy="382" r="3.5"/>
+      <circle cx="300" cy="410" r="3"/><circle cx="612" cy="342" r="3.5"/>
+      <circle cx="196" cy="378" r="3"/><circle cx="420" cy="412" r="3"/>
+    </g>
+
+    <!-- 고추기름 방울 -->
+    <g fill="#ffb057" opacity="0.55">
+      <ellipse cx="268" cy="356" rx="13" ry="7"/>
+      <ellipse cx="512" cy="336" rx="10" ry="6"/>
+      <ellipse cx="396" cy="404" rx="14" ry="7"/>
+      <ellipse cx="586" cy="368" rx="9" ry="5"/>
+      <ellipse cx="212" cy="344" rx="8" ry="5"/>
+    </g>
+
+    <!-- 오징어 링 -->
+    <g fill="none" stroke="#fdf1e3" stroke-width="11">
+      <ellipse cx="356" cy="318" rx="24" ry="15"/>
+      <ellipse cx="452" cy="378" rx="21" ry="13"/>
+      <ellipse cx="286" cy="382" rx="19" ry="12"/>
+    </g>
+
+    <!-- 홍합 -->
+    <g transform="translate(238,352) rotate(-14)">
+      <ellipse rx="36" ry="21" fill="#241b2e"/>
+      <path d="M-36 0 A 36 21 0 0 1 36 0 Z" fill="#463555"/>
+      <ellipse cy="5" rx="23" ry="11" fill="#f4a45f"/>
+    </g>
+    <g transform="translate(558,362) rotate(16)">
+      <ellipse rx="33" ry="19" fill="#241b2e"/>
+      <path d="M-33 0 A 33 19 0 0 1 33 0 Z" fill="#463555"/>
+      <ellipse cy="4" rx="21" ry="10" fill="#f4a45f"/>
+    </g>
+
+    <!-- 새우 -->
+    <g transform="translate(318,300) rotate(-12)">
+      <path d="M-24 10 A 26 26 0 1 1 16 -12" fill="none" stroke="#ff7f52" stroke-width="17" stroke-linecap="round"/>
+      <path d="M16 -14 l 20 -11 l -3 14 l 15 5 l -18 9 z" fill="#ff9a72"/>
+      <g stroke="#e05a2e" stroke-width="3" stroke-linecap="round">
+        <path d="M-22 2 l 8 -6"/><path d="M-12 -12 l 7 -7"/><path d="M2 -19 l 5 -8"/>
+      </g>
+      <circle cx="-26" cy="14" r="3" fill="#5c1f0e"/>
+    </g>
+    <g transform="translate(500,318) rotate(158)">
+      <path d="M-21 9 A 23 23 0 1 1 14 -10" fill="none" stroke="#ff7f52" stroke-width="15" stroke-linecap="round"/>
+      <path d="M14 -12 l 18 -10 l -3 12 l 13 5 l -16 8 z" fill="#ff9a72"/>
+      <g stroke="#e05a2e" stroke-width="2.5" stroke-linecap="round">
+        <path d="M-19 2 l 7 -5"/><path d="M-10 -10 l 6 -6"/>
+      </g>
+    </g>
+
+    <!-- 청경채 -->
+    <g transform="translate(596,318) rotate(-18)">
+      <path d="M0 22 C -30 8, -34 -26, -8 -38 C 4 -20, 6 2, 0 22 Z" fill="#4f9c3a"/>
+      <path d="M0 22 C 30 8, 34 -26, 8 -38 C -4 -20, -6 2, 0 22 Z" fill="#67bd4b"/>
+      <path d="M-6 24 L 6 24 L 4 40 L -4 40 Z" fill="#e8f3d4"/>
+    </g>
+
+    <!-- 대파 -->
+    <g fill="none" stroke="#63c04e" stroke-width="7">
+      <circle cx="330" cy="352" r="10"/>
+      <circle cx="418" cy="316" r="9"/>
+      <circle cx="530" cy="392" r="9"/>
+      <circle cx="252" cy="400" r="8"/>
+      <circle cx="606" cy="352" r="8"/>
+      <circle cx="470" cy="336" r="8"/>
+    </g>
+  </g>
+
+  <!-- 그릇 테두리 하이라이트 -->
+  <ellipse cx="400" cy="352" rx="248" ry="92" fill="none" stroke="#3f596f" stroke-width="7"/>
+  <path d="M196 306 C 250 274, 340 262, 400 262" fill="none" stroke="#7d9bb8" stroke-width="6" stroke-linecap="round" opacity="0.5"/>
+
+  <!-- 젓가락 -->
+  <g stroke="#c8895a" stroke-width="9" stroke-linecap="round">
+    <path d="M624 200 L 470 320"/>
+    <path d="M652 224 L 500 340"/>
+  </g>
+
+  <text x="400" y="586" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="26" letter-spacing="8" fill="#e8b48a" opacity="0.75">매콤 짬뽕</text>
+</svg>

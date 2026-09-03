@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NAVER · 메인 홈 클론</title>
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <!-- CDN 버전 고정 (Babel 은 반드시 7.x) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.25.9/babel.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', '맑은 고딕', Dotum, sans-serif;
+      letter-spacing: -0.2px;
+    }
+    /* 네이버 로고 워드마크 근사 (실제 로고 서체 아님) */
+    .naver-wordmark {
+      font-weight: 900;
+      letter-spacing: -0.06em;
+      font-style: italic;
+    }
+
+    /* Tailwind 유틸리티로 표현할 수 없는 애니메이션 */
+    @keyframes drop-in {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .drop-in { animation: drop-in .14s ease-out both; }
+
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    .fade-in { animation: fade-in .25s ease-out both; }
+
+    @keyframes ticker {
+      0%, 26%   { transform: translateY(0); }
+      33%, 59%  { transform: translateY(-100%); }
+      66%, 92%  { transform: translateY(-200%); }
+      100%      { transform: translateY(-300%); }
+    }
+    .ticker-track { animation: ticker 12s cubic-bezier(.4,0,.2,1) infinite; }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-white text-[#222] antialiased">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useRef, useCallback } = React;
+
+    // ========================================
+    // 🎨 Design System Components
+    // ========================================
+
+    const GREEN = '#03C75A';
+
+    function Button({ variant = 'primary', size = 'md', disabled = false, onClick, className = '', children, ...rest }) {
+      const base = 'inline-flex items-center justify-center gap-1.5 font-bold rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#03C75A] focus-visible:ring-offset-1 disabled:opacity-40 disabled:cursor-not-allowed';
+      const variants = {
+        primary:   'bg-[#03C75A] text-white hover:bg-[#02b350] active:bg-[#029c46]',
+        secondary: 'bg-white text-[#333] border border-[#dadada] hover:bg-[#f8f9fa] active:bg-[#f1f3f5]',
+        danger:    'bg-[#f45452] text-white hover:bg-[#e04240]',
+        ghost:     'bg-transparent text-[#666] hover:bg-black/5 active:bg-black/10',
+      };
+      const sizes = { sm: 'text-xs px-2.5 py-1.5', md: 'text-sm px-4 py-2.5', lg: 'text-[15px] px-6 py-3.5' };
+      return (
+        <button
+          type="button"
+          onClick={onClick}
+          disabled={disabled}
+          className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
+          {...rest}
+        >
+          {children}
+        </button>
+      );
+    }
+
+    function Card({ className = '', children, ...rest }) {
+      return (
+        <div className={`bg-white rounded-xl border border-[#eaeaea] ${className}`} {...rest}>
+          {children}
+        </div>
+      );
+    }
+
+    function Badge({ tone = 'green', className = '', children }) {
+      const tones = {
+        green: 'bg-[#e8f8ef] text-[#03a54c]',
+        gray:  'bg-[#f1f3f5] text-[#666]',
+        red:   'bg-[#feeceb] text-[#e5433f]',
+        blue:  'bg-[#eaf1fd] text-[#2f6ed5]',
+      };
+      return (
+        <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-bold ${tones[tone]} ${className}`}>
+          {children}
+        </span>
+      );
+    }
+
+    function WidgetTitle({ title, action, className = '' }) {
+      return (
+        <div className={`flex items-center justify-between px-4 pt-3.5 pb-2 ${className}`}>
+          <h2 className="text-[13px] font-bold text-[#333]">{title}</h2>
+          {action}
+        </div>
+      );
+    }
+
+    function Tabs({ tabs, active, onChange, className = '' }) {
+      return (
+        <div role="tablist" className={`flex gap-1 overflow-x-auto no-scrollbar ${className}`}>
+          {tabs.map((tab) => {
+            const isActive = tab.id === active;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => onChange(tab.id)}
+                className={`flex-shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-bold transition-colors ${
+                  isActive ? 'bg-[#03C75A] text-white' : 'bg-[#f5f6f8] text-[#666] hover:bg-[#eceef0]'
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      );
+    }
+
+    // 썸네일 대체용 그라디언트 플레이스홀더 (외부 이미지 없이 단일 파일 유지)
+    function Thumb({ from, to, emoji, className = '', ratio = 'aspect-[4/3]' }) {
+      return (
+        <div
+          aria-hidden="true"
+          className={`${ratio} w-full rounded-lg grid place-items-center text-3xl overflow-hidden ${className}`}
+          style={{ backgroundImage: `linear-gradient(135deg, ${from}, ${to})` }}
+        >
+          <span className="drop-shadow-sm">{emoji}</span>
+        </div>
+      );
+    }
+
+    // ========================================
+    // 📊 Mock Data
+    // 언론사·기사·시세는 모두 가상의 데이터입니다.
+    // ========================================
+
+    const SHORTCUTS = [
+      { label: '메일',      emoji: '✉️', bg: '#e8f3ff' },
+      { label: '카페',      emoji: '☕', bg: '#fff4e6' },
+      { label: '블로그',    emoji: '📝', bg: '#e8f8ef' },
+      { label: '지식iN',    emoji: '💡', bg: '#fff9db' },
+      { label: '쇼핑',      emoji: '🛒', bg: '#ffe8e8' },
+      { label: '쇼핑LIVE',  emoji: '📺', bg: '#f3e8ff' },
+      { label: 'Pay',       emoji: '💳', bg: '#e6fcf5' },
+      { label: '네이버TV',  emoji: '🎬', bg: '#e8f3ff' },
+      { label: '사전',      emoji: '📖', bg: '#f1f3f5' },
+      { label: '뉴스',      emoji: '📰', bg: '#e8f8ef' },
+      { label: '증권',      emoji: '📈', bg: '#ffe8e8' },
+      { label: '부동산',    emoji: '🏠', bg: '#fff4e6' },
+      { label: '지도',      emoji: '🗺️', bg: '#e6fcf5' },
+      { label: 'VIBE',      emoji: '🎵', bg: '#f3e8ff' },
+      { label: '도서',      emoji: '📚', bg: '#fff9db' },
+      { label: '웹툰',      emoji: '🦸', bg: '#e8f3ff' },
+    ];
+
+    const RECENT_KEYWORDS = ['간장버터 치킨덮밥', '주말 날씨', '환율 전망', '제주 항공권'];
+
+    const SUGGESTION_POOL = [
+      '간장버터 치킨덮밥', '간장버터 파스타', '간장 계란밥', '감자탕 맛집',
+      '주말 날씨', '주말 나들이', '주식 시황', '제주도 여행 코스',
+      '환율 전망', '환절기 감기', '홈트레이닝 루틴', '한강 야경 명소',
+      '넷플릭스 추천', '노트북 추천', '냉장고 파먹기', '단백질 레시피',
+    ];
+
+    // 가상의 언론사 (실존 언론사 아님)
+    const PRESS = [
+      { name: '가온일보',   color: '#1a5fb4' }, { name: '한빛경제',   color: '#c9184a' },
+      { name: '서울데일리', color: '#2b2d42' }, { name: '미래일보',   color: '#087f5b' },
+      { name: '테크리뷰',   color: '#5f3dc4' }, { name: '코리아투데이', color: '#e8590c' },
+      { name: '새벽신문',   color: '#0b7285' }, { name: '동방경제',   color: '#a61e4d' },
+      { name: '푸른매일',   color: '#364fc7' }, { name: '나래타임즈', color: '#66a80f' },
+      { name: '월간산업',   color: '#495057' }, { name: '리빙저널',   color: '#d6336c' },
+      { name: '스포츠온',   color: '#1971c2' }, { name: '컬처위크',   color: '#7048e8' },
+      { name: '해담뉴스',   color: '#0ca678' }, { name: '중앙타임',   color: '#f76707' },
+      { name: '오늘의경제', color: '#c2255c' }, { name: '초록신문',   color: '#2f9e44' },
+      { name: '반도일보',   color: '#3b5bdb' }, { name: '시티저널',   color: '#862e9c' },
+    ];
+
+    const PANEL_TABS = [
+      {
+        id: 'entertain', label: '엔터',
+        articles: [
+          { title: '가상 밴드 "노을발전소", 첫 단독 공연 전석 매진', press: '컬처위크', emoji: '🎤', from: '#ffd8a8', to: '#ff8787' },
+          { title: '올여름 극장가, 애니메이션 3파전 예고', press: '해담뉴스', emoji: '🎬', from: '#d0bfff', to: '#748ffc' },
+          { title: '드라마 "골목 끝 식당" 시청률 자체 최고 경신', press: '나래타임즈', emoji: '📺', from: '#99e9f2', to: '#3bc9db' },
+          { title: '신인 배우 오디션, 지원자 1만 명 돌파', press: '중앙타임', emoji: '🌟', from: '#ffec99', to: '#ffa94d' },
+        ],
+      },
+      {
+        id: 'sports', label: '스포츠',
+        articles: [
+          { title: '9회말 역전 투런…홈 3연전 싹쓸이', press: '스포츠온', emoji: '⚾', from: '#a5d8ff', to: '#4dabf7' },
+          { title: '후반 추가시간 결승골, 리그 선두 탈환', press: '가온일보', emoji: '⚽', from: '#b2f2bb', to: '#40c057' },
+          { title: '국내 마라톤 신기록…2시간 6분대 진입', press: '푸른매일', emoji: '🏃', from: '#ffd8a8', to: '#fd7e14' },
+          { title: '배구 새 시즌 개막, 신인 드래프트 관전 포인트', press: '새벽신문', emoji: '🏐', from: '#eebefa', to: '#cc5de8' },
+        ],
+      },
+      {
+        id: 'economy', label: '경제',
+        articles: [
+          { title: '기준금리 동결…"물가 흐름 더 지켜본다"', press: '한빛경제', emoji: '🏦', from: '#bac8ff', to: '#5c7cfa' },
+          { title: '반도체 수출 3개월 연속 증가세', press: '오늘의경제', emoji: '💾', from: '#c5f6fa', to: '#22b8cf' },
+          { title: '전세 대출 금리 소폭 하락, 실수요자 숨통', press: '동방경제', emoji: '🏢', from: '#ffe3e3', to: '#ff6b6b' },
+          { title: '중소기업 체감경기 지수 5개월 만에 반등', press: '월간산업', emoji: '📊', from: '#d3f9d8', to: '#51cf66' },
+        ],
+      },
+      {
+        id: 'tech', label: 'IT·과학',
+        articles: [
+          { title: '국내 연구진, 배터리 충전 속도 40% 개선', press: '테크리뷰', emoji: '🔋', from: '#d0ebff', to: '#339af0' },
+          { title: '온디바이스 AI 탑재 노트북 신제품 공개', press: '미래일보', emoji: '💻', from: '#e5dbff', to: '#7950f2' },
+          { title: '누리형 관측위성, 첫 지구 사진 전송 성공', press: '반도일보', emoji: '🛰️', from: '#ced4da', to: '#495057' },
+          { title: '개발자 채용 시장, 신입 비중 다시 늘어', press: '시티저널', emoji: '⌨️', from: '#ffdeeb', to: '#f06595' },
+        ],
+      },
+      {
+        id: 'living', label: '리빙',
+        articles: [
+          { title: '15분이면 끝, 한 팬 저녁 메뉴 7선', press: '리빙저널', emoji: '🍚', from: '#ffe8cc', to: '#ff922b' },
+          { title: '작은 방 넓어 보이게 만드는 배치의 원칙', press: '초록신문', emoji: '🛋️', from: '#d3f9d8', to: '#37b24d' },
+          { title: '환절기 실내 습도, 몇 %가 적당할까', press: '코리아투데이', emoji: '💧', from: '#c5f6fa', to: '#15aabf' },
+          { title: '한 달 식비 줄이는 장보기 루틴', press: '서울데일리', emoji: '🧺', from: '#fff3bf', to: '#fab005' },
+        ],
+      },
+    ];
+
+    const SHOPPING = [
+      { title: '무선 이어폰 노이즈캔슬링', price: '89,000', discount: '32%', emoji: '🎧', from: '#e7f5ff', to: '#a5d8ff' },
+      { title: '가을 니트 오버핏 5종', price: '29,900', discount: '45%', emoji: '🧶', from: '#fff0f6', to: '#fcc2d7' },
+      { title: '스테인리스 웍 28cm', price: '43,500', discount: '18%', emoji: '🍳', from: '#fff9db', to: '#ffe066' },
+      { title: '원두 1kg 홀빈 다크로스팅', price: '19,800', discount: '25%', emoji: '☕', from: '#f8f0e5', to: '#d9b08c' },
+      { title: '접이식 캠핑 체어', price: '54,000', discount: '30%', emoji: '⛺', from: '#e6fcf5', to: '#96f2d7' },
+    ];
+
+    const WEATHER = {
+      city: '서울 서초구',
+      temp: 28,
+      condition: '맑음',
+      emoji: '☀️',
+      high: 31,
+      low: 22,
+      feels: 30,
+      dust: '좋음',
+      microDust: '보통',
+      week: [
+        { day: '오늘', emoji: '☀️', high: 31, low: 22 },
+        { day: '내일', emoji: '⛅', high: 29, low: 21 },
+        { day: '금',   emoji: '🌧️', high: 25, low: 20 },
+        { day: '토',   emoji: '🌦️', high: 27, low: 20 },
+        { day: '일',   emoji: '☀️', high: 30, low: 21 },
+      ],
+    };
+
+    const STOCKS = [
+      { name: '코스피',   value: '2,745.82', change: '+12.31', rate: '+0.45%', up: true },
+      { name: '코스닥',   value: '869.20',   change: '-3.15',  rate: '-0.36%', up: false },
+      { name: '원/달러',  value: '1,382.50', change: '+4.20',  rate: '+0.30%', up: true },
+      { name: '비트코인', value: '94,120,000', change: '-820,000', rate: '-0.86%', up: false },
+    ];
+
+    const TOP_NEWS = [
+      { rank: 1, title: '기준금리 동결 결정…시장 반응은 엇갈려', press: '한빛경제', trend: 'up' },
+      { rank: 2, title: '주말 전국 비 소식, 기온 5도 뚝', press: '가온일보', trend: 'up' },
+      { rank: 3, title: '추석 연휴 항공권 예매 시작', press: '코리아투데이', trend: 'same' },
+      { rank: 4, title: '전기차 보조금 개편안 발표', press: '미래일보', trend: 'down' },
+      { rank: 5, title: '프로야구 순위 싸움 최종전으로', press: '스포츠온', trend: 'up' },
+    ];
+
+    const TICKER_ITEMS = [
+      '🔥 오늘의 특가 · 무선 이어폰 최대 32% 할인',
+      '🎁 첫 구매 고객 5,000원 적립금 증정',
+      '🚚 오늘 주문하면 내일 새벽 도착',
+      '💳 페이 결제 시 3% 추가 적립',
+    ];
+
+    const FOOTER_LINKS = [
+      '회사소개', '인재채용', '제휴제안', '이용약관', '개인정보처리방침',
+      '청소년보호정책', '책임의 한계와 법적고지', '검색 최적화', '공지사항',
+    ];
+
+    // ========================================
+    // 🧩 Header / Search
+    // ========================================
+
+    function NaverLogo({ className = '' }) {
+      return (
+        <span className={`naver-wordmark select-none ${className}`} style={{ color: GREEN }}>
+          NAVER
+        </span>
+      );
+    }
+
+    function TopUtilityBar() {
+      const links = ['네이버를 시작페이지로', '주니어네이버', '해피빈'];
+      return (
+        <div className="hidden md:block">
+          <div className="mx-auto max-w-[1130px] px-5 pt-2.5">
+            <ul className="flex justify-end gap-4">
+              {links.map((label) => (
+                <li key={label}>
+                  <a href="#" className="text-[11px] text-[#888] hover:text-[#333] hover:underline">{label}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      );
+    }
+
+    function SearchBox({ onSearch }) {
+      const [query, setQuery] = useState('');
+      const [open, setOpen] = useState(false);
+      const [cursor, setCursor] = useState(-1);
+      const boxRef = useRef(null);
+      const inputRef = useRef(null);
+
+      const suggestions = useMemo(() => {
+        const q = query.trim();
+        if (!q) return RECENT_KEYWORDS.map((text) => ({ text, recent: true }));
+        return SUGGESTION_POOL
+          .filter((text) => text.replace(/\s/g, '').includes(q.replace(/\s/g, '')))
+          .slice(0, 8)
+          .map((text) => ({ text, recent: false }));
+      }, [query]);
+
+      // 바깥 클릭 시 자동완성 닫기
+      useEffect(() => {
+        const onDocDown = (e) => {
+          if (boxRef.current && !boxRef.current.contains(e.target)) setOpen(false);
+        };
+        document.addEventListener('mousedown', onDocDown);
+        return () => document.removeEventListener('mousedown', onDocDown);
+      }, []);
+
+      useEffect(() => { setCursor(-1); }, [query]);
+
+      const submit = (text) => {
+        const q = (text !== undefined ? text : query).trim();
+        if (!q) return;
+        setQuery(q);
+        setOpen(false);
+        inputRef.current && inputRef.current.blur();
+        onSearch(q);
+      };
+
+      const onKeyDown = (e) => {
+        if (!open || suggestions.length === 0) {
+          if (e.key === 'Enter') submit();
+          return;
+        }
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          setCursor((c) => (c + 1) % suggestions.length);
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          setCursor((c) => (c <= 0 ? suggestions.length - 1 : c - 1));
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          submit(cursor >= 0 ? suggestions[cursor].text : undefined);
+        } else if (e.key === 'Escape') {
+          setOpen(false);
+        }
+      };
+
+      return (
+        <div ref={boxRef} className="relative mx-auto w-full max-w-[620px]">
+          <div className="flex h-[52px] items-center gap-2 rounded-xl border-[3px] bg-white px-3.5" style={{ borderColor: GREEN }}>
+            <NaverLogo className="text-[15px] pr-1" />
+
+            <input
+              ref={inputRef}
+              type="text"
+              value={query}
+              onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+              onFocus={() => setOpen(true)}
+              onKeyDown={onKeyDown}
+              placeholder="검색어를 입력해 주세요"
+              aria-label="검색어 입력"
+              aria-expanded={open}
+              aria-controls="search-suggestions"
+              role="combobox"
+              autoComplete="off"
+              className="min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-[#a0a0a0]"
+            />
+
+            <div className="flex items-center gap-1.5 text-[#666]">
+              <button type="button" aria-label="음성 검색" className="grid h-8 w-8 place-items-center rounded-full text-base hover:bg-black/5">🎙️</button>
+              <button type="button" aria-label="렌즈 검색" className="hidden sm:grid h-8 w-8 place-items-center rounded-full text-base hover:bg-black/5">📷</button>
+              <button
+                type="button"
+                aria-label="검색"
+                onClick={() => submit()}
+                className="grid h-9 w-9 place-items-center rounded-lg text-white transition-colors hover:brightness-95"
+                style={{ backgroundColor: GREEN }}
+              >
+                <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="M20 20l-3.5-3.5" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {open && suggestions.length > 0 && (
+            <div
+              id="search-suggestions"
+              role="listbox"
+              className="drop-in absolute inset-x-0 top-[54px] z-30 overflow-hidden rounded-xl border border-[#e0e0e0] bg-white shadow-lg"
+            >
+              {!query.trim() && (
+                <div className="flex items-center justify-between border-b border-[#f1f3f5] px-4 py-2">
+                  <span className="text-[12px] font-bold text-[#333]">최근 검색어</span>
+                  <button type="button" className="text-[11px] text-[#888] hover:underline">전체 삭제</button>
+                </div>
+              )}
+              <ul className="py-1">
+                {suggestions.map((item, i) => (
+                  <li key={item.text}>
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={i === cursor}
+                      onMouseEnter={() => setCursor(i)}
+                      onClick={() => submit(item.text)}
+                      className={`flex w-full items-center gap-2.5 px-4 py-2 text-left text-[14px] ${i === cursor ? 'bg-[#f5f6f8]' : ''}`}
+                    >
+                      <span aria-hidden="true" className="text-[#b0b0b0]">{item.recent ? '🕘' : '🔍'}</span>
+                      <span className="truncate text-[#333]">{item.text}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex justify-between border-t border-[#f1f3f5] bg-[#fafafa] px-4 py-2">
+                <span className="text-[11px] text-[#999]">도움말</span>
+                <button type="button" className="text-[11px] text-[#999] hover:underline">자동완성 끄기</button>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function ShortcutGrid() {
+      return (
+        <nav aria-label="서비스 바로가기" className="mx-auto mt-6 max-w-[900px] px-2">
+          <ul className="grid grid-cols-4 gap-y-4 sm:grid-cols-8">
+            {SHORTCUTS.map((item) => (
+              <li key={item.label}>
+                <a href="#" className="group flex flex-col items-center gap-1.5">
+                  <span
+                    aria-hidden="true"
+                    className="grid h-11 w-11 place-items-center rounded-2xl text-xl transition-transform group-hover:-translate-y-0.5"
+                    style={{ backgroundColor: item.bg }}
+                  >
+                    {item.emoji}
+                  </span>
+                  <span className="text-[12px] text-[#555] group-hover:text-[#03C75A]">{item.label}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      );
+    }
+
+    function Header({ onSearch }) {
+      return (
+        <header className="border-b border-[#eee] bg-white">
+          <TopUtilityBar />
+          <div className="mx-auto max-w-[1130px] px-5 pb-6 pt-6 sm:pt-8">
+            <h1 className="mb-5 text-center">
+              <NaverLogo className="text-[38px] sm:text-[44px]" />
+              <span className="sr-only">네이버 메인 홈 클론</span>
+            </h1>
+            <SearchBox onSearch={onSearch} />
+            <ShortcutGrid />
+          </div>
+        </header>
+      );
+    }
+
+    // ========================================
+    // 📄 Main Content Sections
+    // ========================================
+
+    function NewsStand() {
+      const PER_PAGE = 10;
+      const pages = Math.ceil(PRESS.length / PER_PAGE);
+      const [page, setPage] = useState(0);
+
+      const items = PRESS.slice(page * PER_PAGE, page * PER_PAGE + PER_PAGE);
+
+      return (
+        <Card className="overflow-hidden">
+          <div className="flex items-center justify-between border-b border-[#f1f3f5] px-4 py-3">
+            <h2 className="text-[15px] font-bold text-[#222]">뉴스스탠드</h2>
+            <div className="flex items-center gap-1">
+              <span className="mr-1.5 text-[12px] tabular-nums text-[#999]">{page + 1} / {pages}</span>
+              <button
+                type="button"
+                aria-label="이전 언론사 보기"
+                onClick={() => setPage((p) => (p - 1 + pages) % pages)}
+                className="grid h-7 w-7 place-items-center rounded-md border border-[#e5e5e5] text-[#666] hover:bg-[#f8f9fa]"
+              >‹</button>
+              <button
+                type="button"
+                aria-label="다음 언론사 보기"
+                onClick={() => setPage((p) => (p + 1) % pages)}
+                className="grid h-7 w-7 place-items-center rounded-md border border-[#e5e5e5] text-[#666] hover:bg-[#f8f9fa]"
+              >›</button>
+            </div>
+          </div>
+
+          <ul key={page} className="fade-in grid grid-cols-2 sm:grid-cols-5">
+            {items.map((press) => (
+              <li key={press.name} className="border-b border-r border-[#f4f4f4]">
+                <a
+                  href="#"
+                  className="grid h-[62px] place-items-center px-2 transition-colors hover:bg-[#fafbfc]"
+                >
+                  <span className="text-[13px] font-bold" style={{ color: press.color }}>{press.name}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+
+          <div className="flex items-center justify-between px-4 py-2.5">
+            <div className="flex gap-1.5">
+              {Array.from({ length: pages }).map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  aria-label={`${i + 1}페이지`}
+                  aria-current={i === page}
+                  onClick={() => setPage(i)}
+                  className={`h-1.5 rounded-full transition-all ${i === page ? 'w-4 bg-[#03C75A]' : 'w-1.5 bg-[#dcdcdc]'}`}
+                />
+              ))}
+            </div>
+            <a href="#" className="text-[12px] text-[#888] hover:text-[#333] hover:underline">전체 언론사 &gt;</a>
+          </div>
+        </Card>
+      );
+    }
+
+    function NewsPanel() {
+      const [active, setActive] = useState(PANEL_TABS[0].id);
+      const panel = PANEL_TABS.find((t) => t.id === active);
+
+      return (
+        <Card className="p-4">
+          <div className="mb-3.5 flex items-center justify-between gap-3">
+            <Tabs tabs={PANEL_TABS} active={active} onChange={setActive} />
+            <a href="#" className="hidden flex-shrink-0 text-[12px] text-[#888] hover:underline sm:block">더보기 &gt;</a>
+          </div>
+
+          <ul key={active} className="fade-in grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-4">
+            {panel.articles.map((article) => (
+              <li key={article.title}>
+                <a href="#" className="group block">
+                  <Thumb from={article.from} to={article.to} emoji={article.emoji} className="transition-transform group-hover:scale-[1.02]" />
+                  <p className="mt-2 line-clamp-2 text-[13px] font-medium leading-5 text-[#333] group-hover:underline">
+                    {article.title}
+                  </p>
+                  <p className="mt-1 text-[12px] text-[#999]">{article.press}</p>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      );
+    }
+
+    function ShoppingSection() {
+      return (
+        <Card className="p-4">
+          <div className="mb-3.5 flex items-center justify-between">
+            <h2 className="flex items-center gap-1.5 text-[15px] font-bold text-[#222]">
+              쇼핑 <Badge tone="red">특가</Badge>
+            </h2>
+            <a href="#" className="text-[12px] text-[#888] hover:underline">더보기 &gt;</a>
+          </div>
+
+          {/* 롤링 배너 */}
+          <div className="mb-4 h-10 overflow-hidden rounded-lg bg-[#f5f6f8] px-4">
+            <ul className="ticker-track">
+              {TICKER_ITEMS.map((text) => (
+                <li key={text} className="flex h-10 items-center text-[13px] text-[#444]">{text}</li>
+              ))}
+            </ul>
+          </div>
+
+          <ul className="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-5">
+            {SHOPPING.map((item) => (
+              <li key={item.title}>
+                <a href="#" className="group block">
+                  <Thumb ratio="aspect-square" from={item.from} to={item.to} emoji={item.emoji} className="transition-transform group-hover:scale-[1.02]" />
+                  <p className="mt-2 line-clamp-2 text-[13px] leading-5 text-[#333] group-hover:underline">{item.title}</p>
+                  <p className="mt-1 flex items-baseline gap-1.5">
+                    <span className="text-[13px] font-bold text-[#f45452]">{item.discount}</span>
+                    <span className="text-[14px] font-bold text-[#222]">{item.price}원</span>
+                  </p>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      );
+    }
+
+    // ========================================
+    // 📄 Sidebar Widgets
+    // ========================================
+
+    function LoginBox() {
+      return (
+        <Card className="p-4">
+          <div className="mb-3 flex items-center gap-3">
+            <span aria-hidden="true" className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-[#f1f3f5] text-lg">👤</span>
+            <p className="text-[13px] leading-5 text-[#555]">
+              로그인하고<br />더 많은 서비스를 이용해 보세요.
+            </p>
+          </div>
+          <Button size="lg" className="w-full">NAVER 로그인</Button>
+          <div className="mt-2.5 flex justify-center gap-2 text-[12px] text-[#888]">
+            <a href="#" className="hover:underline">회원가입</a>
+            <span aria-hidden="true">·</span>
+            <a href="#" className="hover:underline">아이디/비밀번호 찾기</a>
+          </div>
+        </Card>
+      );
+    }
+
+    function WeatherWidget() {
+      const [now, setNow] = useState(() => new Date());
+
+      useEffect(() => {
+        const id = setInterval(() => setNow(new Date()), 60000);
+        return () => clearInterval(id);
+      }, []);
+
+      const time = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+
+      return (
+        <Card>
+          <WidgetTitle
+            title="날씨"
+            action={<span className="text-[11px] tabular-nums text-[#aaa]">{time} 기준</span>}
+          />
+          <div className="px-4 pb-3">
+            <div className="flex items-center gap-3">
+              <span aria-hidden="true" className="text-4xl">{WEATHER.emoji}</span>
+              <div>
+                <p className="text-[12px] text-[#888]">{WEATHER.city}</p>
+                <p className="text-[28px] font-bold leading-8 text-[#222]">{WEATHER.temp}°</p>
+                <p className="text-[12px] text-[#666]">
+                  {WEATHER.condition} · 체감 {WEATHER.feels}°
+                  <span className="ml-1.5 text-[#f45452]">{WEATHER.high}°</span>
+                  <span className="mx-1 text-[#ccc]">/</span>
+                  <span className="text-[#4593fc]">{WEATHER.low}°</span>
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-3 flex gap-2">
+              <div className="flex-1 rounded-lg bg-[#f5f6f8] px-3 py-2">
+                <p className="text-[11px] text-[#888]">미세먼지</p>
+                <p className="text-[13px] font-bold text-[#03a54c]">{WEATHER.dust}</p>
+              </div>
+              <div className="flex-1 rounded-lg bg-[#f5f6f8] px-3 py-2">
+                <p className="text-[11px] text-[#888]">초미세먼지</p>
+                <p className="text-[13px] font-bold text-[#f59f00]">{WEATHER.microDust}</p>
+              </div>
+            </div>
+
+            <ul className="mt-3 grid grid-cols-5 border-t border-[#f1f3f5] pt-3">
+              {WEATHER.week.map((day) => (
+                <li key={day.day} className="text-center">
+                  <p className="text-[11px] text-[#888]">{day.day}</p>
+                  <p aria-hidden="true" className="my-0.5 text-base">{day.emoji}</p>
+                  <p className="text-[11px] tabular-nums">
+                    <span className="text-[#f45452]">{day.high}</span>
+                    <span className="mx-0.5 text-[#ddd]">/</span>
+                    <span className="text-[#4593fc]">{day.low}</span>
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Card>
+      );
+    }
+
+    function StockWidget() {
+      return (
+        <Card>
+          <WidgetTitle title="증권" action={<a href="#" className="text-[11px] text-[#888] hover:underline">더보기 &gt;</a>} />
+          <ul className="px-4 pb-3">
+            {STOCKS.map((item) => (
+              <li key={item.name} className="flex items-center justify-between border-b border-[#f6f6f6] py-2 last:border-0">
+                <span className="text-[13px] text-[#444]">{item.name}</span>
+                <span className="text-right">
+                  <span className="block text-[13px] font-bold tabular-nums text-[#222]">{item.value}</span>
+                  <span className={`block text-[11px] tabular-nums ${item.up ? 'text-[#f45452]' : 'text-[#4593fc]'}`}>
+                    {item.up ? '▲' : '▼'} {item.change} ({item.rate})
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      );
+    }
+
+    function TopNewsWidget() {
+      const trendMark = { up: '▲', down: '▼', same: '−' };
+      const trendColor = { up: 'text-[#f45452]', down: 'text-[#4593fc]', same: 'text-[#bbb]' };
+
+      return (
+        <Card>
+          <WidgetTitle title="많이 본 뉴스" action={<span className="text-[11px] text-[#aaa]">1시간 전</span>} />
+          <ol className="px-4 pb-3">
+            {TOP_NEWS.map((item) => (
+              <li key={item.rank} className="border-b border-[#f6f6f6] py-2 last:border-0">
+                <a href="#" className="group flex items-start gap-2.5">
+                  <span className="w-3.5 flex-shrink-0 text-[13px] font-bold tabular-nums text-[#03C75A]">{item.rank}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[13px] text-[#333] group-hover:underline">{item.title}</span>
+                    <span className="text-[11px] text-[#999]">{item.press}</span>
+                  </span>
+                  <span aria-hidden="true" className={`text-[10px] ${trendColor[item.trend]}`}>{trendMark[item.trend]}</span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        </Card>
+      );
+    }
+
+    function AdBanner() {
+      return (
+        <a
+          href="#"
+          className="block overflow-hidden rounded-xl border border-[#eaeaea] bg-gradient-to-br from-[#03C75A] to-[#029c46] p-5 text-white transition-shadow hover:shadow-md"
+        >
+          <p className="text-[11px] opacity-80">AD</p>
+          <p className="mt-1 text-[17px] font-bold leading-6">한 팬으로 끝내는<br />15분 저녁 레시피</p>
+          <p className="mt-2 text-[12px] opacity-90">지금 바로 확인하기 &gt;</p>
+        </a>
+      );
+    }
+
+    // ========================================
+    // 📄 Search Result Overlay
+    // ========================================
+
+    function SearchResultOverlay({ query, onClose }) {
+      useEffect(() => {
+        const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+        document.addEventListener('keydown', onKey);
+        document.body.style.overflow = 'hidden';
+        return () => {
+          document.removeEventListener('keydown', onKey);
+          document.body.style.overflow = '';
+        };
+      }, [onClose]);
+
+      const results = useMemo(
+        () =>
+          PANEL_TABS.flatMap((tab) => tab.articles.map((a) => ({ ...a, category: tab.label })))
+            .filter((a) => a.title.includes(query) || a.press.includes(query) || a.category.includes(query))
+            .slice(0, 6),
+        [query]
+      );
+
+      return (
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 pt-16 sm:pt-24" role="dialog" aria-modal="true" aria-label="검색 결과">
+          <div className="fade-in max-h-[70vh] w-full max-w-[720px] overflow-y-auto rounded-2xl bg-white shadow-2xl">
+            <div className="sticky top-0 flex items-center justify-between gap-4 border-b border-[#eee] bg-white px-5 py-4">
+              <p className="min-w-0 text-[15px]">
+                <span className="font-bold text-[#03C75A]">‘{query}’</span>
+                <span className="text-[#666]"> 통합검색 결과</span>
+              </p>
+              <Button variant="ghost" size="sm" onClick={onClose} aria-label="검색 결과 닫기">✕ 닫기</Button>
+            </div>
+
+            {results.length > 0 ? (
+              <ul className="divide-y divide-[#f4f4f4]">
+                {results.map((item) => (
+                  <li key={item.title} className="flex gap-3.5 px-5 py-4">
+                    <div className="w-20 flex-shrink-0">
+                      <Thumb from={item.from} to={item.to} emoji={item.emoji} />
+                    </div>
+                    <div className="min-w-0">
+                      <Badge tone="gray" className="mb-1">{item.category}</Badge>
+                      <p className="text-[14px] font-medium leading-5 text-[#222]">{item.title}</p>
+                      <p className="mt-1 text-[12px] text-[#999]">{item.press} · 2시간 전</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="px-5 py-16 text-center">
+                <p aria-hidden="true" className="text-4xl">🔍</p>
+                <p className="mt-3 text-[15px] font-bold text-[#333]">‘{query}’에 대한 검색결과가 없습니다.</p>
+                <p className="mt-1.5 text-[13px] leading-5 text-[#888]">
+                  단어의 철자가 정확한지 확인해 보세요.<br />
+                  검색 옵션을 변경해서 다시 검색해 보세요.
+                </p>
+              </div>
+            )}
+
+            <p className="border-t border-[#f4f4f4] bg-[#fafafa] px-5 py-3 text-center text-[11px] text-[#aaa]">
+              학습용 클론 페이지의 목업 검색 결과입니다.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // ========================================
+    // 🧩 Footer
+    // ========================================
+
+    function Footer() {
+      return (
+        <footer className="mt-10 border-t border-[#eaeaea] bg-white">
+          <div className="mx-auto max-w-[1130px] px-5 py-8">
+            <ul className="flex flex-wrap justify-center gap-x-4 gap-y-2">
+              {FOOTER_LINKS.map((label) => (
+                <li key={label}>
+                  <a href="#" className="text-[12px] text-[#666] hover:text-[#222] hover:underline">{label}</a>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-4 text-center text-[12px] text-[#888]">
+              <span className="naver-wordmark mr-1.5 text-[13px] text-[#999]">NAVER</span>
+              © NAVER Corp.
+            </p>
+            <p className="mt-2 text-center text-[11px] leading-4 text-[#bbb]">
+              이 페이지는 UI 학습용으로 만든 클론이며 네이버와 무관합니다.<br className="sm:hidden" />
+              모든 언론사·기사·시세·상품 정보는 가상의 데이터입니다.
+            </p>
+          </div>
+        </footer>
+      );
+    }
+
+    // ========================================
+    // 🚀 App Component
+    // ========================================
+
+    function App() {
+      const [searchQuery, setSearchQuery] = useState(null);
+
+      const handleSearch = useCallback((q) => setSearchQuery(q), []);
+      const closeSearch = useCallback(() => setSearchQuery(null), []);
+
+      return (
+        <div className="min-h-screen bg-[#f5f6f8]">
+          <Header onSearch={handleSearch} />
+
+          <main className="mx-auto max-w-[1130px] px-5 py-5">
+            <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
+              <div className="min-w-0 space-y-5">
+                <NewsStand />
+                <NewsPanel />
+                <ShoppingSection />
+              </div>
+
+              <aside className="space-y-5">
+                <LoginBox />
+                <WeatherWidget />
+                <StockWidget />
+                <TopNewsWidget />
+                <AdBanner />
+              </aside>
+            </div>
+          </main>
+
+          <Footer />
+
+          {searchQuery && <SearchResultOverlay query={searchQuery} onClose={closeSearch} />}
+        </div>
+      );
+    }
+
+    // ========================================
+    // Rendering
+    // ========================================
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

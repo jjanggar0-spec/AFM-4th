@@ -1,0 +1,443 @@
+<title>속이 다 시원한 갈비탕</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap">
+
+<style>
+/* ─────────── 토큰 ─────────── */
+:root{
+  --ground:#EDF0EF;        /* 청백자 */
+  --surface:#F8FAF9;
+  --surface-2:#E2E7E5;
+  --ink:#1B2422;           /* 먹 */
+  --ink-2:#4C5A56;
+  --ink-3:#7C8A86;
+  --rule:#CBD4D1;
+  --accent:#A8321E;        /* 대추 */
+  --gold:#9C7524;          /* 유기 */
+  --gold-soft:#E7DCC2;
+  --shadow:0 1px 2px rgba(27,36,34,.05), 0 12px 32px -14px rgba(27,36,34,.28);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#111716;
+    --surface:#191F1E;
+    --surface-2:#232B29;
+    --ink:#E8EDEB;
+    --ink-2:#A3B0AC;
+    --ink-3:#7B8884;
+    --rule:#2E3735;
+    --accent:#E4715A;
+    --gold:#D6AC5C;
+    --gold-soft:#3A3324;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 16px 40px -18px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#111716;
+  --surface:#191F1E;
+  --surface-2:#232B29;
+  --ink:#E8EDEB;
+  --ink-2:#A3B0AC;
+  --ink-3:#7B8884;
+  --rule:#2E3735;
+  --accent:#E4715A;
+  --gold:#D6AC5C;
+  --gold-soft:#3A3324;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 16px 40px -18px rgba(0,0,0,.7);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--ground);
+  color:var(--ink);
+  font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  font-weight:400;
+  font-size:17px;
+  line-height:1.78;
+  -webkit-font-smoothing:antialiased;
+  word-break:keep-all;
+}
+img{max-width:100%;display:block}
+
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+.narrow{max-width:660px}
+
+/* ─────────── 공용 활자 ─────────── */
+.label{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:.7rem;font-weight:500;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--gold);
+}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+h1,h2,h3{font-family:"Hahmlet","Apple SD Gothic Neo",serif;text-wrap:balance;margin:0;line-height:1.28}
+
+/* ─────────── 히어로 ─────────── */
+.hero{position:relative;margin-bottom:clamp(56px,9vw,110px)}
+.hero-img{width:100%;height:clamp(300px,58vh,600px);object-fit:cover}
+.hero-card{
+  position:relative;
+  max-width:720px;
+  margin:clamp(-90px,-9vw,-56px) auto 0;
+  background:var(--surface);
+  border:1px solid var(--rule);
+  border-top:3px solid var(--accent);
+  box-shadow:var(--shadow);
+  padding:clamp(28px,5vw,48px);
+}
+@media (min-width:900px){
+  .hero-card{margin-left:max(24px,calc(50vw - 540px + 24px));margin-right:0}
+}
+.hero-card h1{
+  font-weight:800;
+  font-size:clamp(2.4rem,7.5vw,4.2rem);
+  letter-spacing:-.02em;
+  margin:.32em 0 .3em;
+}
+.hero-card h1 em{font-style:normal;color:var(--accent)}
+.hero-sub{color:var(--ink-2);font-weight:300;font-size:1.02rem;margin:0;max-width:46ch}
+
+/* 스펙 스트립 */
+.spec{
+  display:flex;flex-wrap:wrap;gap:0;
+  margin-top:clamp(24px,4vw,34px);
+  border-top:1px solid var(--rule);
+}
+.spec div{
+  flex:1 1 120px;padding:16px 18px 4px 0;
+}
+.spec dt{font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 4px}
+.spec dd{margin:0;font-family:"Hahmlet",serif;font-weight:700;font-size:1.32rem;font-variant-numeric:tabular-nums}
+.spec dd small{font-family:"IBM Plex Sans KR",sans-serif;font-weight:400;font-size:.8rem;color:var(--ink-2);margin-left:2px}
+
+/* ─────────── 섹션 ─────────── */
+section{margin-bottom:clamp(60px,9vw,108px)}
+.sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:clamp(24px,3.5vw,38px);flex-wrap:wrap}
+.sec-head h2{font-weight:700;font-size:clamp(1.55rem,3.4vw,2.15rem);letter-spacing:-.015em}
+.sec-head .label{flex:0 0 auto}
+.sec-head .rule{flex:1 1 60px;height:1px;background:var(--rule);min-width:30px}
+.lead{color:var(--ink-2);font-weight:300;max-width:62ch;margin:0 0 8px}
+
+/* ─────────── 타임라인 ─────────── */
+.tl{border:1px solid var(--rule);background:var(--surface);padding:clamp(20px,3.5vw,32px)}
+.tl-bar{display:flex;height:38px;overflow:hidden;border:1px solid var(--rule)}
+.tl-bar span{
+  display:flex;align-items:center;justify-content:center;
+  font-family:"IBM Plex Mono",monospace;font-size:.66rem;font-weight:600;
+  color:var(--surface);white-space:nowrap;overflow:hidden;
+  border-right:1px solid var(--surface);
+}
+.tl-bar span:last-child{border-right:0}
+.t-wait{background:var(--ink-3)}
+.t-fire{background:var(--gold)}
+.t-hand{background:var(--accent)}
+.tl-legend{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:18px;font-size:.82rem;color:var(--ink-2)}
+.tl-legend b{display:inline-block;width:11px;height:11px;margin-right:7px;vertical-align:-1px}
+.tl-note{margin:18px 0 0;padding-top:16px;border-top:1px dashed var(--rule);font-size:.88rem;color:var(--ink-2)}
+.tl-note strong{color:var(--ink);font-weight:600}
+
+/* ─────────── 재료 ─────────── */
+.ing-grid{display:grid;gap:clamp(28px,4vw,44px);grid-template-columns:1fr}
+@media (min-width:820px){.ing-grid{grid-template-columns:1.15fr .85fr;align-items:start}}
+.ing-photo{border:1px solid var(--rule);box-shadow:var(--shadow)}
+.ing-cap{font-size:.78rem;color:var(--ink-3);margin:10px 0 0;font-family:"IBM Plex Mono",monospace}
+.ing-block{margin-bottom:30px}
+.ing-block h3{font-size:1.02rem;font-weight:700;padding-bottom:9px;border-bottom:2px solid var(--ink);margin-bottom:4px}
+.ing-list{list-style:none;margin:0;padding:0}
+.ing-list li{display:flex;align-items:baseline;gap:8px;padding:8px 0;border-bottom:1px solid var(--rule);font-size:.95rem}
+.ing-list li .dots{flex:1 1 auto;border-bottom:1px dotted var(--rule);transform:translateY(-4px)}
+.ing-list li .amt{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-size:.88rem;color:var(--ink-2);white-space:nowrap}
+.ing-list li .opt{font-size:.72rem;color:var(--gold);margin-left:5px;letter-spacing:.04em}
+
+/* ─────────── 조리 순서 ─────────── */
+.steps{list-style:none;margin:0;padding:0;counter-reset:step}
+.step{display:grid;grid-template-columns:auto 1fr;gap:0 clamp(16px,3vw,32px);padding:clamp(24px,3.5vw,34px) 0;border-top:1px solid var(--rule)}
+.step:last-child{border-bottom:1px solid var(--rule)}
+.step-n{
+  counter-increment:step;
+  font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:1.05rem;
+  color:var(--gold);padding-top:.35em;
+}
+.step-n::before{content:counter(step,decimal-leading-zero)}
+.step-body h3{font-size:clamp(1.15rem,2.4vw,1.42rem);font-weight:700;margin-bottom:.45em}
+.step-body p{margin:0 0 .8em;max-width:60ch}
+.step-body p:last-child{margin-bottom:0}
+.chip{
+  display:inline-block;vertical-align:.18em;margin-left:10px;
+  font-family:"IBM Plex Mono",monospace;font-size:.66rem;font-weight:500;letter-spacing:.06em;
+  color:var(--ink-2);background:var(--surface-2);padding:3px 9px;border-radius:2px;
+}
+.key{
+  margin-top:14px;padding:13px 16px;
+  background:var(--surface);border-left:3px solid var(--accent);
+  font-size:.9rem;color:var(--ink-2);
+}
+.key b{color:var(--accent);font-weight:600;font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;display:block;margin-bottom:3px}
+
+/* ─────────── 원칙 ─────────── */
+.rules{display:grid;gap:1px;background:var(--rule);border:1px solid var(--rule);grid-template-columns:1fr}
+@media (min-width:760px){.rules{grid-template-columns:repeat(3,1fr)}}
+.rule-card{background:var(--surface);padding:clamp(24px,3.2vw,32px)}
+.rule-card .label{display:block;margin-bottom:14px}
+.rule-card h3{font-size:1.18rem;font-weight:700;margin-bottom:.5em}
+.rule-card p{margin:0;font-size:.92rem;color:var(--ink-2)}
+
+/* ─────────── 클로즈업 밴드 ─────────── */
+.band{position:relative;margin-bottom:clamp(60px,9vw,108px)}
+.band img{width:100%;height:clamp(240px,42vh,420px);object-fit:cover}
+.band figcaption{
+  max-width:1080px;margin:14px auto 0;padding:0 24px;
+  font-family:"IBM Plex Mono",monospace;font-size:.76rem;color:var(--ink-3);
+}
+
+/* ─────────── 마무리 ─────────── */
+.two{display:grid;gap:clamp(28px,4vw,48px);grid-template-columns:1fr}
+@media (min-width:760px){.two{grid-template-columns:1fr 1fr}}
+.two h3{font-size:1.05rem;font-weight:700;padding-bottom:9px;border-bottom:2px solid var(--ink);margin-bottom:14px}
+.two ul{margin:0;padding-left:1.15em;font-size:.94rem;color:var(--ink-2)}
+.two li{margin-bottom:.5em}
+.two li strong{color:var(--ink);font-weight:600}
+
+footer{border-top:1px solid var(--rule);padding:34px 0 60px;margin-top:20px}
+footer p{margin:0;font-family:"IBM Plex Mono",monospace;font-size:.74rem;color:var(--ink-3);letter-spacing:.03em}
+footer p + p{margin-top:6px}
+
+@media print{
+  body{background:#fff;color:#000;font-size:11pt}
+  .hero-img,.band{display:none}
+  .hero-card{margin:0;box-shadow:none;border:0;padding:0}
+  section{margin-bottom:24pt;break-inside:avoid}
+  .step{break-inside:avoid}
+}
+</style>
+
+<!-- ═══════════ 히어로 ═══════════ -->
+<header class="hero">
+  <img class="hero-img" src="{{HERO}}" alt="맑은 국물의 갈비탕 한 그릇, 무와 당면과 지단을 올리고 김이 피어오르는 모습">
+  <div class="hero-card">
+    <span class="label">주말의 한 솥 · 4인분</span>
+    <h1>속이 다 <em>시원한</em><br>갈비탕</h1>
+    <p class="hero-sub">뿌옇지 않고 맑게, 기름지지 않고 깔끔하게. 손이 많이 가는 요리가 아니라 <strong>기다림이 많이 가는</strong> 요리입니다. 불 앞에 서 있는 시간은 30분이면 충분해요.</p>
+    <dl class="spec">
+      <div><dt>Serves</dt><dd>4<small>인분</small></dd></div>
+      <div><dt>Hands-on</dt><dd>30<small>분</small></dd></div>
+      <div><dt>Total</dt><dd>4<small>시간~</small></dd></div>
+      <div><dt>Level</dt><dd>보통</dd></div>
+    </dl>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ═══════════ 타임라인 ═══════════ -->
+  <section>
+    <div class="sec-head">
+      <span class="label">Timeline</span>
+      <h2>시간이 하는 일, 내가 하는 일</h2>
+      <span class="rule"></span>
+    </div>
+    <p class="lead">갈비탕의 총 시간 대부분은 그냥 두는 시간입니다. 아래 막대는 각 단계가 차지하는 실제 시간 비율이에요.</p>
+    <div class="tl">
+      <div class="tl-bar" role="img" aria-label="핏물 빼기 120분, 데치기 5분, 1차 끓이기 105분, 무 넣고 30분, 식혀서 기름 걷기 120분, 마무리 10분">
+        <span class="t-wait" style="flex:120 1 0">핏물 120분</span>
+        <span class="t-hand" style="flex:5 1 0" title="데치기 5분"></span>
+        <span class="t-fire" style="flex:105 1 0">끓이기 105분</span>
+        <span class="t-fire" style="flex:30 1 0">무 30분</span>
+        <span class="t-wait" style="flex:120 1 0">기름 걷기 120분</span>
+        <span class="t-hand" style="flex:10 1 0" title="마무리 10분"></span>
+      </div>
+      <div class="tl-legend">
+        <span><b class="t-wait"></b>그냥 두는 시간 — 4시간</span>
+        <span><b class="t-fire"></b>불 위에 올린 시간 — 2시간 15분</span>
+        <span><b class="t-hand"></b>손이 가는 시간 — 15분</span>
+      </div>
+      <p class="tl-note"><strong>급할 땐</strong> 핏물 1시간, 기름 걷기 생략(국자로 걷어내기)으로 <span class="mono">2시간 30분</span>까지 줄일 수 있습니다. 다만 맑기와 개운함은 그만큼 양보하게 돼요. 전날 5번까지 해두고 다음 날 6~7번만 하면 가장 편합니다.</p>
+    </div>
+  </section>
+
+  <!-- ═══════════ 재료 ═══════════ -->
+  <section>
+    <div class="sec-head">
+      <span class="label">Ingredients</span>
+      <h2>재료</h2>
+      <span class="rule"></span>
+    </div>
+    <div class="ing-grid">
+      <div>
+        <img class="ing-photo" src="{{INGREDIENTS}}" alt="갈비탕 재료 — 소갈비, 무, 대파, 마늘, 생강, 대추, 통후추, 국간장, 당면">
+        <p class="ing-cap">왼쪽부터 대파·마늘·생강·대추 / 가운데 찜갈비 / 오른쪽 무·당면</p>
+      </div>
+      <div>
+        <div class="ing-block">
+          <h3>국물</h3>
+          <ul class="ing-list">
+            <li><span>소갈비 <small style="color:var(--ink-3)">(찜갈비용 5cm 토막)</small></span><span class="dots"></span><span class="amt">1.2 kg</span></li>
+            <li><span>물</span><span class="dots"></span><span class="amt">3 L</span></li>
+            <li><span>무</span><span class="dots"></span><span class="amt">400 g</span></li>
+            <li><span>양파</span><span class="dots"></span><span class="amt">1개</span></li>
+            <li><span>대파 뿌리쪽</span><span class="dots"></span><span class="amt">2대</span></li>
+            <li><span>통마늘</span><span class="dots"></span><span class="amt">10쪽</span></li>
+            <li><span>생강<small style="color:var(--ink-3)"> 엄지만큼</small></span><span class="dots"></span><span class="amt">1톨</span></li>
+            <li><span>통후추</span><span class="dots"></span><span class="amt">1 큰술</span></li>
+            <li><span>청주 또는 맛술</span><span class="dots"></span><span class="amt">3 큰술</span></li>
+            <li><span>대추<span class="opt">선택</span></span><span class="dots"></span><span class="amt">4개</span></li>
+          </ul>
+        </div>
+        <div class="ing-block">
+          <h3>간</h3>
+          <ul class="ing-list">
+            <li><span>국간장</span><span class="dots"></span><span class="amt">2 큰술</span></li>
+            <li><span>소금<small style="color:var(--ink-3)"> 간 보며</small></span><span class="dots"></span><span class="amt">1 작은술~</span></li>
+            <li><span>다진 마늘</span><span class="dots"></span><span class="amt">1 큰술</span></li>
+            <li><span>후춧가루</span><span class="dots"></span><span class="amt">약간</span></li>
+          </ul>
+        </div>
+        <div class="ing-block">
+          <h3>마무리</h3>
+          <ul class="ing-list">
+            <li><span>당면<small style="color:var(--ink-3)"> 찬물 30분 불림</small></span><span class="dots"></span><span class="amt">100 g</span></li>
+            <li><span>대파 흰 부분<small style="color:var(--ink-3)"> 송송</small></span><span class="dots"></span><span class="amt">1대</span></li>
+            <li><span>달걀<small style="color:var(--ink-3)"> 지단용</small><span class="opt">선택</span></span><span class="dots"></span><span class="amt">1개</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ 조리 순서 ═══════════ -->
+  <section>
+    <div class="sec-head">
+      <span class="label">Method</span>
+      <h2>만드는 법</h2>
+      <span class="rule"></span>
+    </div>
+    <ol class="steps">
+      <li class="step">
+        <div class="step-n" aria-hidden="true"></div>
+        <div class="step-body">
+          <h3>핏물을 뺀다<span class="chip">2시간</span></h3>
+          <p>갈비를 찬물에 완전히 잠기게 담가 냉장고에서 2시간 둡니다. 30분마다 물을 갈아주세요. 물이 맑아질 때까지가 기준입니다.</p>
+          <div class="key"><b>Why</b>누린내와 국물이 탁해지는 원인의 대부분은 핏물입니다. 여기서 뺀 만큼 나중에 맑아져요.</div>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-n" aria-hidden="true"></div>
+        <div class="step-body">
+          <h3>한 번 데쳐서 첫물은 버린다<span class="chip">5분</span></h3>
+          <p>끓는 물에 갈비를 넣고 <span class="mono">5분</span>만 팔팔 끓입니다. 건져서 흐르는 찬물에 뼛가루와 굳은 기름, 핏덩이를 손으로 씻어내세요. 데친 물은 미련 없이 버립니다.</p>
+          <p>냄비도 한 번 헹궈서 씁니다. 냄비에 붙은 거품이 그대로 남으면 다시 탁해져요.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-n" aria-hidden="true"></div>
+        <div class="step-body">
+          <h3>향채와 함께 푹 끓인다<span class="chip">1시간 45분</span></h3>
+          <p>씻은 갈비에 물 <span class="mono">3L</span>, 양파, 대파 뿌리쪽, 통마늘, 생강, 통후추, 청주를 넣고 센 불에 올립니다. 끓어오르면 거품을 한 번 걷고 <strong>중약불로 낮춰</strong> 1시간 30분.</p>
+          <div class="key"><b>Key</b>뚜껑은 반만 덮으세요. 꽉 닫고 팔팔 끓이면 기름이 국물에 유화되어 되돌릴 수 없이 뿌예집니다. 국물이 살랑살랑 흔들리는 정도의 불이 정답이에요.</div>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-n" aria-hidden="true"></div>
+        <div class="step-body">
+          <h3>무는 나중에 넣는다<span class="chip">30분</span></h3>
+          <p>무를 <span class="mono">3cm</span> 사방으로 큼직하게 썰어 넣고 30분 더 끓입니다. 무가 반투명해지고 젓가락이 쑥 들어가면 끝이에요.</p>
+          <div class="key"><b>Why</b>처음부터 넣으면 무가 다 풀어져 국물이 텁텁하고 지나치게 달아집니다. '시원한 맛'은 무가 형태를 유지한 채 우러날 때 나와요.</div>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-n" aria-hidden="true"></div>
+        <div class="step-body">
+          <h3>거르고, 식혀서 기름을 걷는다<span class="chip">2시간</span></h3>
+          <p>갈비와 무는 따로 건져둡니다. 향채는 모두 버리고 국물은 고운 체에 한 번 거르세요.</p>
+          <p>국물만 냉장고에 <span class="mono">2~3시간</span> 두면 기름이 하얗게 굳습니다. 숟가락으로 판째 걷어내면 끝. 급할 땐 국자로 표면을 훑거나 키친타올을 살짝 얹었다 떼면 됩니다.</p>
+          <div class="key"><b>Key</b>'속이 시원하다'는 감각의 정체가 바로 이 단계입니다. 기름을 걷어낸 국물은 뜨거워도 목넘김이 가벼워요.</div>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-n" aria-hidden="true"></div>
+        <div class="step-body">
+          <h3>간은 국간장 먼저, 소금으로 끝낸다<span class="chip">5분</span></h3>
+          <p>국물을 다시 데우고 국간장 <span class="mono">2큰술</span>, 다진 마늘 <span class="mono">1큰술</span>을 넣습니다. 여기까지가 색과 감칠맛이에요. 나머지 간은 <strong>소금으로만</strong> 맞춥니다.</p>
+          <div class="key"><b>Why</b>국간장을 더 넣으면 짜기 전에 국물색이 먼저 검어집니다. 맑은 갈비탕의 색은 소금이 지켜줘요.</div>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-n" aria-hidden="true"></div>
+        <div class="step-body">
+          <h3>당면을 넣고 담아낸다<span class="chip">5분</span></h3>
+          <p>불려둔 당면을 국물에 넣고 <span class="mono">3분</span>, 건져둔 갈비와 무를 다시 넣어 데웁니다.</p>
+          <p>그릇에 갈비를 먼저 담고 무와 당면을 올린 뒤 국물을 붓습니다. 송송 썬 대파와 지단, 후춧가루를 올려 완성. 소금과 후추는 따로 곁들여 각자 간을 맞추게 하세요.</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+</div>
+
+<!-- ═══════════ 클로즈업 ═══════════ -->
+<figure class="band">
+  <img src="{{CLOSEUP}}" alt="젓가락으로 들어올린 갈비, 뼈에서 살이 떨어져 나오고 국물이 방울져 떨어지는 모습">
+  <figcaption>잘 끓은 갈비는 젓가락으로 들면 뼈와 살이 저절로 갈라집니다.</figcaption>
+</figure>
+
+<div class="wrap">
+  <!-- ═══════════ 3원칙 ═══════════ -->
+  <section>
+    <div class="sec-head">
+      <span class="label">Principles</span>
+      <h2>맑은 국물의 세 가지 원칙</h2>
+      <span class="rule"></span>
+    </div>
+    <div class="rules">
+      <div class="rule-card">
+        <span class="label">첫째</span>
+        <h3>핏물과 첫물은 버린다</h3>
+        <p>누린내의 대부분이 여기서 사라집니다. 아깝다고 데친 물을 쓰면 그 뒤에 무엇을 해도 개운해지지 않아요.</p>
+      </div>
+      <div class="rule-card">
+        <span class="label">둘째</span>
+        <h3>뚜껑은 반만, 불은 약하게</h3>
+        <p>거세게 끓으면 기름이 국물과 섞여 유화됩니다. 한 번 뿌예진 국물은 다시 맑아지지 않아요. 표면이 잔잔히 일렁이는 불이면 충분합니다.</p>
+      </div>
+      <div class="rule-card">
+        <span class="label">셋째</span>
+        <h3>기름은 식혀서 걷는다</h3>
+        <p>뜨거울 때 걷으면 절반도 못 걷습니다. 차게 식혀 굳은 기름을 판째 들어내는 것이 가장 확실하고 가장 쉬워요.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ 곁들임 & 보관 ═══════════ -->
+  <section>
+    <div class="sec-head">
+      <span class="label">Serving &amp; Storage</span>
+      <h2>곁들임과 보관</h2>
+      <span class="rule"></span>
+    </div>
+    <div class="two">
+      <div>
+        <h3>같이 내면 좋은 것</h3>
+        <ul>
+          <li><strong>깍두기</strong> — 갈비탕에는 배추김치보다 깍두기입니다. 국물 한 술에 무 한 조각.</li>
+          <li><strong>다진 양념</strong> — 청양고추 2개 다져 간장 2큰술, 참기름 조금. 매콤하게 먹고 싶은 사람용으로 종지에.</li>
+          <li><strong>소금 · 후추</strong> — 간을 살짝 싱겁게 맞추고 각자 더하게 하면 모두가 만족합니다.</li>
+          <li><strong>흰쌀밥</strong> — 말아 먹을 사람을 위해 국물은 넉넉히.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>보관과 재가열</h3>
+        <ul>
+          <li><strong>국물과 건더기는 따로</strong> 담아 식혀서 냉장 — 3일.</li>
+          <li><strong>냉동</strong>은 1인분씩 소분해 1개월. 국물만 얼리고 갈비는 따로 담으면 해동이 빨라요.</li>
+          <li><strong>당면은 그때그때</strong> 넣습니다. 미리 넣어두면 국물을 다 빨아들여 불어버려요.</li>
+          <li><strong>다시 데울 때</strong>도 팔팔 끓이지 말고 김이 오를 정도까지만. 고기가 퍽퍽해지지 않습니다.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>속이 다 시원한 갈비탕 · 4인분 · 총 4시간 (실제 조리 30분)</p>
+    <p>사진 — Nano Banana Pro (Gemini 3 Pro Image)로 생성</p>
+  </footer>
+</div>
