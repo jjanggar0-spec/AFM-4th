@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>짤생성기 · 밈 메이커</title>
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <!-- ⚠️ CDN 버전 고정 필수. Babel 은 7.x (8.x 는 인라인 text/babel 미지원) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.25.9/babel.min.js"></script>
+
+  <!-- 밈 제작용 웹폰트. 오프라인이면 시스템 폰트로 자연 폴백된다. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Anton&family=Black+Han+Sans&family=Do+Hyeon&family=Nanum+Myeongjo:wght@400;700&family=Noto+Sans+KR:wght@400;700;900&display=swap">
+
+  <style>
+    /* Tailwind 로 표현하기 어려운 진입 애니메이션 */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-up { animation: fadeUp .3s ease-out both; }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(.96); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .animate-pop-in { animation: popIn .25s cubic-bezier(.34,1.4,.64,1) both; }
+
+    /* 캔버스 뒤 투명 격자 (여백 색이 흰색일 때 경계를 보이게 함) */
+    .checker {
+      background-image:
+        linear-gradient(45deg, #e2e8f0 25%, transparent 25%),
+        linear-gradient(-45deg, #e2e8f0 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #e2e8f0 75%),
+        linear-gradient(-45deg, transparent 75%, #e2e8f0 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+    }
+
+    /* 슬라이더 톤 통일 */
+    input[type="range"] { -webkit-appearance: none; appearance: none; background: transparent; }
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 4px; border-radius: 9999px; background: #cbd5e1;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 16px; height: 16px; margin-top: -6px;
+      border-radius: 9999px; background: #0f172a; border: 2px solid #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,.3); cursor: pointer;
+    }
+    input[type="range"]::-moz-range-track { height: 4px; border-radius: 9999px; background: #cbd5e1; }
+    input[type="range"]::-moz-range-thumb {
+      width: 16px; height: 16px; border-radius: 9999px;
+      background: #0f172a; border: 2px solid #fff; cursor: pointer;
+    }
+
+    /* 색상 입력을 정사각 스와치처럼 */
+    input[type="color"] { -webkit-appearance: none; appearance: none; padding: 0; border: none; background: none; }
+    input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+    input[type="color"]::-webkit-color-swatch { border: none; border-radius: 8px; }
+    input[type="color"]::-moz-color-swatch { border: none; border-radius: 8px; }
+  </style>
+</head>
+<body class="bg-slate-100">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    // ========================================
+    // React Hooks
+    // ========================================
+    const { useState, useEffect, useMemo, useCallback, useRef } = React;
+
+    // ========================================
+    // ⚙️ Constants
+    // ========================================
+
+    /** 내보내기 최대 긴 변(px). 원본이 더 크면 축소해 성능/용량을 잡는다. */
+    const MAX_EDGE = 1600;
+
+    /** 이미지 없이 시작할 때 만드는 기본 배경 크기 */
+    const GEN_SIZE = 1080;
+
+    const FONTS = [
+      { id: 'impact',    label: '임팩트 (밈 기본)',   weight: '400', css: "Impact, 'Anton', 'Black Han Sans', sans-serif" },
+      { id: 'blackhan',  label: '블랙한산스 (굵은)',  weight: '400', css: "'Black Han Sans', 'Noto Sans KR', sans-serif" },
+      { id: 'dohyeon',   label: '도현 (둥근 고딕)',   weight: '400', css: "'Do Hyeon', 'Noto Sans KR', sans-serif" },
+      { id: 'notoBlack', label: '노토 산스 900',      weight: '900', css: "'Noto Sans KR', sans-serif" },
+      { id: 'notoReg',   label: '노토 산스 400',      weight: '400', css: "'Noto Sans KR', sans-serif" },
+      { id: 'myeongjo',  label: '나눔명조',           weight: '700', css: "'Nanum Myeongjo', serif" },
+    ];
+    const FONT_MAP = FONTS.reduce((acc, f) => { acc[f.id] = f; return acc; }, {});
+
+    const BACKGROUNDS = [
+      { id: 'dark',  label: '어두운 배경' },
+      { id: 'light', label: '밝은 배경' },
+      { id: 'grid',  label: '격자 배경' },
+    ];
+
+    // ========================================
+    // 🧰 Utils
+    // ========================================
+
+    const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+    let _seq = 0;
+    const uid = () => `L${++_seq}`;
+
+    /** 기본값 위에 덮어쓴 새 텍스트 레이어 */
+    function mkLayer(over) {
+      return Object.assign({
+        id: uid(),
+        text: '',
+        font: 'impact',
+        size: 0.11,        // 캔버스 높이 대비 비율 → 해상도와 무관하게 유지
+        lineHeight: 1.12,
+        width: 0.92,       // 줄바꿈 기준 폭 (캔버스 너비 대비)
+        align: 'center',
+        x: 0.5,            // 정규화 좌표(0~1)
+        y: 0.5,
+        fill: '#ffffff',
+        stroke: '#000000',
+        strokeW: 0.14,     // 폰트 크기 대비 외곽선 두께
+        upper: true,
+        shadow: false,
+      }, over || {});
+    }
+
+    const PRESETS = [
+      {
+        id: 'classic', name: '클래식 임팩트', desc: '위·아래 흰 글씨 + 검정 외곽선',
+        build: () => ({
+          padTop: 0, padBottom: 0,
+          layers: [
+            mkLayer({ text: '상단 문구', y: 0.10 }),
+            mkLayer({ text: '하단 문구', y: 0.90 }),
+          ],
+        }),
+      },
+      {
+        id: 'bottom', name: '하단 자막', desc: '영상 자막처럼 아래 한 줄',
+        build: () => ({
+          padTop: 0, padBottom: 0,
+          layers: [
+            mkLayer({ text: '여기에 자막을 입력', y: 0.88, size: 0.072, upper: false, font: 'notoBlack', width: 0.9 }),
+          ],
+        }),
+      },
+      {
+        id: 'whitebar', name: '흰 여백 자막', desc: '이미지 위 흰 띠 + 검정 글씨',
+        build: () => ({
+          padTop: 0.2, padBottom: 0,
+          layers: [
+            mkLayer({ text: '제목을 입력하세요', y: 0.082, size: 0.058, upper: false, font: 'notoBlack',
+                      fill: '#0f172a', strokeW: 0, width: 0.9 }),
+          ],
+        }),
+      },
+      {
+        id: 'center', name: '중앙 한 방', desc: '가운데 큰 글씨 하나',
+        build: () => ({
+          padTop: 0, padBottom: 0,
+          layers: [
+            mkLayer({ text: '한 방', y: 0.5, size: 0.2, font: 'blackhan' }),
+          ],
+        }),
+      },
+    ];
+
+    /**
+     * 캔버스 폭에 맞춰 줄바꿈한다.
+     * 공백 단위로 자르되, 한 덩어리가 폭을 넘으면 글자 단위로 쪼갠다.
+     * (한국어는 공백이 드물어 글자 단위 폴백이 반드시 필요하다)
+     */
+    function wrapLines(ctx, text, maxWidth) {
+      const out = [];
+
+      const pushByChar = (word) => {
+        let chunk = '';
+        for (const ch of word) {
+          if (chunk && ctx.measureText(chunk + ch).width > maxWidth) {
+            out.push(chunk);
+            chunk = ch;
+          } else {
+            chunk += ch;
+          }
+        }
+        return chunk;
+      };
+
+      for (const para of String(text).split('\n')) {
+        if (para === '') { out.push(''); continue; }
+        let line = '';
+        for (const word of para.split(' ')) {
+          const test = line ? line + ' ' + word : word;
+          if (ctx.measureText(test).width <= maxWidth) {
+            line = test;
+            continue;
+          }
+          if (line) out.push(line);
+          line = ctx.measureText(word).width > maxWidth ? pushByChar(word) : word;
+        }
+        out.push(line);
+      }
+      return out;
+    }
+
+    /** 한 레이어의 배치(줄 목록·박스)를 계산. 그리기와 히트테스트가 공유한다. */
+    function layoutLayer(ctx, L, CW, CH) {
+      const f = FONT_MAP[L.font] || FONTS[0];
+      const fontPx = Math.max(1, L.size * CH);
+      ctx.font = `${f.weight} ${fontPx}px ${f.css}`;
+
+      const raw = L.upper ? String(L.text).toUpperCase() : String(L.text);
+      const lines = wrapLines(ctx, raw, CW * L.width);
+      const lh = fontPx * L.lineHeight;
+      const totalH = lines.length * lh;
+
+      let widest = 0;
+      for (const ln of lines) widest = Math.max(widest, ctx.measureText(ln).width);
+
+      const cx = L.x * CW;
+      const cy = L.y * CH;
+      const left = L.align === 'center' ? cx - widest / 2
+                 : L.align === 'right'  ? cx - widest
+                 : cx;
+
+      return { fontPx, fontSpec: ctx.font, lines, lh, totalH, widest, cx, cy, left, top: cy - totalH / 2 };
+    }
+
+    /**
+     * 짤을 캔버스에 그린다. 미리보기와 내보내기가 같은 함수를 쓰므로
+     * "보이는 것 = 저장되는 것"이 보장된다. (가이드선은 opts.guides 일 때만)
+     * @returns {Object} 레이어별 바운딩 박스(캔버스 px) — 드래그 히트테스트용
+     */
+    function renderMeme(canvas, st, opts) {
+      const boxes = {};
+      if (!canvas || !st.source) return boxes;
+      const guides = !!(opts && opts.guides);
+
+      const scale = Math.min(1, MAX_EDGE / Math.max(st.srcW, st.srcH));
+      const iw = Math.max(1, Math.round(st.srcW * scale));
+      const ih = Math.max(1, Math.round(st.srcH * scale));
+      const padT = Math.round(st.padTop * ih);
+      const padB = Math.round(st.padBottom * ih);
+
+      const CW = iw;
+      const CH = ih + padT + padB;
+      canvas.width = CW;
+      canvas.height = CH;
+
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, CW, CH);
+      if (padT > 0 || padB > 0) {
+        ctx.fillStyle = st.barColor;
+        ctx.fillRect(0, 0, CW, CH);
+      }
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(st.source, 0, padT, iw, ih);
+
+      for (const L of st.layers) {
+        if (!String(L.text).trim()) continue;
+
+        const lay = layoutLayer(ctx, L, CW, CH);
+        ctx.font = lay.fontSpec;
+        ctx.textAlign = L.align;
+        ctx.textBaseline = 'middle';
+        ctx.lineJoin = 'round';
+        ctx.miterLimit = 2;
+
+        const lw = lay.fontPx * L.strokeW;
+        let y = lay.top + lay.lh / 2;
+
+        for (const ln of lay.lines) {
+          // 외곽선이 있으면 그림자는 외곽선에, 없으면 글자 자체에 건다
+          if (L.shadow && lw > 0) {
+            ctx.shadowColor = 'rgba(0,0,0,.5)';
+            ctx.shadowBlur = lay.fontPx * 0.18;
+            ctx.shadowOffsetY = lay.fontPx * 0.05;
+          }
+          if (lw > 0) {
+            ctx.strokeStyle = L.stroke;
+            ctx.lineWidth = lw;
+            ctx.strokeText(ln, lay.cx, y);
+          }
+          ctx.shadowColor = 'transparent';
+          ctx.shadowBlur = 0;
+          ctx.shadowOffsetY = 0;
+
+          if (L.shadow && lw <= 0) {
+            ctx.shadowColor = 'rgba(0,0,0,.5)';
+            ctx.shadowBlur = lay.fontPx * 0.18;
+            ctx.shadowOffsetY = lay.fontPx * 0.05;
+          }
+          ctx.fillStyle = L.fill;
+          ctx.fillText(ln, lay.cx, y);
+          ctx.shadowColor = 'transparent';
+          ctx.shadowBlur = 0;
+          ctx.shadowOffsetY = 0;
+
+          y += lay.lh;
+        }
+
+        const pad = lay.fontPx * 0.18;
+        boxes[L.id] = {
+          x0: lay.left - pad,
+          y0: lay.top - pad,
+          x1: lay.left + lay.widest + pad,
+          y1: lay.top + lay.totalH + pad,
+        };
+      }
+
+      if (guides && st.selectedId && boxes[st.selectedId]) {
+        const b = boxes[st.selectedId];
+        const d = Math.max(4, CH * 0.008);
+        ctx.save();
+        ctx.setLineDash([d, d]);
+        ctx.lineWidth = Math.max(1.5, CH * 0.0035);
+        ctx.strokeStyle = 'rgba(14,165,233,.95)';
+        ctx.strokeRect(b.x0, b.y0, b.x1 - b.x0, b.y1 - b.y0);
+        ctx.restore();
+      }
+
+      return boxes;
+    }
+
+    /** 이미지 없이 시작할 수 있도록 배경을 즉석에서 그린다 (외부 요청 없음 → canvas 오염 없음) */
+    function makeBackground(kind) {
+      const c = document.createElement('canvas');
+      c.width = GEN_SIZE;
+      c.height = GEN_SIZE;
+      const ctx = c.getContext('2d');
+
+      if (kind === 'light' || kind === 'grid') {
+        const g = ctx.createLinearGradient(0, 0, 0, GEN_SIZE);
+        g.addColorStop(0, '#f8fafc');
+        g.addColorStop(1, '#dbe3ec');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, GEN_SIZE, GEN_SIZE);
+        if (kind === 'grid') {
+          ctx.strokeStyle = 'rgba(100,116,139,.28)';
+          ctx.lineWidth = 2;
+          for (let i = 60; i < GEN_SIZE; i += 60) {
+            ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, GEN_SIZE); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(GEN_SIZE, i); ctx.stroke();
+          }
+        }
+      } else {
+        const g = ctx.createLinearGradient(0, 0, GEN_SIZE, GEN_SIZE);
+        g.addColorStop(0, '#334155');
+        g.addColorStop(1, '#0b1220');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, GEN_SIZE, GEN_SIZE);
+        const vg = ctx.createRadialGradient(
+          GEN_SIZE / 2, GEN_SIZE / 2, GEN_SIZE * 0.2,
+          GEN_SIZE / 2, GEN_SIZE / 2, GEN_SIZE * 0.72
+        );
+        vg.addColorStop(0, 'rgba(0,0,0,0)');
+        vg.addColorStop(1, 'rgba(0,0,0,.45)');
+        ctx.fillStyle = vg;
+        ctx.fillRect(0, 0, GEN_SIZE, GEN_SIZE);
+      }
+      return c;
+    }
+
+    /** File → HTMLImageElement. objectURL 은 호출부에서 정리한다. */
+    function loadImageFile(file) {
+      return new Promise((resolve, reject) => {
+        if (!file || !/^image\//.test(file.type)) {
+          reject(new Error('이미지 파일만 넣을 수 있어요.'));
+          return;
+        }
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => resolve({ img, url, name: file.name });
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('이미지를 열 수 없어요.')); };
+        img.src = url;
+      });
+    }
+
+    // ========================================
+    // 🎨 Design System Components
+    // ========================================
+
+    function Button({ variant = 'primary', size = 'md', className = '', disabled, children, ...rest }) {
+      const base = 'inline-flex items-center justify-center gap-1.5 rounded-lg font-semibold transition ' +
+                   'focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-slate-900 ' +
+                   'disabled:opacity-40 disabled:cursor-not-allowed';
+      const sizes = {
+        sm: 'px-2.5 py-1.5 text-xs',
+        md: 'px-3.5 py-2 text-sm',
+        lg: 'px-5 py-2.5 text-base',
+      };
+      const variants = {
+        primary:   'bg-slate-900 text-white hover:bg-slate-800 active:bg-slate-950',
+        secondary: 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 active:bg-slate-100',
+        danger:    'bg-white text-rose-600 border border-rose-200 hover:bg-rose-50',
+        ghost:     'bg-transparent text-slate-600 hover:bg-slate-200/70',
+      };
+      return (
+        <button
+          className={`${base} ${sizes[size]} ${variants[variant]} ${className}`}
+          disabled={disabled}
+          {...rest}
+        >
+          {children}
+        </button>
+      );
+    }
+
+    function Card({ className = '', children }) {
+      return (
+        <section className={`bg-white rounded-2xl shadow-sm ring-1 ring-slate-200/70 ${className}`}>
+          {children}
+        </section>
+      );
+    }
+
+    function SectionTitle({ step, title, right }) {
+      return (
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <h2 className="flex items-center gap-2 text-sm font-bold text-slate-800">
+            {step != null && (
+              <span className="grid place-items-center w-5 h-5 rounded-md bg-slate-900 text-white text-[11px] font-bold">
+                {step}
+              </span>
+            )}
+            {title}
+          </h2>
+          {right}
+        </div>
+      );
+    }
+
+    /** 라벨 + 값 힌트 래퍼. 버튼 그룹도 감싸므로 label 이 아닌 div 로 두고
+        실제 컨트롤에는 aria-label 을 직접 준다 (label 안의 button 은 클릭이 중복 발화한다). */
+    function Field({ label, hint, children }) {
+      return (
+        <div className="block">
+          <div className="flex items-baseline justify-between mb-1">
+            <span className="text-xs font-semibold text-slate-600">{label}</span>
+            {hint && <span className="text-[11px] text-slate-400 tabular-nums">{hint}</span>}
+          </div>
+          {children}
+        </div>
+      );
+    }
+
+    function Slider({ label, value, onChange, min, max, step, format }) {
+      return (
+        <Field label={label} hint={format ? format(value) : value}>
+          <input
+            type="range"
+            aria-label={label}
+            className="w-full cursor-pointer"
+            min={min} max={max} step={step}
+            value={value}
+            onChange={(e) => onChange(parseFloat(e.target.value))}
+          />
+        </Field>
+      );
+    }
+
+    function ColorField({ label, value, onChange }) {
+      // 타이핑 중간 상태(#ff 등)를 그대로 캔버스로 흘리면 색이 엉키므로
+      // 초안은 로컬에 두고, 올바른 6자리 hex 일 때만 커밋한다.
+      const [draft, setDraft] = useState(value);
+      useEffect(() => { setDraft(value); }, [value]);
+
+      const onText = (v) => {
+        setDraft(v);
+        const t = v.trim();
+        if (/^#[0-9a-fA-F]{6}$/.test(t)) onChange(t.toLowerCase());
+      };
+
+      return (
+        <Field label={label}>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              className="w-9 h-9 rounded-lg ring-1 ring-slate-300 cursor-pointer shrink-0"
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              aria-label={label}
+            />
+            <input
+              type="text"
+              spellCheck="false"
+              aria-label={`${label} (HEX)`}
+              className="w-full min-w-0 px-2 py-1.5 text-xs font-mono uppercase rounded-lg border border-slate-300
+                         focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+              value={draft}
+              onChange={(e) => onText(e.target.value)}
+              onBlur={() => setDraft(value)}
+            />
+          </div>
+        </Field>
+      );
+    }
+
+    function Select({ label, value, onChange, options }) {
+      return (
+        <Field label={label}>
+          <select
+            aria-label={label}
+            className="w-full px-2.5 py-2 text-sm rounded-lg border border-slate-300 bg-white
+                       focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+          >
+            {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </Field>
+      );
+    }
+
+    function Segmented({ label, value, onChange, options }) {
+      return (
+        <Field label={label}>
+          <div className="inline-flex w-full p-0.5 rounded-lg bg-slate-100 ring-1 ring-slate-200">
+            {options.map((o) => (
+              <button
+                key={o.value}
+                type="button"
+                onClick={() => onChange(o.value)}
+                aria-pressed={value === o.value}
+                className={`flex-1 px-2 py-1.5 text-xs font-semibold rounded-[7px] transition ${
+                  value === o.value ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+        </Field>
+      );
+    }
+
+    function Toggle({ label, checked, onChange }) {
+      return (
+        <button
+          type="button"
+          role="switch"
+          aria-checked={checked}
+          onClick={() => onChange(!checked)}
+          className="flex items-center justify-between w-full py-1.5 group"
+        >
+          <span className="text-xs font-semibold text-slate-600">{label}</span>
+          <span className={`relative w-9 h-5 rounded-full transition ${checked ? 'bg-slate-900' : 'bg-slate-300'}`}>
+            <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${
+              checked ? 'left-[18px]' : 'left-0.5'
+            }`} />
+          </span>
+        </button>
+      );
+    }
+
+    function Toast({ msg }) {
+      if (!msg) return null;
+      return (
+        <div className="fixed left-1/2 -translate-x-1/2 bottom-6 z-50 animate-pop-in">
+          <div className={`px-4 py-2.5 rounded-xl shadow-lg text-sm font-semibold text-white ${
+            msg.tone === 'error' ? 'bg-rose-600' : 'bg-slate-900'
+          }`}>
+            {msg.text}
+          </div>
+        </div>
+      );
+    }
+
+    // ========================================
+    // 🧩 Layout
+    // ========================================
+
+    function Header() {
+      return (
+        <header className="border-b border-slate-200 bg-white/80 backdrop-blur sticky top-0 z-30">
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-3.5 flex items-center gap-3">
+            <div className="grid place-items-center w-9 h-9 rounded-xl bg-slate-900 text-white text-lg">🖼️</div>
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg font-extrabold text-slate-900 leading-tight">짤생성기</h1>
+              <p className="text-[11px] sm:text-xs text-slate-500 leading-tight">
+                canvas 로 합성하는 밈 메이커 · 보이는 그대로 PNG 저장
+              </p>
+            </div>
+          </div>
+        </header>
+      );
+    }
+
+    // ========================================
+    // 📄 Page — 밈 메이커
+    // ========================================
+
+    function MemeMaker() {
+      const [source, setSource] = useState(null);     // HTMLImageElement | HTMLCanvasElement
+      const [srcW, setSrcW] = useState(0);
+      const [srcH, setSrcH] = useState(0);
+      const [srcName, setSrcName] = useState('');
+
+      const [padTop, setPadTop] = useState(0);
+      const [padBottom, setPadBottom] = useState(0);
+      const [barColor, setBarColor] = useState('#ffffff');
+
+      const [layers, setLayers] = useState(() => PRESETS[0].build().layers);
+      const [selectedId, setSelectedId] = useState(null);
+
+      const [dragging, setDragging] = useState(false);
+      const [dropping, setDropping] = useState(false);
+      const [fontTick, setFontTick] = useState(0);
+      const [toast, setToast] = useState(null);
+
+      const canvasRef = useRef(null);
+      const fileRef = useRef(null);
+      const boxesRef = useRef({});
+      const dragRef = useRef(null);
+      const objUrlRef = useRef(null);
+
+      const selected = useMemo(
+        () => layers.find((l) => l.id === selectedId) || null,
+        [layers, selectedId]
+      );
+
+      const state = { source, srcW, srcH, padTop, padBottom, barColor, layers, selectedId };
+
+      const say = useCallback((text, tone) => {
+        setToast({ text, tone });
+      }, []);
+
+      useEffect(() => {
+        if (!toast) return;
+        const t = setTimeout(() => setToast(null), 2200);
+        return () => clearTimeout(t);
+      }, [toast]);
+
+      // ---- 웹폰트 로드 후 한 번 다시 그린다 (폰트 없이 그리면 폴백으로 측정돼 어긋남) ----
+      useEffect(() => {
+        if (!document.fonts) return;
+        let alive = true;
+        const specs = [
+          "400 100px 'Anton'", "400 100px 'Black Han Sans'", "400 100px 'Do Hyeon'",
+          "900 100px 'Noto Sans KR'", "400 100px 'Noto Sans KR'", "700 100px 'Nanum Myeongjo'",
+        ];
+        Promise.all(specs.map((s) => document.fonts.load(s).catch(() => {})))
+          .then(() => document.fonts.ready)
+          .then(() => { if (alive) setFontTick((t) => t + 1); })
+          .catch(() => {});
+        return () => { alive = false; };
+      }, []);
+
+      // ---- 렌더 ----
+      useEffect(() => {
+        boxesRef.current = renderMeme(canvasRef.current, state, { guides: true });
+      });
+
+      // ---- 정리: objectURL 회수 ----
+      useEffect(() => () => {
+        if (objUrlRef.current) URL.revokeObjectURL(objUrlRef.current);
+      }, []);
+
+      // ---- 이미지 투입 ----
+      const applyImage = useCallback((img, name) => {
+        setSource(img);
+        setSrcW(img.naturalWidth || img.width);
+        setSrcH(img.naturalHeight || img.height);
+        setSrcName(name || '');
+      }, []);
+
+      const acceptFile = useCallback(async (file) => {
+        try {
+          const { img, url, name } = await loadImageFile(file);
+          if (objUrlRef.current) URL.revokeObjectURL(objUrlRef.current);
+          objUrlRef.current = url;
+          applyImage(img, name);
+          say('이미지를 불러왔어요.');
+        } catch (e) {
+          say(e.message || '이미지를 불러오지 못했어요.', 'error');
+        }
+      }, [applyImage, say]);
+
+      const useBackground = useCallback((kind) => {
+        if (objUrlRef.current) { URL.revokeObjectURL(objUrlRef.current); objUrlRef.current = null; }
+        const c = makeBackground(kind);
+        applyImage(c, '생성한 배경');
+        say('배경을 만들었어요.');
+      }, [applyImage, say]);
+
+      // ---- 붙여넣기(Ctrl+V) ----
+      useEffect(() => {
+        const onPaste = (e) => {
+          const items = e.clipboardData && e.clipboardData.items;
+          if (!items) return;
+          for (const it of Array.from(items)) {
+            if (it.type && it.type.startsWith('image/')) {
+              const f = it.getAsFile();
+              if (f) { e.preventDefault(); acceptFile(f); }
+              return;
+            }
+          }
+        };
+        window.addEventListener('paste', onPaste);
+        return () => window.removeEventListener('paste', onPaste);
+      }, [acceptFile]);
+
+      // ---- 드래그 앤 드롭 ----
+      useEffect(() => {
+        const stop = (e) => { e.preventDefault(); };
+        const onOver = (e) => { stop(e); setDropping(true); };
+        const onLeave = (e) => { stop(e); if (e.relatedTarget === null) setDropping(false); };
+        const onDrop = (e) => {
+          stop(e);
+          setDropping(false);
+          const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+          if (f) acceptFile(f);
+        };
+        window.addEventListener('dragover', onOver);
+        window.addEventListener('dragleave', onLeave);
+        window.addEventListener('drop', onDrop);
+        return () => {
+          window.removeEventListener('dragover', onOver);
+          window.removeEventListener('dragleave', onLeave);
+          window.removeEventListener('drop', onDrop);
+        };
+      }, [acceptFile]);
+
+      // ---- 레이어 조작 ----
+      const patchLayer = useCallback((id, patch) => {
+        setLayers((ls) => ls.map((l) => (l.id === id ? Object.assign({}, l, patch) : l)));
+      }, []);
+
+      const addLayer = useCallback(() => {
+        const L = mkLayer({ text: '새 텍스트', y: 0.5 });
+        setLayers((ls) => ls.concat(L));
+        setSelectedId(L.id);
+      }, []);
+
+      const removeLayer = useCallback((id) => {
+        setLayers((ls) => ls.filter((l) => l.id !== id));
+        setSelectedId((cur) => (cur === id ? null : cur));
+      }, []);
+
+      const applyPreset = useCallback((p) => {
+        const next = p.build();
+        setPadTop(next.padTop);
+        setPadBottom(next.padBottom);
+        setLayers(next.layers);
+        setSelectedId(next.layers[0] ? next.layers[0].id : null);
+        say(`'${p.name}' 프리셋 적용`);
+      }, [say]);
+
+      // ---- 캔버스 드래그로 위치 이동 ----
+      const toCanvasPoint = (e) => {
+        const cv = canvasRef.current;
+        const r = cv.getBoundingClientRect();
+        return {
+          x: (e.clientX - r.left) * (cv.width / r.width),
+          y: (e.clientY - r.top) * (cv.height / r.height),
+        };
+      };
+
+      const onPointerDown = (e) => {
+        if (!source) return;
+        const cv = canvasRef.current;
+        const p = toCanvasPoint(e);
+
+        // 위에 있는 레이어부터 검사
+        for (let i = layers.length - 1; i >= 0; i--) {
+          const L = layers[i];
+          const b = boxesRef.current[L.id];
+          if (!b) continue;
+          if (p.x >= b.x0 && p.x <= b.x1 && p.y >= b.y0 && p.y <= b.y1) {
+            setSelectedId(L.id);
+            dragRef.current = {
+              id: L.id,
+              dx: L.x - p.x / cv.width,
+              dy: L.y - p.y / cv.height,
+            };
+            setDragging(true);
+            cv.setPointerCapture(e.pointerId);
+            return;
+          }
+        }
+        setSelectedId(null);
+      };
+
+      const onPointerMove = (e) => {
+        const d = dragRef.current;
+        if (!d) return;
+        const cv = canvasRef.current;
+        const p = toCanvasPoint(e);
+        patchLayer(d.id, {
+          x: clamp(p.x / cv.width + d.dx, 0, 1),
+          y: clamp(p.y / cv.height + d.dy, 0, 1),
+        });
+      };
+
+      const endDrag = (e) => {
+        if (!dragRef.current) return;
+        dragRef.current = null;
+        setDragging(false);
+        const cv = canvasRef.current;
+        if (cv && e && cv.hasPointerCapture && cv.hasPointerCapture(e.pointerId)) {
+          cv.releasePointerCapture(e.pointerId);
+        }
+      };
+
+      // ---- 내보내기 (가이드선 없는 별도 캔버스로 다시 그림) ----
+      const exportCanvas = useCallback(() => {
+        const off = document.createElement('canvas');
+        renderMeme(off, { source, srcW, srcH, padTop, padBottom, barColor, layers, selectedId: null }, { guides: false });
+        return off;
+      }, [source, srcW, srcH, padTop, padBottom, barColor, layers]);
+
+      const download = useCallback(() => {
+        if (!source) return;
+        const off = exportCanvas();
+        off.toBlob((blob) => {
+          if (!blob) { say('저장에 실패했어요.', 'error'); return; }
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `meme-${Date.now()}.png`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          say('PNG 로 저장했어요.');
+        }, 'image/png');
+      }, [source, exportCanvas, say]);
+
+      const copyToClipboard = useCallback(async () => {
+        if (!source) return;
+        if (!navigator.clipboard || typeof window.ClipboardItem === 'undefined') {
+          say('이 브라우저는 이미지 복사를 지원하지 않아요.', 'error');
+          return;
+        }
+        try {
+          const off = exportCanvas();
+          const blob = await new Promise((res) => off.toBlob(res, 'image/png'));
+          if (!blob) throw new Error('blob 생성 실패');
+          await navigator.clipboard.write([new window.ClipboardItem({ 'image/png': blob })]);
+          say('클립보드에 복사했어요.');
+        } catch (e) {
+          say('복사가 차단됐어요. 저장 버튼을 써주세요.', 'error');
+        }
+      }, [source, exportCanvas, say]);
+
+      const canvasPx = source
+        ? (() => {
+            const s = Math.min(1, MAX_EDGE / Math.max(srcW, srcH));
+            const iw = Math.round(srcW * s), ih = Math.round(srcH * s);
+            return `${iw} × ${ih + Math.round(padTop * ih) + Math.round(padBottom * ih)}`;
+          })()
+        : '—';
+
+      // ------------------------------------------------------------------
+      return (
+        <main className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+            {/* ============ 왼쪽: 캔버스 ============ */}
+            <div className="lg:col-span-7 xl:col-span-8 space-y-4">
+              <Card className="p-4 sm:p-5 animate-fade-up">
+                <SectionTitle
+                  title="미리보기"
+                  right={<span className="text-[11px] font-mono text-slate-400">{canvasPx}</span>}
+                />
+
+                <div className={`relative rounded-xl overflow-hidden ring-1 transition ${
+                  dropping ? 'ring-2 ring-slate-900' : 'ring-slate-200'
+                }`}>
+                  {source ? (
+                    <div className="checker">
+                      <canvas
+                        ref={canvasRef}
+                        className={`block w-full h-auto touch-none select-none ${
+                          dragging ? 'cursor-grabbing' : 'cursor-grab'
+                        }`}
+                        onPointerDown={onPointerDown}
+                        onPointerMove={onPointerMove}
+                        onPointerUp={endDrag}
+                        onPointerCancel={endDrag}
+                      />
+                    </div>
+                  ) : (
+                    <div className="min-h-[340px] py-16 grid place-items-center bg-slate-50 px-6 text-center">
+                      <div>
+                        <div className="text-4xl mb-3">🖼️</div>
+                        <p className="text-sm font-semibold text-slate-700 mb-1">이미지를 올려주세요</p>
+                        <p className="text-xs text-slate-500 mb-4">
+                          드래그해서 놓거나, <kbd className="px-1.5 py-0.5 rounded border border-slate-300 bg-white font-mono text-[10px]">Ctrl</kbd>
+                          {' + '}
+                          <kbd className="px-1.5 py-0.5 rounded border border-slate-300 bg-white font-mono text-[10px]">V</kbd>
+                          {' '}로 붙여넣기
+                        </p>
+                        <div className="flex flex-wrap items-center justify-center gap-2">
+                          <Button onClick={() => fileRef.current && fileRef.current.click()}>파일 선택</Button>
+                          <Button variant="secondary" onClick={() => useBackground('dark')}>배경 만들어 시작</Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {dropping && (
+                    <div className="absolute inset-0 bg-slate-900/70 grid place-items-center pointer-events-none">
+                      <p className="text-white font-bold text-sm">여기에 놓으면 불러옵니다</p>
+                    </div>
+                  )}
+                </div>
+
+                {source && (
+                  <p className="mt-3 text-[11px] text-slate-500">
+                    💡 캔버스 위의 글자를 <b>드래그</b>하면 위치를 옮길 수 있어요. 빈 곳을 누르면 선택이 해제됩니다.
+                  </p>
+                )}
+              </Card>
+
+              <Card className="p-4 sm:p-5 animate-fade-up">
+                <SectionTitle step={4} title="내보내기" />
+                <div className="flex flex-wrap gap-2">
+                  <Button size="lg" onClick={download} disabled={!source}>PNG 저장</Button>
+                  <Button size="lg" variant="secondary" onClick={copyToClipboard} disabled={!source}>
+                    클립보드 복사
+                  </Button>
+                </div>
+                <p className="mt-3 text-[11px] text-slate-500">
+                  파란 점선(선택 표시)은 저장 파일에 포함되지 않습니다.
+                </p>
+              </Card>
+            </div>
+
+            {/* ============ 오른쪽: 컨트롤 ============ */}
+            <div className="lg:col-span-5 xl:col-span-4 space-y-4">
+
+              {/* 1. 이미지 */}
+              <Card className="p-4 sm:p-5 animate-fade-up">
+                <SectionTitle step={1} title="이미지" />
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files && e.target.files[0];
+                    if (f) acceptFile(f);
+                    e.target.value = '';
+                  }}
+                />
+                <div className="flex flex-wrap gap-2 mb-3">
+                  <Button size="sm" onClick={() => fileRef.current && fileRef.current.click()}>파일 선택</Button>
+                  {BACKGROUNDS.map((b) => (
+                    <Button key={b.id} size="sm" variant="secondary" onClick={() => useBackground(b.id)}>
+                      {b.label}
+                    </Button>
+                  ))}
+                </div>
+                {srcName && (
+                  <p className="text-[11px] text-slate-500 truncate mb-3">
+                    현재: <span className="font-medium text-slate-700">{srcName}</span>
+                    {' · '}{srcW} × {srcH}
+                  </p>
+                )}
+
+                <div className="pt-3 border-t border-slate-100 space-y-3">
+                  <p className="text-xs font-bold text-slate-700">여백 띠</p>
+                  <Slider
+                    label="위쪽 여백" value={padTop} onChange={setPadTop}
+                    min={0} max={0.4} step={0.005}
+                    format={(v) => `${Math.round(v * 100)}%`}
+                  />
+                  <Slider
+                    label="아래쪽 여백" value={padBottom} onChange={setPadBottom}
+                    min={0} max={0.4} step={0.005}
+                    format={(v) => `${Math.round(v * 100)}%`}
+                  />
+                  <ColorField label="여백 색" value={barColor} onChange={setBarColor} />
+                </div>
+              </Card>
+
+              {/* 2. 프리셋 */}
+              <Card className="p-4 sm:p-5 animate-fade-up">
+                <SectionTitle step={2} title="프리셋" />
+                <div className="grid grid-cols-2 gap-2">
+                  {PRESETS.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => applyPreset(p)}
+                      className="text-left p-2.5 rounded-xl border border-slate-200 hover:border-slate-900
+                                 hover:bg-slate-50 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900"
+                    >
+                      <span className="block text-xs font-bold text-slate-800">{p.name}</span>
+                      <span className="block text-[11px] text-slate-500 leading-snug mt-0.5">{p.desc}</span>
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-3 text-[11px] text-slate-400">프리셋을 누르면 현재 텍스트 레이어가 교체됩니다.</p>
+              </Card>
+
+              {/* 3. 텍스트 레이어 */}
+              <Card className="p-4 sm:p-5 animate-fade-up">
+                <SectionTitle
+                  step={3}
+                  title="텍스트"
+                  right={<Button size="sm" variant="secondary" onClick={addLayer}>+ 추가</Button>}
+                />
+
+                {layers.length === 0 ? (
+                  <p className="py-6 text-center text-xs text-slate-400">
+                    텍스트 레이어가 없어요. <b>+ 추가</b>를 눌러 시작하세요.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {layers.map((L, i) => {
+                      const on = L.id === selectedId;
+                      return (
+                        <div
+                          key={L.id}
+                          className={`rounded-xl border transition ${
+                            on ? 'border-slate-900 bg-slate-50' : 'border-slate-200 hover:border-slate-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 px-2.5 pt-2.5">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedId(on ? null : L.id)}
+                              className="flex-1 min-w-0 text-left"
+                              aria-expanded={on}
+                            >
+                              <span className="text-[11px] font-mono text-slate-400">#{i + 1}</span>
+                              <span className="ml-2 text-xs font-semibold text-slate-700">
+                                {L.text.trim() ? L.text.split('\n')[0].slice(0, 18) : '(빈 텍스트)'}
+                              </span>
+                            </button>
+                            <Button size="sm" variant="danger" onClick={() => removeLayer(L.id)} aria-label="레이어 삭제">
+                              삭제
+                            </Button>
+                          </div>
+
+                          <div className="p-2.5">
+                            <textarea
+                              rows={2}
+                              value={L.text}
+                              onFocus={() => setSelectedId(L.id)}
+                              onChange={(e) => patchLayer(L.id, { text: e.target.value })}
+                              placeholder="문구를 입력하세요 (엔터로 줄바꿈)"
+                              className="w-full px-2.5 py-2 text-sm rounded-lg border border-slate-300 resize-y
+                                         focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none"
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </Card>
+
+              {/* 4. 선택 레이어 스타일 */}
+              {selected && (
+                <Card className="p-4 sm:p-5 animate-fade-up">
+                  <SectionTitle title="선택한 텍스트 스타일" />
+                  <div className="space-y-3">
+                    <Select
+                      label="글꼴"
+                      value={selected.font}
+                      onChange={(v) => patchLayer(selected.id, { font: v })}
+                      options={FONTS.map((f) => ({ value: f.id, label: f.label }))}
+                    />
+
+                    <Segmented
+                      label="정렬"
+                      value={selected.align}
+                      onChange={(v) => patchLayer(selected.id, { align: v })}
+                      options={[
+                        { value: 'left', label: '왼쪽' },
+                        { value: 'center', label: '가운데' },
+                        { value: 'right', label: '오른쪽' },
+                      ]}
+                    />
+
+                    <Slider
+                      label="글자 크기" value={selected.size}
+                      onChange={(v) => patchLayer(selected.id, { size: v })}
+                      min={0.03} max={0.3} step={0.002}
+                      format={(v) => `${Math.round(v * 100)}%`}
+                    />
+                    <Slider
+                      label="줄 간격" value={selected.lineHeight}
+                      onChange={(v) => patchLayer(selected.id, { lineHeight: v })}
+                      min={0.9} max={1.8} step={0.01}
+                      format={(v) => v.toFixed(2)}
+                    />
+                    <Slider
+                      label="줄바꿈 폭" value={selected.width}
+                      onChange={(v) => patchLayer(selected.id, { width: v })}
+                      min={0.3} max={1} step={0.01}
+                      format={(v) => `${Math.round(v * 100)}%`}
+                    />
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <ColorField label="글자 색" value={selected.fill}
+                                  onChange={(v) => patchLayer(selected.id, { fill: v })} />
+                      <ColorField label="외곽선 색" value={selected.stroke}
+                                  onChange={(v) => patchLayer(selected.id, { stroke: v })} />
+                    </div>
+
+                    <Slider
+                      label="외곽선 두께" value={selected.strokeW}
+                      onChange={(v) => patchLayer(selected.id, { strokeW: v })}
+                      min={0} max={0.3} step={0.005}
+                      format={(v) => (v === 0 ? '없음' : v.toFixed(3))}
+                    />
+
+                    <div className="pt-1 border-t border-slate-100">
+                      <Toggle
+                        label="영문 대문자로"
+                        checked={selected.upper}
+                        onChange={(v) => patchLayer(selected.id, { upper: v })}
+                      />
+                      <Toggle
+                        label="그림자"
+                        checked={selected.shadow}
+                        onChange={(v) => patchLayer(selected.id, { shadow: v })}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 pt-1">
+                      <Slider
+                        label="가로 위치" value={selected.x}
+                        onChange={(v) => patchLayer(selected.id, { x: v })}
+                        min={0} max={1} step={0.005}
+                        format={(v) => `${Math.round(v * 100)}%`}
+                      />
+                      <Slider
+                        label="세로 위치" value={selected.y}
+                        onChange={(v) => patchLayer(selected.id, { y: v })}
+                        min={0} max={1} step={0.005}
+                        format={(v) => `${Math.round(v * 100)}%`}
+                      />
+                    </div>
+                  </div>
+                </Card>
+              )}
+            </div>
+          </div>
+
+          <Toast msg={toast} />
+        </main>
+      );
+    }
+
+    // ========================================
+    // 🚀 App
+    // ========================================
+
+    function App() {
+      return (
+        <div className="min-h-screen">
+          <Header />
+          <MemeMaker />
+          <footer className="max-w-[1400px] mx-auto px-4 sm:px-6 pb-10 pt-2">
+            <p className="text-[11px] text-slate-400">
+              모든 합성은 브라우저 안 &lt;canvas&gt; 에서만 처리되며, 이미지는 어디에도 업로드되지 않습니다.
+            </p>
+          </footer>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

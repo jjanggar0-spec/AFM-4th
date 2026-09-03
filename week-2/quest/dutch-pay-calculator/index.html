@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>더치페이 계산기</title>
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <!-- ⚠️ CDN 버전 고정 필수. Babel 은 7.x (8.x 는 인라인 text/babel 미지원) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.25.9/babel.min.js"></script>
+  <style>
+    /* Tailwind 로 표현하기 어려운 진입 애니메이션 */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-up { animation: fadeUp .3s ease-out both; }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(.96); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .animate-pop-in { animation: popIn .25s cubic-bezier(.34,1.4,.64,1) both; }
+
+    /* 숫자 입력에서 스피너 제거 (금액은 직접 타이핑) */
+    input[inputmode="numeric"]::-webkit-outer-spin-button,
+    input[inputmode="numeric"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+    /* 모바일에서 입력 포커스 시 확대 방지 */
+    input, select { font-size: 16px; }
+  </style>
+</head>
+<body class="bg-slate-100">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useCallback, useRef } = React;
+
+    // ========================================
+    // 🔧 Constants & Utilities
+    // ========================================
+
+    const STORAGE_KEY = 'dutch-pay-calculator-state';
+
+    // 1인당 금액을 맞출 단위. 현금으로 걷을 때 100원/1,000원 단위가 실용적이다.
+    const ROUND_UNITS = [
+      { label: '1원', value: 1 },
+      { label: '10원', value: 10 },
+      { label: '100원', value: 100 },
+      { label: '1,000원', value: 1000 },
+    ];
+
+    const ROUND_MODES = [
+      { label: '올림', value: 'ceil', hint: '모자라지 않게 걷습니다' },
+      { label: '반올림', value: 'round', hint: '가장 가까운 단위로 맞춥니다' },
+      { label: '내림', value: 'floor', hint: '총무가 차액을 부담합니다' },
+    ];
+
+    const QUICK_AMOUNTS = [10000, 50000, 100000];
+
+    const numberFormatter = new Intl.NumberFormat('ko-KR');
+
+    /** 숫자를 "12,345" 형태로 */
+    function formatNumber(value) {
+      if (!Number.isFinite(value)) return '0';
+      return numberFormatter.format(Math.round(value));
+    }
+
+    /** 숫자를 "12,345원" 형태로 */
+    function formatWon(value) {
+      return formatNumber(value) + '원';
+    }
+
+    /** 입력 문자열에서 숫자만 남겨 정수로. 빈 값은 0 */
+    function parseAmount(text) {
+      const digits = String(text ?? '').replace(/[^0-9]/g, '');
+      if (digits === '') return 0;
+      // 앞자리 0 제거 후 안전한 상한(1조)으로 제한
+      return Math.min(parseInt(digits, 10), 1000000000000);
+    }
+
+    /** 입력창에 보여줄 콤마 문자열. 0이고 사용자가 지운 상태면 빈 문자열 유지 */
+    function displayAmount(raw) {
+      if (raw === '' || raw === null || raw === undefined) return '';
+      const n = parseAmount(raw);
+      return n === 0 ? '' : formatNumber(n);
+    }
+
+    /** 지정한 단위/방식으로 금액을 맞춘다 */
+    function applyRounding(value, unit, mode) {
+      if (unit <= 1) return Math.round(value);
+      const q = value / unit;
+      const r = mode === 'ceil' ? Math.ceil(q) : mode === 'floor' ? Math.floor(q) : Math.round(q);
+      return r * unit;
+    }
+
+    /**
+     * 잔액 목록에서 최소 횟수에 가까운 송금 조합을 만든다.
+     * 가장 많이 낸 사람 ↔ 가장 적게 낸 사람을 차례로 상계하는 그리디 방식.
+     */
+    function buildTransfers(balances) {
+      const creditors = balances
+        .filter((b) => b.balance > 0)
+        .map((b) => ({ name: b.name, amount: b.balance }))
+        .sort((a, b) => b.amount - a.amount);
+      const debtors = balances
+        .filter((b) => b.balance < 0)
+        .map((b) => ({ name: b.name, amount: -b.balance }))
+        .sort((a, b) => b.amount - a.amount);
+
+      const transfers = [];
+      let i = 0;
+      let j = 0;
+      // 방어적 상한: 참가자 수 × 2 회를 넘겨 도는 일은 없지만 무한 루프를 막는다
+      let guard = 0;
+      while (i < debtors.length && j < creditors.length && guard < 1000) {
+        guard += 1;
+        const amount = Math.min(debtors[i].amount, creditors[j].amount);
+        if (amount > 0) {
+          transfers.push({ from: debtors[i].name, to: creditors[j].name, amount });
+        }
+        debtors[i].amount -= amount;
+        creditors[j].amount -= amount;
+        if (debtors[i].amount <= 0) i += 1;
+        if (creditors[j].amount <= 0) j += 1;
+      }
+      return transfers;
+    }
+
+    /** 클립보드 복사 (구형 브라우저/비보안 컨텍스트 폴백 포함) */
+    async function copyText(text) {
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+          return true;
+        }
+      } catch (e) {
+        // 폴백으로 계속 진행
+      }
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        return ok;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function saveState(state) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        // 저장 실패(사생활 보호 모드 등)는 조용히 무시 — 계산 기능에는 영향 없음
+      }
+    }
+
+    let uidSeed = 0;
+    function uid() {
+      uidSeed += 1;
+      return 'p' + Date.now().toString(36) + uidSeed.toString(36);
+    }
+
+    // ========================================
+    // 🎨 Design System Components
+    // ========================================
+
+    function Card({ children, className = '' }) {
+      return (
+        <div className={`bg-white rounded-2xl shadow-sm ring-1 ring-slate-200 p-5 sm:p-6 ${className}`}>
+          {children}
+        </div>
+      );
+    }
+
+    function Button({
+      children,
+      variant = 'primary',
+      size = 'md',
+      disabled = false,
+      onClick,
+      type = 'button',
+      className = '',
+      ...rest
+    }) {
+      const base =
+        'inline-flex items-center justify-center gap-1.5 font-semibold rounded-xl transition ' +
+        'focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 ' +
+        'disabled:opacity-40 disabled:cursor-not-allowed';
+
+      const variants = {
+        primary: 'bg-indigo-600 text-white hover:bg-indigo-700 active:bg-indigo-800 shadow-sm',
+        secondary: 'bg-slate-100 text-slate-700 hover:bg-slate-200 active:bg-slate-300',
+        danger: 'bg-rose-600 text-white hover:bg-rose-700 active:bg-rose-800 shadow-sm',
+        ghost: 'text-slate-500 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200',
+      };
+
+      const sizes = {
+        sm: 'text-sm px-3 py-1.5',
+        md: 'text-sm px-4 py-2.5',
+        lg: 'text-base px-5 py-3',
+      };
+
+      return (
+        <button
+          type={type}
+          disabled={disabled}
+          onClick={onClick}
+          className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
+          {...rest}
+        >
+          {children}
+        </button>
+      );
+    }
+
+    function AmountInput({ label, value, onChange, placeholder = '0', suffix = '원', hint, id }) {
+      const inputId = id || 'amount-' + label;
+      return (
+        <div>
+          {label && (
+            <label htmlFor={inputId} className="block text-sm font-medium text-slate-700 mb-1.5">
+              {label}
+            </label>
+          )}
+          <div className="relative">
+            <input
+              id={inputId}
+              type="text"
+              inputMode="numeric"
+              value={value}
+              placeholder={placeholder}
+              onChange={(e) => onChange(displayAmount(e.target.value))}
+              className="w-full rounded-xl border-0 ring-1 ring-slate-300 bg-white px-3.5 py-2.5 pr-10
+                         text-right tabular-nums text-slate-900 placeholder:text-slate-300
+                         focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+            />
+            <span className="absolute inset-y-0 right-3.5 flex items-center text-sm text-slate-400 pointer-events-none">
+              {suffix}
+            </span>
+          </div>
+          {hint && <p className="mt-1.5 text-xs text-slate-500">{hint}</p>}
+        </div>
+      );
+    }
+
+    function Stepper({ label, value, onChange, min = 1, max = 99, unit = '명' }) {
+      const dec = () => onChange(Math.max(min, value - 1));
+      const inc = () => onChange(Math.min(max, value + 1));
+      return (
+        <div>
+          {label && <span className="block text-sm font-medium text-slate-700 mb-1.5">{label}</span>}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={dec}
+              disabled={value <= min}
+              aria-label="줄이기"
+              className="w-11 h-11 shrink-0 rounded-xl bg-slate-100 text-slate-700 text-xl font-semibold
+                         hover:bg-slate-200 active:bg-slate-300 disabled:opacity-40 disabled:cursor-not-allowed
+                         focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition"
+            >
+              −
+            </button>
+            <div className="flex-1 h-11 rounded-xl ring-1 ring-slate-300 bg-white flex items-center justify-center">
+              <span className="text-lg font-bold text-slate-900 tabular-nums">{value}</span>
+              <span className="ml-1 text-sm text-slate-500">{unit}</span>
+            </div>
+            <button
+              type="button"
+              onClick={inc}
+              disabled={value >= max}
+              aria-label="늘리기"
+              className="w-11 h-11 shrink-0 rounded-xl bg-slate-100 text-slate-700 text-xl font-semibold
+                         hover:bg-slate-200 active:bg-slate-300 disabled:opacity-40 disabled:cursor-not-allowed
+                         focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition"
+            >
+              +
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    function SegmentedControl({ label, options, value, onChange, size = 'md' }) {
+      const pad = size === 'sm' ? 'py-1.5 text-xs' : 'py-2 text-sm';
+      return (
+        <div>
+          {label && <span className="block text-sm font-medium text-slate-700 mb-1.5">{label}</span>}
+          <div className="grid gap-1 p-1 rounded-xl bg-slate-100" style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
+            {options.map((opt) => {
+              const active = opt.value === value;
+              return (
+                <button
+                  key={String(opt.value)}
+                  type="button"
+                  onClick={() => onChange(opt.value)}
+                  aria-pressed={active}
+                  className={`rounded-lg px-2 ${pad} font-semibold transition
+                    focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500
+                    ${active ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    function Toast({ message }) {
+      if (!message) return null;
+      return (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-pop-in
+                     bg-slate-900 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg"
+        >
+          {message}
+        </div>
+      );
+    }
+
+    // ========================================
+    // 🧩 Common Components
+    // ========================================
+
+    function ResultRow({ label, value, tone = 'default', big = false }) {
+      const tones = {
+        default: 'text-slate-900',
+        muted: 'text-slate-500',
+        positive: 'text-emerald-600',
+        negative: 'text-rose-600',
+      };
+      return (
+        <div className="flex items-baseline justify-between gap-4 py-2">
+          <span className={`text-sm ${big ? 'font-semibold text-slate-700' : 'text-slate-500'}`}>{label}</span>
+          <span className={`tabular-nums ${big ? 'text-2xl font-bold' : 'text-base font-semibold'} ${tones[tone]}`}>
+            {value}
+          </span>
+        </div>
+      );
+    }
+
+    function EmptyState({ title, description }) {
+      return (
+        <div className="text-center py-10 px-4">
+          <div className="text-3xl mb-2" aria-hidden="true">🧾</div>
+          <p className="font-semibold text-slate-700">{title}</p>
+          <p className="mt-1 text-sm text-slate-500">{description}</p>
+        </div>
+      );
+    }
+
+    // ========================================
+    // 📄 Page: 빠른 1/N 계산
+    // ========================================
+
+    function QuickSplit({ initial, onPersist, onToast }) {
+      const [total, setTotal] = useState(initial.total ?? '');
+      const [people, setPeople] = useState(initial.people ?? 4);
+      const [tipPercent, setTipPercent] = useState(initial.tipPercent ?? 0);
+      const [unit, setUnit] = useState(initial.unit ?? 100);
+      const [mode, setMode] = useState(initial.mode ?? 'ceil');
+
+      useEffect(() => {
+        onPersist({ total, people, tipPercent, unit, mode });
+      }, [total, people, tipPercent, unit, mode, onPersist]);
+
+      const result = useMemo(() => {
+        const base = parseAmount(total);
+        const tip = Math.round((base * tipPercent) / 100);
+        const grandTotal = base + tip;
+        const rawPerPerson = people > 0 ? grandTotal / people : 0;
+        const perPerson = applyRounding(rawPerPerson, unit, mode);
+        const collected = perPerson * people;
+        return { base, tip, grandTotal, rawPerPerson, perPerson, collected, diff: collected - grandTotal };
+      }, [total, people, tipPercent, unit, mode]);
+
+      const hasInput = result.base > 0;
+
+      const handleCopy = useCallback(async () => {
+        const lines = [
+          '💸 더치페이 결과',
+          `총 금액 ${formatWon(result.grandTotal)}${result.tip > 0 ? ` (봉사료 ${tipPercent}% 포함)` : ''}`,
+          `${people}명 → 1인당 ${formatWon(result.perPerson)}`,
+        ];
+        if (result.diff !== 0) {
+          lines.push(
+            result.diff > 0
+              ? `※ ${formatWon(result.diff)}이 남습니다`
+              : `※ 총무가 ${formatWon(-result.diff)}을 더 냅니다`
+          );
+        }
+        const ok = await copyText(lines.join('\n'));
+        onToast(ok ? '결과를 복사했습니다' : '복사에 실패했습니다');
+      }, [result, people, tipPercent, onToast]);
+
+      const handleReset = useCallback(() => {
+        setTotal('');
+        setPeople(4);
+        setTipPercent(0);
+        onToast('입력을 초기화했습니다');
+      }, [onToast]);
+
+      return (
+        <div className="space-y-4 animate-fade-up">
+          <Card>
+            <div className="space-y-5">
+              <div>
+                <AmountInput
+                  id="quick-total"
+                  label="총 결제 금액"
+                  value={total}
+                  onChange={setTotal}
+                  hint="영수증에 찍힌 금액을 그대로 입력하세요"
+                />
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {QUICK_AMOUNTS.map((amount) => (
+                    <Button
+                      key={amount}
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setTotal(displayAmount(String(parseAmount(total) + amount)))}
+                    >
+                      +{formatNumber(amount / 10000)}만
+                    </Button>
+                  ))}
+                  {parseAmount(total) > 0 && (
+                    <Button variant="ghost" size="sm" onClick={() => setTotal('')}>
+                      지우기
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <Stepper label="인원" value={people} onChange={setPeople} min={1} max={50} />
+
+              <SegmentedControl
+                label="봉사료 / 팁"
+                size="sm"
+                value={tipPercent}
+                onChange={setTipPercent}
+                options={[
+                  { label: '없음', value: 0 },
+                  { label: '5%', value: 5 },
+                  { label: '10%', value: 10 },
+                  { label: '15%', value: 15 },
+                ]}
+              />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <SegmentedControl
+                  label="맞출 단위"
+                  size="sm"
+                  value={unit}
+                  onChange={setUnit}
+                  options={ROUND_UNITS}
+                />
+                <SegmentedControl
+                  label="처리 방식"
+                  size="sm"
+                  value={mode}
+                  onChange={setMode}
+                  options={ROUND_MODES}
+                />
+              </div>
+              <p className="-mt-2 text-xs text-slate-500">
+                {ROUND_MODES.find((m) => m.value === mode)?.hint}
+              </p>
+            </div>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-indigo-50 to-white ring-indigo-100">
+            {!hasInput ? (
+              <EmptyState title="금액을 입력해 주세요" description="총 결제 금액을 넣으면 1인당 금액이 바로 계산됩니다." />
+            ) : (
+              <div aria-live="polite">
+                <div className="text-center pb-4 border-b border-slate-200">
+                  <p className="text-sm font-medium text-slate-500">1인당 낼 금액</p>
+                  <p className="mt-1 text-4xl font-extrabold text-indigo-700 tabular-nums">
+                    {formatWon(result.perPerson)}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    정확히 나누면 {formatWon(result.rawPerPerson)}
+                  </p>
+                </div>
+
+                <div className="pt-2 divide-y divide-slate-100">
+                  <ResultRow label="결제 금액" value={formatWon(result.base)} />
+                  {result.tip > 0 && (
+                    <ResultRow label={`봉사료 ${tipPercent}%`} value={'+ ' + formatWon(result.tip)} tone="muted" />
+                  )}
+                  <ResultRow label="총 금액" value={formatWon(result.grandTotal)} />
+                  <ResultRow label={`걷는 금액 (${people}명)`} value={formatWon(result.collected)} />
+                  {result.diff !== 0 && (
+                    <ResultRow
+                      label={result.diff > 0 ? '남는 금액' : '총무 추가 부담'}
+                      value={formatWon(Math.abs(result.diff))}
+                      tone={result.diff > 0 ? 'positive' : 'negative'}
+                    />
+                  )}
+                </div>
+
+                <div className="mt-5 flex gap-2">
+                  <Button onClick={handleCopy} className="flex-1">결과 복사</Button>
+                  <Button variant="secondary" onClick={handleReset}>초기화</Button>
+                </div>
+              </div>
+            )}
+          </Card>
+        </div>
+      );
+    }
+
+    // ========================================
+    // 📄 Page: 정산하기 (각자 낸 금액이 다를 때)
+    // ========================================
+
+    function ParticipantRow({ participant, index, onChange, onRemove, canRemove }) {
+      return (
+        <div className="rounded-xl ring-1 ring-slate-200 p-3 sm:p-4 bg-white">
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={participant.name}
+              placeholder={`참가자 ${index + 1}`}
+              aria-label={`참가자 ${index + 1} 이름`}
+              onChange={(e) => onChange({ ...participant, name: e.target.value })}
+              className="flex-1 min-w-0 rounded-lg border-0 ring-1 ring-slate-300 bg-white px-3 py-2
+                         text-slate-900 placeholder:text-slate-300
+                         focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onRemove}
+              disabled={!canRemove}
+              aria-label={`${participant.name || `참가자 ${index + 1}`} 삭제`}
+              className="shrink-0"
+            >
+              삭제
+            </Button>
+          </div>
+
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 items-end">
+            <AmountInput
+              id={`paid-${participant.id}`}
+              label="낸 금액"
+              value={participant.paid}
+              onChange={(v) => onChange({ ...participant, paid: v })}
+            />
+            <div>
+              <span className="block text-sm font-medium text-slate-700 mb-1.5">분담 몫</span>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  aria-label="분담 몫 줄이기"
+                  onClick={() => onChange({ ...participant, share: Math.max(0, participant.share - 1) })}
+                  disabled={participant.share <= 0}
+                  className="w-10 h-10 rounded-lg bg-slate-100 text-slate-700 font-semibold
+                             hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed
+                             focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition"
+                >
+                  −
+                </button>
+                <span className="w-12 text-center text-base font-bold text-slate-900 tabular-nums">
+                  {participant.share}
+                </span>
+                <button
+                  type="button"
+                  aria-label="분담 몫 늘리기"
+                  onClick={() => onChange({ ...participant, share: Math.min(20, participant.share + 1) })}
+                  disabled={participant.share >= 20}
+                  className="w-10 h-10 rounded-lg bg-slate-100 text-slate-700 font-semibold
+                             hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed
+                             focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function SettleSplit({ initial, onPersist, onToast }) {
+      const [participants, setParticipants] = useState(
+        initial.participants && initial.participants.length >= 2
+          ? initial.participants
+          : [
+              { id: uid(), name: '', paid: '', share: 1 },
+              { id: uid(), name: '', paid: '', share: 1 },
+            ]
+      );
+      const [unit, setUnit] = useState(initial.unit ?? 100);
+
+      useEffect(() => {
+        onPersist({ participants, unit });
+      }, [participants, unit, onPersist]);
+
+      const updateAt = useCallback((index, next) => {
+        setParticipants((prev) => prev.map((p, i) => (i === index ? next : p)));
+      }, []);
+
+      const removeAt = useCallback((index) => {
+        setParticipants((prev) => (prev.length <= 2 ? prev : prev.filter((_, i) => i !== index)));
+      }, []);
+
+      const addParticipant = useCallback(() => {
+        setParticipants((prev) => (prev.length >= 30 ? prev : [...prev, { id: uid(), name: '', paid: '', share: 1 }]));
+      }, []);
+
+      const resetAll = useCallback(() => {
+        setParticipants([
+          { id: uid(), name: '', paid: '', share: 1 },
+          { id: uid(), name: '', paid: '', share: 1 },
+        ]);
+        onToast('참가자를 초기화했습니다');
+      }, [onToast]);
+
+      const result = useMemo(() => {
+        const rows = participants.map((p, i) => ({
+          id: p.id,
+          name: p.name.trim() || `참가자 ${i + 1}`,
+          paid: parseAmount(p.paid),
+          share: p.share,
+        }));
+
+        const total = rows.reduce((sum, r) => sum + r.paid, 0);
+        const totalShare = rows.reduce((sum, r) => sum + r.share, 0);
+
+        if (total === 0 || totalShare === 0) {
+          return { rows: [], total, totalShare, transfers: [], ready: false };
+        }
+
+        // 몫 비율대로 부담액을 계산하고 지정 단위로 맞춘다.
+        // 단위로 반올림하면 합이 총액과 어긋나므로 남은 금액을 이어가며 배분하고,
+        // 몫이 가장 큰 사람이 마지막 잔액을 받아 합계가 총액과 정확히 일치한다.
+        // (각 단계에서 남은 금액을 넘지 않도록 잘라 부담액이 음수가 되지 않는다)
+        const order = rows.map((_, i) => i).sort((a, b) => rows[a].share - rows[b].share);
+        const dueByIndex = {};
+        let remaining = total;
+        let remainingShare = totalShare;
+
+        order.forEach((idx, k) => {
+          const r = rows[idx];
+          if (k === order.length - 1) {
+            dueByIndex[idx] = Math.max(0, remaining);
+            return;
+          }
+          const raw = remainingShare > 0 ? (remaining * r.share) / remainingShare : 0;
+          const due = Math.max(0, Math.min(applyRounding(raw, unit, 'round'), remaining));
+          dueByIndex[idx] = due;
+          remaining -= due;
+          remainingShare -= r.share;
+        });
+
+        const finalRows = rows.map((r, i) => ({
+          ...r,
+          due: dueByIndex[i],
+          balance: r.paid - dueByIndex[i],
+        }));
+        const transfers = buildTransfers(finalRows);
+
+        return { rows: finalRows, total, totalShare, transfers, ready: true };
+      }, [participants, unit]);
+
+      const handleCopy = useCallback(async () => {
+        const lines = ['💸 더치페이 정산 결과', `총 사용 금액 ${formatWon(result.total)}`, ''];
+        result.rows.forEach((r) => {
+          lines.push(`· ${r.name} — 낸 돈 ${formatWon(r.paid)} / 부담 ${formatWon(r.due)}`);
+        });
+        lines.push('');
+        if (result.transfers.length === 0) {
+          lines.push('정산 완료! 주고받을 금액이 없습니다.');
+        } else {
+          lines.push('[보낼 금액]');
+          result.transfers.forEach((t) => {
+            lines.push(`${t.from} → ${t.to} ${formatWon(t.amount)}`);
+          });
+        }
+        const ok = await copyText(lines.join('\n'));
+        onToast(ok ? '정산 결과를 복사했습니다' : '복사에 실패했습니다');
+      }, [result, onToast]);
+
+      return (
+        <div className="space-y-4 animate-fade-up">
+          <Card>
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <div>
+                <h2 className="font-semibold text-slate-800">참가자</h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  각자 낸 금액을 넣으세요. 분담 몫은 기본 1이고, 2명분을 먹었다면 2로 올리면 됩니다.
+                </p>
+              </div>
+              <span className="shrink-0 text-xs font-semibold text-slate-500 bg-slate-100 rounded-full px-2.5 py-1">
+                {participants.length}명
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              {participants.map((p, i) => (
+                <ParticipantRow
+                  key={p.id}
+                  participant={p}
+                  index={i}
+                  onChange={(next) => updateAt(i, next)}
+                  onRemove={() => removeAt(i)}
+                  canRemove={participants.length > 2}
+                />
+              ))}
+            </div>
+
+            <div className="mt-4 flex gap-2">
+              <Button variant="secondary" onClick={addParticipant} disabled={participants.length >= 30} className="flex-1">
+                + 참가자 추가
+              </Button>
+              <Button variant="ghost" onClick={resetAll}>초기화</Button>
+            </div>
+
+            <div className="mt-5 pt-5 border-t border-slate-100">
+              <SegmentedControl label="맞출 단위" size="sm" value={unit} onChange={setUnit} options={ROUND_UNITS} />
+            </div>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-indigo-50 to-white ring-indigo-100">
+            {!result.ready ? (
+              <EmptyState
+                title="낸 금액을 입력해 주세요"
+                description="한 명이라도 금액을 넣으면 누가 누구에게 보내야 하는지 계산합니다."
+              />
+            ) : (
+              <div aria-live="polite">
+                <div className="text-center pb-4 border-b border-slate-200">
+                  <p className="text-sm font-medium text-slate-500">총 사용 금액</p>
+                  <p className="mt-1 text-3xl font-extrabold text-indigo-700 tabular-nums">
+                    {formatWon(result.total)}
+                  </p>
+                </div>
+
+                <div className="py-3 divide-y divide-slate-100">
+                  {result.rows.map((r) => (
+                    <div key={r.id} className="flex items-center justify-between gap-3 py-2.5">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-slate-800 truncate">
+                          {r.name}
+                          {r.share !== 1 && (
+                            <span className="ml-1.5 text-xs font-medium text-slate-400">몫 {r.share}</span>
+                          )}
+                        </p>
+                        <p className="text-xs text-slate-500 tabular-nums">
+                          낸 돈 {formatWon(r.paid)} · 부담 {formatWon(r.due)}
+                        </p>
+                      </div>
+                      <span
+                        className={`shrink-0 text-sm font-bold tabular-nums ${
+                          r.balance > 0 ? 'text-emerald-600' : r.balance < 0 ? 'text-rose-600' : 'text-slate-400'
+                        }`}
+                      >
+                        {r.balance > 0 ? '+' : ''}
+                        {formatWon(r.balance)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="pt-4 border-t border-slate-200">
+                  <h3 className="text-sm font-semibold text-slate-700 mb-2">보낼 금액</h3>
+                  {result.transfers.length === 0 ? (
+                    <p className="text-sm text-slate-500 py-2">정산 완료! 주고받을 금액이 없습니다. 🎉</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {result.transfers.map((t, i) => (
+                        <li
+                          key={i}
+                          className="flex items-center justify-between gap-3 rounded-xl bg-white ring-1 ring-slate-200 px-3.5 py-3"
+                        >
+                          <span className="min-w-0 text-sm text-slate-700 truncate">
+                            <strong className="font-semibold text-slate-900">{t.from}</strong>
+                            <span className="mx-1.5 text-slate-400" aria-hidden="true">→</span>
+                            <strong className="font-semibold text-slate-900">{t.to}</strong>
+                          </span>
+                          <span className="shrink-0 text-base font-bold text-indigo-700 tabular-nums">
+                            {formatWon(t.amount)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div className="mt-5">
+                  <Button onClick={handleCopy} className="w-full">정산 결과 복사</Button>
+                </div>
+              </div>
+            )}
+          </Card>
+        </div>
+      );
+    }
+
+    // ========================================
+    // 🚀 App
+    // ========================================
+
+    const TABS = [
+      { label: '빠른 1/N', value: 'quick' },
+      { label: '정산하기', value: 'settle' },
+    ];
+
+    function App() {
+      const saved = useRef(loadState() || {});
+      const [tab, setTab] = useState(saved.current.tab === 'settle' ? 'settle' : 'quick');
+      const [toast, setToast] = useState('');
+      const toastTimer = useRef(null);
+
+      // 각 모드의 입력값을 모아 두었다가 한 번에 저장한다
+      const store = useRef({
+        quick: saved.current.quick || {},
+        settle: saved.current.settle || {},
+      });
+
+      // persist 안에서 최신 tab 을 읽기 위한 ref (persist 자체는 재생성하지 않는다)
+      const tabRef = useRef(tab);
+      useEffect(() => {
+        tabRef.current = tab;
+        saveState({ tab, quick: store.current.quick, settle: store.current.settle });
+      }, [tab]);
+
+      const persist = useCallback((key, value) => {
+        store.current[key] = value;
+        saveState({ tab: tabRef.current, quick: store.current.quick, settle: store.current.settle });
+      }, []);
+
+      const persistQuick = useCallback((v) => persist('quick', v), [persist]);
+      const persistSettle = useCallback((v) => persist('settle', v), [persist]);
+
+      const showToast = useCallback((message) => {
+        setToast(message);
+        if (toastTimer.current) clearTimeout(toastTimer.current);
+        toastTimer.current = setTimeout(() => setToast(''), 1800);
+      }, []);
+
+      useEffect(() => {
+        return () => {
+          if (toastTimer.current) clearTimeout(toastTimer.current);
+        };
+      }, []);
+
+      return (
+        <div className="min-h-screen">
+          <div className="mx-auto max-w-lg px-4 py-8 sm:py-12">
+            <header className="mb-6 text-center">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+                <span aria-hidden="true">💸</span> 더치페이 계산기
+              </h1>
+              <p className="mt-1.5 text-sm text-slate-500">
+                깔끔하게 나누고, 남은 건 서로에게 보내면 끝.
+              </p>
+            </header>
+
+            <div className="mb-4">
+              <SegmentedControl options={TABS} value={tab} onChange={setTab} />
+            </div>
+
+            {tab === 'quick' ? (
+              <QuickSplit initial={store.current.quick} onPersist={persistQuick} onToast={showToast} />
+            ) : (
+              <SettleSplit initial={store.current.settle} onPersist={persistSettle} onToast={showToast} />
+            )}
+
+            <footer className="mt-8 text-center text-xs text-slate-400">
+              입력한 값은 이 브라우저에만 저장됩니다.
+            </footer>
+          </div>
+
+          <Toast message={toast} />
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
