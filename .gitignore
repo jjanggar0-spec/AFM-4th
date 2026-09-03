@@ -21,3 +21,9 @@ $RECYCLE.BIN/
 node_modules/
 dist/
 build/
+
+# Claude Code local settings (contains API keys - never commit)
+.claude/settings.local.json
+
+# Anthropic 번들 스킬 (벤더 코드 1.3MB / XSD 61개 - 재설치로 복구 가능)
+.claude/skills/docx/
