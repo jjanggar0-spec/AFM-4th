@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>구로 이안과 인스타그램 콘텐츠 기획안</title>
+<style>
+:root{
+  --bg:#f6f7f9; --card:#fff; --ink:#15181c; --muted:#69707b; --line:#e2e5ea;
+  --accent:#7c3aed; --accent2:#2563eb; --hot:#e11d48; --good:#0f9d58;
+  --hi:#f3f0ff; --tag:#eceff3; --tag-ink:#4b535e; --warn-bg:#fff7e3; --warn-line:#efd189; --warn-ink:#6a5211;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121418; --card:#1a1e24; --ink:#e8ebef; --muted:#98a1ad; --line:#2a3038;
+    --accent:#a78bfa; --accent2:#60a5fa; --hot:#fb7185; --good:#4ade80;
+    --hi:#241f38; --tag:#262c34; --tag-ink:#a8b1bd; --warn-bg:#2d2615; --warn-line:#5a4b21; --warn-ink:#e4ce92;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121418; --card:#1a1e24; --ink:#e8ebef; --muted:#98a1ad; --line:#2a3038;
+  --accent:#a78bfa; --accent2:#60a5fa; --hot:#fb7185; --good:#4ade80;
+  --hi:#241f38; --tag:#262c34; --tag-ink:#a8b1bd; --warn-bg:#2d2615; --warn-line:#5a4b21; --warn-ink:#e4ce92;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,-apple-system,sans-serif;
+  line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1040px;margin:0 auto;padding:32px 18px 80px}
+header{padding-bottom:24px;border-bottom:3px solid var(--accent)}
+.eyebrow{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.04em;
+  background:var(--accent);color:#fff;padding:5px 12px;border-radius:999px}
+h1{font-size:clamp(24px,4.4vw,38px);margin:14px 0 8px;font-weight:800;letter-spacing:-.025em;line-height:1.22}
+.sub{color:var(--muted);margin:0;font-size:15px;max-width:58ch}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:16px}
+.chip{font-size:12px;padding:5px 11px;border-radius:8px;background:var(--tag);color:var(--tag-ink)}
+h2{font-size:clamp(19px,2.7vw,25px);margin:52px 0 6px;font-weight:780;letter-spacing:-.018em}
+h2 .n{color:var(--accent);margin-right:9px;font-variant-numeric:tabular-nums}
+h3{font-size:17px;margin:26px 0 8px;font-weight:720}
+.lead{color:var(--muted);font-size:14.5px;margin:4px 0 18px;max-width:70ch}
+.card{background:var(--card);border:1px solid var(--line);border-radius:15px;overflow:hidden}
+.pad{padding:20px}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:660px}
+th,td{padding:10px 13px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{background:var(--hi);color:var(--muted);font-size:12.5px;font-weight:660}
+th:nth-child(2),td:nth-child(2),th:nth-child(6),td:nth-child(6){text-align:left;white-space:normal}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--hi)}
+td.num{font-variant-numeric:tabular-nums}
+.hotrow{background:linear-gradient(90deg,var(--hi),transparent)}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin:18px 0}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.stat .k{font-size:12px;color:var(--muted)}
+.stat .v{margin-top:5px;font-size:25px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.stat .r{margin-top:3px;font-size:12px;color:var(--muted)}
+.badge{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:6px}
+.b-hot{background:#ffe4e6;color:#9f1239}
+.b-warm{background:#fef3c7;color:#92400e}
+.b-cold{background:var(--tag);color:var(--tag-ink)}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .b-hot{background:#4c1d24;color:#fda4af}
+  :root:not([data-theme="light"]) .b-warm{background:#432d0c;color:#fcd34d}
+}
+.formula{border-left:5px solid var(--accent);background:var(--card);border-radius:0 15px 15px 0;
+  border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+  padding:22px;margin:14px 0}
+.formula .fn{font-size:12px;font-weight:800;color:var(--accent);letter-spacing:.05em}
+.formula h3{margin:8px 0 10px;font-size:20px;font-weight:800;letter-spacing:-.02em}
+.proof{background:var(--hi);border-radius:10px;padding:12px 14px;margin-top:12px;font-size:13.5px}
+.proof b{font-variant-numeric:tabular-nums}
+.plan{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;margin:16px 0}
+.plan-head{padding:20px;background:linear-gradient(135deg,var(--hi),transparent);border-bottom:1px solid var(--line)}
+.plan-head .no{font-size:12px;font-weight:800;color:var(--accent);letter-spacing:.05em}
+.plan-head h3{margin:6px 0 6px;font-size:21px;font-weight:800;letter-spacing:-.02em}
+.plan-head .why{font-size:13.5px;color:var(--muted)}
+.plan-body{padding:20px}
+.kv{display:grid;grid-template-columns:96px 1fr;gap:8px 14px;font-size:14px;margin-bottom:16px}
+.kv dt{color:var(--muted);font-size:13px}
+.kv dd{margin:0}
+.script{background:var(--hi);border-radius:12px;padding:16px;font-size:14px}
+.script .row{display:grid;grid-template-columns:76px 1fr;gap:12px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.script .row:last-child{border-bottom:none}
+.script .t{font-weight:800;color:var(--accent2);font-variant-numeric:tabular-nums;font-size:13px}
+.cap{background:var(--card);border:1px dashed var(--line);border-radius:12px;padding:16px;
+  font-size:13.5px;white-space:pre-wrap;margin-top:14px;line-height:1.75}
+.tags{margin-top:12px;font-size:12.5px;color:var(--accent2);word-break:keep-all}
+.note{background:var(--warn-bg);border:1px solid var(--warn-line);color:var(--warn-ink);
+  border-radius:12px;padding:14px 17px;font-size:13.8px;margin:18px 0}
+ul{padding-left:19px;margin:10px 0}li{margin:6px 0}
+footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">벤치마킹 리포트 · 2026.09.08</span>
+  <h1>@highmyopia 게시물 15개를 뜯어보고<br>구로 이안과 콘텐츠 3편을 설계했습니다</h1>
+  <p class="sub">안과 홍보 계정 참여율 1위(21.7%) 계정의 최근 릴스 15편을 좋아요·댓글·주제·포맷으로 분해해
+  성과 공식 3가지를 뽑고, 그 공식을 이안과의원에 그대로 적용한 기획안입니다.</p>
+  <div class="chips">
+    <span class="chip">분석 대상 @highmyopia · 안과의사 류영주</span>
+    <span class="chip">팔로워 3,007</span>
+    <span class="chip">최근 게시물 15개 (2026.08.01~09.01)</span>
+    <span class="chip">전량 릴스</span>
+  </div>
+</header>
+
+<h2><span class="n">01</span>15개 게시물 전수 기록</h2>
+<p class="lead">최근 15편을 모두 열어 좋아요·댓글을 확인했습니다. 상단 고정 게시물 3개는 기간이 달라 별도로 뒤에 정리했습니다.</p>
+
+<div class="grid">
+  <div class="stat"><div class="k">좋아요 중앙값</div><div class="v">44</div><div class="r">평균 169 · 편차 51배</div></div>
+  <div class="stat"><div class="k">최고 / 최저</div><div class="v">925 / 18</div><div class="r">렌즈 팁 vs 성장호르몬</div></div>
+  <div class="stat"><div class="k">댓글 중앙값</div><div class="v">5</div><div class="r">최고 30 · 합계 117</div></div>
+  <div class="stat"><div class="k">포맷</div><div class="v">릴스 100%</div><div class="r">사진 게시물 0개</div></div>
+</div>
+
+<div class="card"><div class="scroll">
+<table>
+  <thead><tr>
+    <th>#</th><th>게시물</th><th>날짜</th><th>좋아요</th><th>댓글</th><th>주제 분류</th><th>포맷</th>
+  </tr></thead>
+  <tbody>
+    <tr class="hotrow"><td class="num">1</td><td>렌즈 뒤집혔는지 3초 만에 확인하는 법</td><td class="num">08-29</td><td class="num"><b>925</b></td><td class="num">3</td><td><span class="badge b-hot">렌즈 실전</span></td><td>릴스</td></tr>
+    <tr class="hotrow"><td class="num">2</td><td>렌즈가 눈 안에서 돌아가 안 빠질 때</td><td class="num">09-01</td><td class="num"><b>559</b></td><td class="num">5</td><td><span class="badge b-hot">렌즈 실전</span></td><td>릴스</td></tr>
+    <tr class="hotrow"><td class="num">3</td><td>안과의사가 딸에게 알려준 렌즈 앞뒤 구분법</td><td class="num">08-27</td><td class="num"><b>496</b></td><td class="num">1</td><td><span class="badge b-hot">렌즈 실전</span></td><td>릴스</td></tr>
+    <tr><td class="num">4</td><td>드림렌즈, 몇 살까지 할 수 있어요?</td><td class="num">08-12</td><td class="num">111</td><td class="num">9</td><td><span class="badge b-warm">소아 근시</span></td><td>릴스</td></tr>
+    <tr><td class="num">5</td><td>왜 우리 아이는 드림렌즈를 그만뒀을까</td><td class="num">08-05</td><td class="num">65</td><td class="num">12</td><td><span class="badge b-warm">소아 근시</span></td><td>릴스</td></tr>
+    <tr><td class="num">6</td><td>드림렌즈 그만둔 아이, 엄마는 뭘 해줬나</td><td class="num">08-07</td><td class="num">61</td><td class="num"><b>30</b></td><td><span class="badge b-warm">소아 근시</span></td><td>릴스</td></tr>
+    <tr><td class="num">7</td><td>물안경, 몇 점일까요? (안과의사 Pick)</td><td class="num">08-01</td><td class="num">56</td><td class="num">11</td><td><span class="badge b-cold">생활 안전</span></td><td>릴스</td></tr>
+    <tr><td class="num">8</td><td>“엄마가 근시라서 나도 근시야?”</td><td class="num">08-03</td><td class="num">42</td><td class="num">1</td><td><span class="badge b-warm">소아 근시</span></td><td>릴스</td></tr>
+    <tr><td class="num">9</td><td>안과의사는 이렇게 보이면 안 넘어갑니다 ①</td><td class="num">08-21</td><td class="num">44</td><td class="num">5</td><td><span class="badge b-cold">질환 시각화</span></td><td>릴스</td></tr>
+    <tr><td class="num">10</td><td>세상이 이렇게 보인 적 있으세요? (당뇨망막)</td><td class="num">08-25</td><td class="num">37</td><td class="num">3</td><td><span class="badge b-cold">질환 시각화</span></td><td>릴스</td></tr>
+    <tr><td class="num">11</td><td>우리 아이는 왜 세 가지나 할까요?</td><td class="num">08-09</td><td class="num">31</td><td class="num">14</td><td><span class="badge b-warm">소아 근시</span></td><td>릴스</td></tr>
+    <tr><td class="num">12</td><td>아이 영양제, 시력에 도움 될까요?</td><td class="num">08-19</td><td class="num">30</td><td class="num">17</td><td><span class="badge b-warm">소아 근시</span></td><td>릴스</td></tr>
+    <tr><td class="num">13</td><td>한쪽 눈 감으면 왜 자꾸 빗나갈까 (입체시)</td><td class="num">08-17</td><td class="num">30</td><td class="num">2</td><td><span class="badge b-cold">눈 상식</span></td><td>릴스</td></tr>
+    <tr><td class="num">14</td><td>안과의사는 이렇게 보이면 안 넘깁니다 ②</td><td class="num">08-23</td><td class="num">26</td><td class="num">1</td><td><span class="badge b-cold">질환 시각화</span></td><td>릴스</td></tr>
+    <tr><td class="num">15</td><td>키 크는 주사, 눈은 괜찮을까요?</td><td class="num">08-14</td><td class="num">18</td><td class="num">3</td><td><span class="badge b-warm">소아 근시</span></td><td>릴스</td></tr>
+  </tbody>
+</table>
+</div></div>
+
+<h3>주제별 평균</h3>
+<div class="card"><div class="scroll">
+<table>
+  <thead><tr><th>주제</th><th>편수</th><th>좋아요 평균</th><th>댓글 평균</th><th>해석</th></tr></thead>
+  <tbody>
+    <tr><td><span class="badge b-hot">렌즈 실전</span></td><td class="num">3</td><td class="num"><b>660</b></td><td class="num">3.0</td><td>좋아요 폭발 · 댓글은 적음 → <b>저장·공유형</b></td></tr>
+    <tr><td><span class="badge b-warm">소아 근시</span></td><td class="num">7</td><td class="num">51</td><td class="num"><b>12.3</b></td><td>좋아요는 낮아도 댓글 4배 → <b>상담 전환형</b></td></tr>
+    <tr><td><span class="badge b-cold">생활 안전</span></td><td class="num">2</td><td class="num">43</td><td class="num">6.5</td><td>중간</td></tr>
+    <tr><td><span class="badge b-cold">질환 시각화</span></td><td class="num">3</td><td class="num">36</td><td class="num">3.0</td><td>정보량 최다인데 반응 최저</td></tr>
+  </tbody>
+</table>
+</div></div>
+
+<h3>참고 · 상단 고정 게시물 (역대 히트)</h3>
+<div class="card"><div class="scroll">
+<table>
+  <thead><tr><th>게시물</th><th>날짜</th><th>좋아요</th><th>댓글</th><th>특징</th></tr></thead>
+  <tbody>
+    <tr class="hotrow"><td>같이 사는 종양내과 교수님께 눈꺼풀 청소법 가르쳐봤습니다</td><td class="num">06-29</td><td class="num"><b>8,350</b></td><td class="num"><b>242</b></td><td>실제 인물 등장 + 동작 실연 + “그냥 세수하면 안 돼?” 반전</td></tr>
+    <tr><td>안과 의사가 속눈썹에 절대 하지 않는 3가지</td><td class="num">04-29</td><td class="num">712</td><td class="num">44</td><td>금기 프레임 + 미용 관심사</td></tr>
+    <tr><td>안과의사가 골프에서 선글라스 절대 안 벗는 진짜 이유</td><td class="num">04-10</td><td class="num">239</td><td class="num">29</td><td>반전(자외선이 아니라 안구파열)</td></tr>
+  </tbody>
+</table>
+</div></div>
+
+<h2><span class="n">02</span>반응 좋았던 게시물의 공통점 3가지</h2>
+<p class="lead">상위 게시물과 하위 게시물을 가른 것은 정보의 양이나 전문성이 아니었습니다. 세 가지가 갈랐습니다.</p>
+
+<div class="formula">
+  <div class="fn">공식 ①</div>
+  <h3>시청자가 지금 손으로 따라 할 동작을 준다</h3>
+  <p>상위 3편(925·559·496)은 모두 <b>렌즈를 직접 다루는 손동작</b>입니다. 역대 1위(8,350)도
+  “눈꺼풀 청소법을 실제로 해 보이는” 영상이었습니다. 반대로 하위 3편은 전부
+  ‘이런 증상은 이런 질환’ 같은 <b>지식 전달형</b>이었습니다.</p>
+  <p>정보의 질은 하위 게시물이 오히려 높습니다. 차이는 <b>시청자가 영상을 보고 할 일이 있느냐</b>였습니다.
+  따라 할 동작이 있으면 저장하고, 없으면 그냥 지나갑니다.</p>
+  <div class="proof">📌 <b>근거</b> — 동작형 3편 평균 <b>660</b> vs 지식형 3편 평균 <b>36</b> · <b>18.3배</b> 차이</div>
+</div>
+
+<div class="formula">
+  <div class="fn">공식 ②</div>
+  <h3>의사가 아니라 ‘엄마·딸·동료’로 등장한다</h3>
+  <p>제목을 보면 “안과의사 <b>엄마가 딸에게</b>”, “<b>우리 딸이</b> 물었어요”, “같이 사는 <b>종양내과 교수님께</b>”처럼
+  관계가 먼저 나옵니다. 특히 <b>댓글 상위 3편이 전부 ‘우리 아이’ 시리즈</b>(30·17·14)입니다.</p>
+  <p>흥미로운 건 이 시리즈의 좋아요는 평균 51로 낮다는 점입니다. 좋아요는 유용한 팁에서 나오고,
+  <b>댓글은 “우리 애도 그런데요” 하는 공감에서</b> 나옵니다. 병원 입장에서 실제 예약으로 이어지는 건 후자입니다.</p>
+  <div class="proof">📌 <b>근거</b> — 소아 근시 7편 댓글 평균 <b>12.3</b> vs 나머지 8편 평균 <b>3.3</b> · <b>3.7배</b></div>
+</div>
+
+<div class="formula">
+  <div class="fn">공식 ③</div>
+  <h3>‘안 하는 것’과 ‘틀린 상식’으로 연다</h3>
+  <p>“절대 하지 않는 3가지”, “절대 안 벗는 진짜 이유”, “왜 우리 아이는 드림렌즈를 <b>그만뒀을까</b>”.
+  홍보 계정이 흔히 쓰는 “좋습니다·추천합니다” 프레임이 하나도 없습니다.</p>
+  <p>역대 1위 영상의 훅도 교수님의 <b>“그냥 세수하면 안 돼?”</b>라는 틀린 상식이었습니다.
+  전문가가 자기 분야에서 <b>무엇을 피하는지</b>를 말할 때 사람들은 멈춰 섭니다.</p>
+  <div class="proof">📌 <b>근거</b> — 금기·반전 프레임 4편 평균 <b>2,341</b> vs 일반 정보 프레임 평균 <b>44</b></div>
+</div>
+
+<h2><span class="n">03</span>구로 이안과의원 적용 기획안 3편</h2>
+<div class="note">
+  <b>적용 대상</b> · 이안과의원 (서울 구로구 구로중앙로 217, 02-6382-7007)<br>
+  전문의 6명 · 수술실 4개 · 회복실 2개 · 입원실 25개 규모로, <b>수술을 직접 하는 안과</b>입니다.
+  진료시간은 평일 09:00~18:00(점심 13~14시), 토요일 09:00~13:30, 일·공휴일 휴진.<br>
+  상권은 <b>구로디지털단지 직장인</b>과 <b>구로동 아파트 단지 육아 가구</b>가 겹칩니다. 아래 3편은 이 두 축과 수술 역량을 각각 겨냥합니다.
+</div>
+
+<div class="plan">
+  <div class="plan-head">
+    <div class="no">기획안 1 · 공식 ① 동작형 적용</div>
+    <h3>“모니터 앞에서 30초, 안과의사가 알려주는 눈 리셋법”</h3>
+    <div class="why">타깃: 구로디지털단지 직장인 · 목표: 저장·공유 (도달 확보용 대표 콘텐츠)</div>
+  </div>
+  <div class="plan-body">
+    <dl class="kv">
+      <dt>포맷</dt><dd>릴스 45~60초 · 세로 · 원장 1인 실연 · 자막 필수</dd>
+      <dt>촬영지</dt><dd>진료실 책상 (모니터가 보이게)</dd>
+      <dt>핵심 장치</dt><dd>시청자가 <b>영상을 보면서 같이 따라 하도록</b> 카메라를 향해 지시</dd>
+      <dt>제작 난이도</dt><dd>낮음 — 소품 없음, 1테이크 가능</dd>
+      <dt>KPI</dt><dd>저장 수 (좋아요보다 저장을 지표로)</dd>
+    </dl>
+    <div class="script">
+      <div class="row"><div class="t">0–3초</div><div><b>훅</b> — “컴퓨터 보다가 눈 뻑뻑하신 분, 인공눈물 넣기 전에 이거 먼저 하세요.”</div></div>
+      <div class="row"><div class="t">3–12초</div><div><b>동작 1</b> — 20초 동안 창밖 보기. 원장이 실제로 고개를 돌려 보여줌. “20-20-20 규칙인데, 20분마다 6m 밖을 20초.”</div></div>
+      <div class="row"><div class="t">12–25초</div><div><b>동작 2</b> — 의식적으로 꽉 감았다 뜨기 5회. “모니터 볼 때 깜빡임이 분당 15회에서 5회로 줍니다.”</div></div>
+      <div class="row"><div class="t">25–40초</div><div><b>동작 3</b> — 따뜻한 손바닥으로 눈 덮고 10초. 마이봄샘 온찜질 원리 한 줄 설명.</div></div>
+      <div class="row"><div class="t">40–55초</div><div><b>반전 마무리</b> — “인공눈물부터 넣는 분들 많은데, 순서가 반대예요. 그리고 하루 6번 넣어도 그대로면 건조증이 아니라 다른 문제일 수 있습니다.”</div></div>
+      <div class="row"><div class="t">CTA</div><div>“저장해두고 오후 3시에 한 번 해보세요.” (병원명은 자막 하단 워터마크로만)</div></div>
+    </div>
+    <div class="cap">💻 모니터 앞 30초 눈 리셋법
+
+컴퓨터 오래 보시는 분들, 인공눈물부터 찾지 마세요.
+순서가 있습니다 👇
+
+① 20초 창밖 보기 — 20분마다, 6m 밖을 20초간
+② 꽉 감았다 뜨기 5회 — 모니터 보면 깜빡임이 분당 15회에서 5회로 줄어듭니다
+③ 손바닥 온찜질 10초 — 눈꺼풀 기름샘(마이봄샘)이 굳는 걸 풀어줘요
+
+⚠️ 인공눈물을 하루 6번 넣어도 그대로라면
+건조증이 아니라 눈꺼풀염이나 마이봄샘 기능장애일 수 있어요. 그땐 검사받으셔야 합니다.
+
+저장해두고 오후 3시에 한 번 해보세요 🙂</div>
+    <div class="tags">#구로안과 #구로디지털단지 #안구건조증 #눈운동 #직장인건강 #마이봄샘 #이안과의원 #구로동안과</div>
+  </div>
+</div>
+
+<div class="plan">
+  <div class="plan-head">
+    <div class="no">기획안 2 · 공식 ② 관계 서사 적용</div>
+    <h3>“원장님, 본인 아이 시력검사는 몇 살에 시키셨어요?”</h3>
+    <div class="why">타깃: 구로동 아파트 단지 학부모 · 목표: 댓글·DM 상담 전환</div>
+  </div>
+  <div class="plan-body">
+    <dl class="kv">
+      <dt>포맷</dt><dd>릴스 60초 · 인터뷰 형식 (직원이 묻고 원장이 답하는 2인 구도)</dd>
+      <dt>촬영지</dt><dd>대기실 소파 — 진료실보다 편안한 톤</dd>
+      <dt>핵심 장치</dt><dd>‘의사’가 아니라 <b>‘부모인 의사’</b>로 말하기. 자기 아이 이야기를 먼저 꺼냄</dd>
+      <dt>제작 난이도</dt><dd>중간 — 원장 1명 + 질문자 1명, 대본 필요</dd>
+      <dt>KPI</dt><dd>댓글 수 · DM 문의 (벤치마크 계정은 이 유형에서 댓글 3.7배)</dd>
+    </dl>
+    <div class="script">
+      <div class="row"><div class="t">0–4초</div><div><b>훅</b> — 직원이 카메라 밖에서 질문. “원장님은 본인 아이 시력검사, 몇 살에 처음 시키셨어요?” 원장이 웃으며 “세 살이요.”</div></div>
+      <div class="row"><div class="t">4–15초</div><div><b>공감</b> — “주변에서 ‘그렇게 빨리?’ 하시는데, 저는 약시 때문이었어요. 약시는 만 8세 지나면 되돌리기 어렵거든요.”</div></div>
+      <div class="row"><div class="t">15–35초</div><div><b>체크리스트</b> — 집에서 보이는 신호 3가지: TV에 자꾸 다가감 / 한쪽 눈을 찡그림 / 고개를 기울여 봄. 각각 짧은 재연 컷.</div></div>
+      <div class="row"><div class="t">35–50초</div><div><b>반전</b> — “근데 아이가 ‘잘 보여요’라고 해도 소용없어요. 한쪽만 나쁘면 아이는 불편한 걸 모릅니다. 그래서 검사가 필요한 거예요.”</div></div>
+      <div class="row"><div class="t">50–60초</div><div><b>CTA</b> — “우리 아이 몇 살인지 댓글로 남겨주시면, 지금 검사 시기인지 답해드릴게요.”</div></div>
+    </div>
+    <div class="cap">👦 “원장님은 본인 아이 시력검사, 몇 살에 시키셨어요?”
+
+세 살이요.
+빠르다고들 하시는데, 이유가 있어요.
+
+약시는 만 8세가 지나면 되돌리기 어렵습니다.
+그 전에 찾아야 교정이 되거든요.
+
+집에서 이런 모습 보이면 검사해보세요 👇
+① TV나 책에 자꾸 가까이 다가간다
+② 한쪽 눈을 찡그리거나 자주 비빈다
+③ 고개를 기울이거나 돌려서 본다
+
+⚠️ 아이가 “잘 보여요”라고 해도 안심하면 안 돼요.
+한쪽 눈만 나쁘면 아이는 불편한 걸 아예 모릅니다.
+
+우리 아이 몇 살인지 댓글로 남겨주시면
+지금이 검사 시기인지 답해드릴게요 🙂
+
+📍 구로중앙로 217 · 평일 09:00–18:00 / 토 09:00–13:30</div>
+    <div class="tags">#구로맘 #구로동안과 #소아안과 #약시 #아이시력검사 #근시관리 #드림렌즈 #이안과의원 #구로육아</div>
+  </div>
+</div>
+
+<div class="plan">
+  <div class="plan-head">
+    <div class="no">기획안 3 · 공식 ③ 금기·반전 적용</div>
+    <h3>“백내장 수술, 안과의사인 제 부모님께는 이렇게 안 합니다”</h3>
+    <div class="why">타깃: 50~70대 본인 및 그 자녀 세대 · 목표: 수술 상담 (병원 수술 역량 활용)</div>
+  </div>
+  <div class="plan-body">
+    <dl class="kv">
+      <dt>포맷</dt><dd>릴스 60~75초 · 원장 정면 토킹 + 렌즈 모형 컷</dd>
+      <dt>촬영지</dt><dd>수술실 앞 복도 또는 검사실 (장비가 배경에 보이게)</dd>
+      <dt>핵심 장치</dt><dd>“이건 <b>안 합니다</b>” 3가지로 구성 — 추천이 아니라 배제로 신뢰 확보</dd>
+      <dt>제작 난이도</dt><dd>중간 — 원내 촬영 동의 및 환자 노출 차단 필요</dd>
+      <dt>KPI</dt><dd>전화 문의 · 프로필 링크 클릭</dd>
+      <dt>주의</dt><dd>의료광고 심의 대상 표현 확인 필수 (아래 참고 참조)</dd>
+    </dl>
+    <div class="script">
+      <div class="row"><div class="t">0–5초</div><div><b>훅</b> — “백내장 수술, 제가 부모님께는 안 하는 게 세 가지 있습니다.”</div></div>
+      <div class="row"><div class="t">5–20초</div><div><b>안 하는 것 ①</b> — “무조건 비싼 다초점 렌즈요. 야간 운전 많으시면 빛번짐 때문에 오히려 불편해하십니다. 생활 패턴을 먼저 여쭤봅니다.”</div></div>
+      <div class="row"><div class="t">20–35초</div><div><b>안 하는 것 ②</b> — “‘일단 좀 더 참았다 하시죠’요. 너무 익으면 수술이 어려워지고 합병증 위험이 올라갑니다. 미루는 게 안전한 게 아니에요.”</div></div>
+      <div class="row"><div class="t">35–50초</div><div><b>안 하는 것 ③</b> — “양쪽 눈 같은 날 수술이요. 하루 이틀 간격을 둡니다. 회복 반응을 보고 두 번째를 조정할 수 있으니까요.”</div></div>
+      <div class="row"><div class="t">50–70초</div><div><b>마무리</b> — “백내장은 한 번 넣으면 평생 쓰는 렌즈예요. 그래서 저희는 수술 전 상담에 시간을 더 씁니다.” (수술실·입원실 인서트)</div></div>
+    </div>
+    <div class="cap">👁 백내장 수술, 제 부모님께는 안 하는 세 가지
+
+① 무조건 비싼 다초점 렌즈
+야간 운전이 많으시면 빛번짐 때문에 오히려 불편해하십니다.
+렌즈보다 생활 패턴을 먼저 여쭤봅니다.
+
+② “좀 더 참았다 하시죠”
+백내장이 너무 익으면 수술 난이도와 합병증 위험이 올라갑니다.
+미루는 게 늘 안전한 건 아니에요.
+
+③ 양쪽 눈 같은 날 수술
+하루 이틀 간격을 둡니다.
+첫 번째 눈 회복을 보고 두 번째를 조정할 수 있으니까요.
+
+백내장 인공수정체는 한 번 넣으면 평생 씁니다.
+그래서 저희는 수술보다 수술 전 상담에 시간을 더 씁니다.
+
+📍 이안과의원 · 구로중앙로 217
+☎ 02-6382-7007 (평일 09:00–18:00 / 토 09:00–13:30)</div>
+    <div class="tags">#구로안과 #백내장 #노안백내장 #인공수정체 #다초점렌즈 #구로동안과 #이안과의원 #백내장수술</div>
+  </div>
+</div>
+
+<h2><span class="n">04</span>운영 제안</h2>
+<ul>
+  <li><b>주 2회, 릴스만.</b> 벤치마크 계정은 15편 전부 릴스였고 사진 게시물이 0개입니다. 카드뉴스는 만들지 않는 편이 낫습니다.</li>
+  <li><b>기획안 1을 먼저 올리세요.</b> 도달을 벌어 놓아야 2·3편이 노출됩니다. 1편은 지역 무관하게 퍼지는 유형이고, 2·3편은 지역 전환용입니다.</li>
+  <li><b>좋아요와 댓글 목표를 나눠 잡으세요.</b> 1편은 저장, 2편은 댓글, 3편은 전화 문의가 지표입니다. 하나의 지표로 세 편을 평가하면 2·3편이 실패로 보입니다.</li>
+  <li><b>댓글에는 원장 계정으로 답을 다세요.</b> 벤치마크 계정의 댓글 상위 게시물은 전부 원장이 직접 답한 글이었습니다.</li>
+  <li><b>의료광고 사전심의</b> — 치료 효과를 단정하거나 최상급(‘최고’, ‘유일’)을 쓰면 의료법 제56조 위반 소지가 있습니다. 위 캡션은 단정 표현을 피해 작성했지만, 게시 전 심의 확인을 권합니다.</li>
+</ul>
+
+<footer>
+  <p><b>조사 방법</b> — Playwright로 @highmyopia 프로필을 열어 게시물 URL을 수집한 뒤,
+  각 게시물 페이지의 og:description에서 좋아요·댓글·게시일·본문을 읽었습니다.
+  최근 15편(2026-08-01 ~ 09-01)과 상단 고정 3편을 구분해 집계했습니다.
+  이안과의원 정보는 네이버 검색 결과(주소·연락처·진료시간·시설 현황) 기준입니다.</p>
+  <p>수집일 2026-09-08 · 인스타그램은 방문자 수를 외부에 공개하지 않아 도달 지표는 팔로워 수로 대체했습니다.
+  본 기획안은 제안이며 게시 전 의료광고 심의 확인이 필요합니다.</p>
+</footer>
+
+</div>
+</body>
+</html>

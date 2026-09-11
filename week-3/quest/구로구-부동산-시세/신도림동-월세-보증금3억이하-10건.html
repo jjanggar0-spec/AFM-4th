@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>신도림동 월세 조건 매물 10선</title>
+<style>
+:root{
+  --bg:#f5f6f8; --card:#fff; --ink:#15181c; --muted:#69707b; --line:#e2e5ea;
+  --accent:#1b6ef3; --good:#127a4b; --good-bg:#e6f5ee;
+  --warn-bg:#fff7e3; --warn-line:#efd189; --warn-ink:#6a5211;
+  --hi:#eef4ff; --tag:#eceff3; --tag-ink:#4b535e;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#13161a; --card:#1b1f25; --ink:#e7eaee; --muted:#98a1ad; --line:#2b3139;
+    --accent:#6ba4ff; --good:#5fd39b; --good-bg:#16362a;
+    --warn-bg:#2d2615; --warn-line:#5a4b21; --warn-ink:#e4ce92;
+    --hi:#212936; --tag:#272d35; --tag-ink:#a8b1bd;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#13161a; --card:#1b1f25; --ink:#e7eaee; --muted:#98a1ad; --line:#2b3139;
+  --accent:#6ba4ff; --good:#5fd39b; --good-bg:#16362a;
+  --warn-bg:#2d2615; --warn-line:#5a4b21; --warn-ink:#e4ce92;
+  --hi:#212936; --tag:#272d35; --tag-ink:#a8b1bd;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,-apple-system,sans-serif;
+  line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1000px;margin:0 auto;padding:32px 18px 72px}
+header{padding-bottom:22px;border-bottom:2px solid var(--ink)}
+h1{font-size:clamp(23px,4.2vw,34px);margin:0 0 8px;font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--muted);margin:0;font-size:15px}
+.cond{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.cond span{font-size:13px;padding:6px 12px;border-radius:8px;background:var(--accent);color:#fff;font-weight:650}
+.cond span.off{background:var(--tag);color:var(--tag-ink);font-weight:500}
+h2{font-size:clamp(18px,2.6vw,22px);margin:46px 0 6px;font-weight:750;letter-spacing:-.015em}
+h2 .num{color:var(--accent);margin-right:8px;font-variant-numeric:tabular-nums}
+.lead{color:var(--muted);font-size:14.5px;margin:4px 0 16px}
+.note{background:var(--warn-bg);border:1px solid var(--warn-line);color:var(--warn-ink);
+  border-radius:12px;padding:15px 18px;font-size:14px;margin:20px 0}
+.note strong{font-weight:750}
+.list{display:grid;gap:12px;margin:20px 0}
+.item{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;
+  display:grid;grid-template-columns:44px 1fr auto;gap:14px;align-items:start}
+.rank{width:44px;height:44px;border-radius:11px;background:var(--hi);color:var(--accent);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;
+  font-variant-numeric:tabular-nums}
+.item.best .rank{background:var(--good-bg);color:var(--good)}
+.body h3{margin:0 0 4px;font-size:17.5px;font-weight:750}
+.body .spec{color:var(--muted);font-size:13.5px;margin:0 0 8px}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:12px;padding:3px 9px;border-radius:6px;background:var(--tag);color:var(--tag-ink)}
+.tag.new{background:var(--good-bg);color:var(--good);font-weight:650}
+.price{text-align:right;white-space:nowrap}
+.price .main{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.price .dep{font-size:13.5px;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:2px}
+.price .conv{font-size:12.5px;color:var(--muted);margin-top:6px;font-variant-numeric:tabular-nums}
+.price .conv b{color:var(--ink);font-weight:700}
+@media (max-width:600px){
+  .item{grid-template-columns:36px 1fr;}
+  .rank{width:36px;height:36px;font-size:15px}
+  .price{grid-column:1 / -1;text-align:left;padding-top:6px;border-top:1px solid var(--line);margin-top:4px}
+}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:640px}
+th,td{padding:10px 13px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{background:var(--hi);color:var(--muted);font-size:13px;font-weight:650}
+th:nth-child(-n+3),td:nth-child(-n+3){text-align:left}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--hi)}
+td.num{font-variant-numeric:tabular-nums}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));margin:18px 0}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.stat .k{font-size:12.5px;color:var(--muted);margin-bottom:6px}
+.stat .v{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.stat .r{font-size:12.5px;color:var(--muted);margin-top:3px}
+ul{padding-left:20px;margin:12px 0} li{margin:7px 0}
+footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>신도림동 월세 조건 매물 10선</h1>
+  <p class="sub">보증금 3억 이하 · 월세 200만원 이하 — 국토교통부 실거래 기준</p>
+  <div class="cond">
+    <span>보증금 ≤ 3억</span>
+    <span>월세 ≤ 200만원</span>
+    <span class="off">전용 59㎡ 이상</span>
+    <span class="off">계약일 최신순</span>
+    <span class="off">2025.09 ~ 2026.09</span>
+  </div>
+</header>
+
+<div class="note">
+  <strong>먼저 알려드릴 두 가지가 있습니다.</strong><br>
+  ① <strong>40평대에는 조건에 맞는 건이 0건</strong>입니다. 신도림동 40평대 월세 24건은 전부 보증금이 3억을 넘거나 월세가 200만원을 초과했습니다. 그래서 <strong>신도림동 전체</strong>로 범위를 넓혔고, 실제 거주 가능한 규모를 위해 전용 59㎡ 이상만 추렸습니다.<br>
+  ② 아래 목록은 <strong>지금 계약할 수 있는 매물이 아니라 실제로 체결된 계약 기록</strong>입니다. 조사한 자료 중 보증금과 월세가 함께 담긴 것은 국토부 실거래뿐이라서입니다. "이 조건이면 이런 집을 이 가격에 얻을 수 있다"는 시세 기준선으로 보시면 됩니다.
+</div>
+
+<h2><span class="num">01</span>조건 충족 현황</h2>
+<div class="grid">
+  <div class="stat"><div class="k">신도림동 전체 조건 충족</div><div class="v">392건</div><div class="r">월세 659건 중 59%</div></div>
+  <div class="stat"><div class="k">전용 59㎡ 이상</div><div class="v">131건</div><div class="r">나머지는 원룸·소형</div></div>
+  <div class="stat"><div class="k">40평대 (전용 99~125㎡)</div><div class="v">0건</div><div class="r">조건 초과</div></div>
+</div>
+
+<h2><span class="num">02</span>매물 10선 <span style="font-size:14px;color:var(--muted);font-weight:400">— 계약일 최신순</span></h2>
+<p class="lead">환산월세 = 월세 + (보증금 × 연 4% ÷ 12). 보증금 조건이 다른 집을 같은 잣대로 비교하기 위한 값입니다.</p>
+
+<div class="list">
+
+  <div class="item">
+    <div class="rank">1</div>
+    <div class="body">
+      <h3>현대홈타운아파트</h3>
+      <p class="spec">전용 59.73㎡ (18.1평) · 10층 · 1999년 준공 · 신도림로19길 16</p>
+      <div class="tags"><span class="tag new">신규 계약</span><span class="tag">2026.08.28</span><span class="tag">입주 26.10</span></div>
+    </div>
+    <div class="price">
+      <div class="main">월 100만</div>
+      <div class="dep">보증금 2.5억</div>
+      <div class="conv">환산월세 <b>183만</b></div>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="rank">2</div>
+    <div class="body">
+      <h3>우성3차</h3>
+      <p class="spec">전용 84.75㎡ (25.6평) · 15층 · 1993년 준공 · 신도림로21길 25</p>
+      <div class="tags"><span class="tag new">신규 계약</span><span class="tag">2026.08.25</span><span class="tag">입주 26.10</span></div>
+    </div>
+    <div class="price">
+      <div class="main">월 120만</div>
+      <div class="dep">보증금 3.0억</div>
+      <div class="conv">환산월세 <b>220만</b></div>
+    </div>
+  </div>
+
+  <div class="item best">
+    <div class="rank">3</div>
+    <div class="body">
+      <h3>대림2차</h3>
+      <p class="spec">전용 59.9㎡ (18.1평) · 6층 · 2001년 준공 · 신도림로 16</p>
+      <div class="tags"><span class="tag">갱신 계약</span><span class="tag">2026.08.19</span><span class="tag">종전 5,000/100 → 동결</span></div>
+    </div>
+    <div class="price">
+      <div class="main">월 106만</div>
+      <div class="dep">보증금 0.5억</div>
+      <div class="conv">환산월세 <b>123만</b></div>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="rank">4</div>
+    <div class="body">
+      <h3>대림2차</h3>
+      <p class="spec">전용 59.9㎡ (18.1평) · 10층 · 2001년 준공 · 신도림로 16</p>
+      <div class="tags"><span class="tag new">신규 계약</span><span class="tag">2026.08.07</span><span class="tag">입주 26.11</span></div>
+    </div>
+    <div class="price">
+      <div class="main">월 195만</div>
+      <div class="dep">보증금 1.0억</div>
+      <div class="conv">환산월세 <b>228만</b></div>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="rank">5</div>
+    <div class="body">
+      <h3>우성3차</h3>
+      <p class="spec">전용 84.75㎡ (25.6평) · 12층 · 1993년 준공 · 신도림로21길 25</p>
+      <div class="tags"><span class="tag new">신규 계약</span><span class="tag">2026.07.31</span><span class="tag">입주 26.08</span></div>
+    </div>
+    <div class="price">
+      <div class="main">월 155만</div>
+      <div class="dep">보증금 1.5억</div>
+      <div class="conv">환산월세 <b>205만</b></div>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="rank">6</div>
+    <div class="body">
+      <h3>대림1차</h3>
+      <p class="spec">전용 84.95㎡ (25.7평) · 11층 · 1999년 준공 · 신도림로 16</p>
+      <div class="tags"><span class="tag new">신규 계약</span><span class="tag">2026.07.24</span><span class="tag">입주 26.10</span></div>
+    </div>
+    <div class="price">
+      <div class="main">월 170만</div>
+      <div class="dep">보증금 3.0억</div>
+      <div class="conv">환산월세 <b>270만</b></div>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="rank">7</div>
+    <div class="body">
+      <h3>동아3차</h3>
+      <p class="spec">전용 60㎡ (18.1평) · 10층 · 2000년 준공 · 신도림로 78</p>
+      <div class="tags"><span class="tag">갱신 계약</span><span class="tag">2026.07.23</span><span class="tag">종전 10,000/160 → 169</span></div>
+    </div>
+    <div class="price">
+      <div class="main">월 169만</div>
+      <div class="dep">보증금 1.0억</div>
+      <div class="conv">환산월세 <b>202만</b></div>
+    </div>
+  </div>
+
+  <div class="item best">
+    <div class="rank">8</div>
+    <div class="body">
+      <h3>대림1차</h3>
+      <p class="spec">전용 59.9㎡ (18.1평) · 3층 · 1999년 준공 · 신도림로 16</p>
+      <div class="tags"><span class="tag">갱신 계약</span><span class="tag">2026.07.21</span><span class="tag">종전 30,000/50 → 58</span></div>
+    </div>
+    <div class="price">
+      <div class="main">월 58만</div>
+      <div class="dep">보증금 3.0억</div>
+      <div class="conv">환산월세 <b>158만</b></div>
+    </div>
+  </div>
+
+  <div class="item best">
+    <div class="rank">9</div>
+    <div class="body">
+      <h3>우성5차</h3>
+      <p class="spec">전용 59.91㎡ (18.1평) · 1층 · 1994년 준공 · 신도림로21길 21</p>
+      <div class="tags"><span class="tag new">신규 계약</span><span class="tag">2026.07.20</span><span class="tag">1층</span></div>
+    </div>
+    <div class="price">
+      <div class="main">월 60만</div>
+      <div class="dep">보증금 2.1억</div>
+      <div class="conv">환산월세 <b>130만</b></div>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="rank">10</div>
+    <div class="body">
+      <h3>대림1차</h3>
+      <p class="spec">전용 59.88㎡ (18.1평) · 3층 · 1999년 준공 · 신도림로 16</p>
+      <div class="tags"><span class="tag">갱신 계약</span><span class="tag">2026.07.14</span><span class="tag">종전 7,000/130 → 135</span></div>
+    </div>
+    <div class="price">
+      <div class="main">월 135만</div>
+      <div class="dep">보증금 0.7억</div>
+      <div class="conv">환산월세 <b>158만</b></div>
+    </div>
+  </div>
+
+</div>
+
+<h2><span class="num">03</span>한눈에 보는 표</h2>
+<div class="card"><div class="scroll">
+<table>
+  <thead><tr>
+    <th>#</th><th>단지</th><th>계약일</th><th>전용면적</th><th>층</th>
+    <th>보증금</th><th>월세</th><th>환산월세</th><th>준공</th><th>구분</th>
+  </tr></thead>
+  <tbody>
+    <tr><td class="num">1</td><td>현대홈타운</td><td class="num">2026.08.28</td><td class="num">59.73㎡</td><td class="num">10층</td><td class="num">2.5억</td><td class="num">100만</td><td class="num">183만</td><td class="num">1999</td><td>신규</td></tr>
+    <tr><td class="num">2</td><td>우성3차</td><td class="num">2026.08.25</td><td class="num">84.75㎡</td><td class="num">15층</td><td class="num">3.0억</td><td class="num">120만</td><td class="num">220만</td><td class="num">1993</td><td>신규</td></tr>
+    <tr><td class="num">3</td><td>대림2차</td><td class="num">2026.08.19</td><td class="num">59.9㎡</td><td class="num">6층</td><td class="num">0.5억</td><td class="num">106만</td><td class="num">123만</td><td class="num">2001</td><td>갱신</td></tr>
+    <tr><td class="num">4</td><td>대림2차</td><td class="num">2026.08.07</td><td class="num">59.9㎡</td><td class="num">10층</td><td class="num">1.0억</td><td class="num">195만</td><td class="num">228만</td><td class="num">2001</td><td>신규</td></tr>
+    <tr><td class="num">5</td><td>우성3차</td><td class="num">2026.07.31</td><td class="num">84.75㎡</td><td class="num">12층</td><td class="num">1.5억</td><td class="num">155만</td><td class="num">205만</td><td class="num">1993</td><td>신규</td></tr>
+    <tr><td class="num">6</td><td>대림1차</td><td class="num">2026.07.24</td><td class="num">84.95㎡</td><td class="num">11층</td><td class="num">3.0억</td><td class="num">170만</td><td class="num">270만</td><td class="num">1999</td><td>신규</td></tr>
+    <tr><td class="num">7</td><td>동아3차</td><td class="num">2026.07.23</td><td class="num">60㎡</td><td class="num">10층</td><td class="num">1.0억</td><td class="num">169만</td><td class="num">202만</td><td class="num">2000</td><td>갱신</td></tr>
+    <tr><td class="num">8</td><td>대림1차</td><td class="num">2026.07.21</td><td class="num">59.9㎡</td><td class="num">3층</td><td class="num">3.0억</td><td class="num">58만</td><td class="num">158만</td><td class="num">1999</td><td>갱신</td></tr>
+    <tr><td class="num">9</td><td>우성5차</td><td class="num">2026.07.20</td><td class="num">59.91㎡</td><td class="num">1층</td><td class="num">2.1억</td><td class="num">60만</td><td class="num">130만</td><td class="num">1994</td><td>신규</td></tr>
+    <tr><td class="num">10</td><td>대림1차</td><td class="num">2026.07.14</td><td class="num">59.88㎡</td><td class="num">3층</td><td class="num">0.7억</td><td class="num">135만</td><td class="num">158만</td><td class="num">1999</td><td>갱신</td></tr>
+  </tbody>
+</table>
+</div></div>
+
+<h2><span class="num">04</span>읽는 법</h2>
+<ul>
+  <li><b>환산월세가 가장 저렴한 건 3번 대림2차(123만)와 9번 우성5차(130만)</b>입니다. 다만 9번은 1층이라 가격이 낮게 형성된 점을 감안하셔야 합니다.</li>
+  <li><b>보증금 여력이 크다면 8번 대림1차</b>가 눈에 띕니다. 보증금 3억을 넣으면 월세가 58만원까지 떨어집니다.</li>
+  <li><b>보증금이 부족하다면 3번(0.5억/106만)이나 10번(0.7억/135만)</b> 형태가 현실적입니다.</li>
+  <li><b>25평대(전용 84㎡)를 원하신다면 우성3차·대림1차</b>가 조건 안에 들어옵니다. 월 120~170만원 선입니다.</li>
+  <li><b>갱신 계약은 시세보다 낮습니다.</b> 3·7·8·10번은 계약갱신청구권으로 5% 상한이 적용됐을 수 있어, 새로 구하실 때는 이보다 높게 잡으셔야 합니다.</li>
+  <li>조건 충족 392건 중 261건이 전용 59㎡ 미만입니다. <b>보증금 3억·월세 200만 이하 구간은 사실상 소형 위주</b>의 시장입니다.</li>
+</ul>
+
+<h2><span class="num">05</span>유의사항</h2>
+<ul>
+  <li>실제 <b>거래된 계약 기록</b>이며, 현재 계약 가능한 매물이 아닙니다. 지금 나온 물건은 네이버부동산·직방 등에서 확인하셔야 합니다.</li>
+  <li>국토부 자료는 계약일 기준이라 <b>최근 1~2개월 건은 신고가 진행 중</b>입니다.</li>
+  <li>환산월세는 <b>전월세 전환율 연 4%</b>를 가정한 값으로, 실제 협상에서 적용되는 비율과 다를 수 있습니다.</li>
+  <li>동일 단지·동일 면적이라도 층·향·수리 상태에 따라 편차가 큽니다.</li>
+</ul>
+
+<footer>
+  <p><b>출처</b> 국토교통부 실거래가 공개시스템(rt.molit.go.kr) · 서울특별시 구로구 신도림동 아파트 전월세 · 계약일 2025-09-09 ~ 2026-09-08 · 총 1,271건 중 조건 필터링</p>
+  <p>수집일 2026-09-08 · 본 자료는 법적 효력이 없는 참고용입니다.</p>
+</footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "mulbit-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "물빛 화실 - fal.ai 기반 수채화 이미지 생성 앱",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}

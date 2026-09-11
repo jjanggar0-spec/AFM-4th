@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>물빛 화실</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@500;700&family=Gowun+Dodum&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --paper:#fbfbf8;
+  --sheet:#ffffff;
+  --wash:#eef1f3;
+  --wash-deep:#dfe4e8;
+  --ink:#26303b;
+  --ink-soft:#5e6873;
+  --ink-faint:#8d959d;
+  --ultramarine:#3d5ba9;
+  --ultramarine-wash:#e7ecf7;
+  --line:#e3e6e9;
+  --line-strong:#cdd3d8;
+  --warn:#8a5a2b;
+  --warn-wash:#f7efe4;
+  --shadow:rgba(38,48,59,.10);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#15181c;
+    --sheet:#1c2026;
+    --wash:#1e2329;
+    --wash-deep:#262c33;
+    --ink:#e6e9ec;
+    --ink-soft:#a7afb7;
+    --ink-faint:#747d86;
+    --ultramarine:#8ea6e0;
+    --ultramarine-wash:#222b3d;
+    --line:#2a3037;
+    --line-strong:#3a424b;
+    --warn:#d9b284;
+    --warn-wash:#2b241b;
+    --shadow:rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#15181c;
+  --sheet:#1c2026;
+  --wash:#1e2329;
+  --wash-deep:#262c33;
+  --ink:#e6e9ec;
+  --ink-soft:#a7afb7;
+  --ink-faint:#747d86;
+  --ultramarine:#8ea6e0;
+  --ultramarine-wash:#222b3d;
+  --line:#2a3037;
+  --line-strong:#3a424b;
+  --warn:#d9b284;
+  --warn-wash:#2b241b;
+  --shadow:rgba(0,0,0,.35);
+}
+
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased;
+}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+button,input,textarea{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible,textarea:focus-visible,label:focus-within{
+  outline:2px solid var(--ultramarine);outline-offset:2px;
+}
+
+.wrap{max-width:1180px;margin:0 auto;padding:30px 24px 60px}
+
+/* ── 머리말 ── */
+.top{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  padding-bottom:18px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+h1{font-family:"Hahmlet","Apple SD Gothic Neo",serif;font-weight:700;
+  font-size:clamp(28px,4.4vw,38px);letter-spacing:-.02em;margin:0;line-height:1.1}
+.tagline{color:var(--ink-soft);font-size:14px}
+.status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-faint)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--ink-faint)}
+.dot.on{background:#5f9a7a}
+.dot.off{background:#c0695a}
+
+/* ── 작업대 ── */
+.studio{display:grid;grid-template-columns:340px 1fr;gap:34px;margin-top:28px;align-items:start}
+@media (max-width:900px){.studio{grid-template-columns:1fr}}
+
+.palette{display:flex;flex-direction:column;gap:22px}
+.group{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+.legend{font-family:"Hahmlet",serif;font-weight:500;font-size:15px;padding:0;
+  display:flex;justify-content:space-between;align-items:baseline;width:100%}
+.legend .aside{font-family:"Gowun Dodum",sans-serif;font-size:12px;color:var(--ink-faint);font-weight:400}
+
+textarea{
+  width:100%;min-height:104px;resize:vertical;
+  background:var(--sheet);border:1px solid var(--line-strong);border-radius:10px;
+  padding:12px 14px;line-height:1.6;outline:none;
+}
+textarea:focus{border-color:var(--ultramarine)}
+.tip{margin:0;font-size:12px;color:var(--ink-faint)}
+
+/* 세그먼트 선택 */
+.seg{display:grid;gap:6px}
+.seg.three{grid-template-columns:repeat(3,1fr)}
+.seg.two{grid-template-columns:repeat(2,1fr)}
+.opt{position:relative;display:flex;flex-direction:column;gap:1px;cursor:pointer;
+  border:1px solid var(--line);background:var(--sheet);border-radius:9px;padding:9px 10px;
+  transition:border-color .15s,background .15s}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.opt .l{font-size:14px}
+.opt .n{font-size:11px;color:var(--ink-faint);line-height:1.35}
+.opt:hover{border-color:var(--line-strong)}
+.opt:has(input:checked){border-color:var(--ultramarine);background:var(--ultramarine-wash)}
+
+/* 물 양 */
+.water{display:flex;flex-direction:column;gap:6px}
+input[type=range]{width:100%;accent-color:var(--ultramarine)}
+.scale{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-faint)}
+.water-now{font-size:13px;color:var(--ultramarine)}
+
+/* 안료 */
+.pigments{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.pig{position:relative;cursor:pointer;border:1px solid var(--line);background:var(--sheet);
+  border-radius:9px;padding:9px 10px;display:flex;flex-direction:column;gap:7px;transition:border-color .15s}
+.pig input{position:absolute;opacity:0;pointer-events:none}
+.pig:has(input:checked){border-color:var(--ultramarine);background:var(--ultramarine-wash);box-shadow:inset 0 0 0 1px var(--ultramarine)}
+.chips{display:flex;gap:3px}
+.chips i{display:block;width:18px;height:18px;border-radius:50% 45% 52% 48%;opacity:.88}
+.pig .l{font-size:12.5px;line-height:1.3}
+
+details{border-top:1px dashed var(--line);padding-top:12px}
+summary{cursor:pointer;font-size:13px;color:var(--ink-soft)}
+.seed{display:flex;gap:8px;margin-top:10px;align-items:center}
+.seed input{flex:1;background:var(--sheet);border:1px solid var(--line-strong);border-radius:8px;
+  padding:7px 10px;font-family:"IBM Plex Mono",monospace;font-size:13px;outline:none}
+.seed input:focus{border-color:var(--ultramarine)}
+
+.paint{
+  border:0;border-radius:11px;padding:13px 18px;cursor:pointer;
+  background:var(--ultramarine);color:#fff;font-family:"Hahmlet",serif;font-weight:500;font-size:16px;
+  transition:opacity .15s,transform .15s;
+}
+:root[data-theme="dark"] .paint{color:#111723}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .paint{color:#111723}}
+.paint:hover{transform:translateY(-1px)}
+.paint:disabled{opacity:.45;cursor:default;transform:none}
+.cost{margin:-12px 0 0;font-size:11.5px;color:var(--ink-faint);text-align:center}
+
+/* ── 도화지 ── */
+.easel{display:flex;flex-direction:column;gap:14px;min-width:0}
+.sheet{
+  position:relative;margin:0;background:var(--sheet);
+  padding:18px;border-radius:3px;
+  box-shadow:0 1px 0 var(--line),0 18px 40px -22px var(--shadow),0 2px 6px var(--shadow);
+}
+.canvas{
+  position:relative;overflow:hidden;border-radius:2px;
+  aspect-ratio:1/1;width:100%;max-height:74vh;margin:0 auto;
+  background:
+    radial-gradient(60% 50% at 30% 35%,var(--ultramarine-wash),transparent 70%),
+    radial-gradient(45% 40% at 72% 68%,var(--wash-deep),transparent 72%),
+    var(--wash);
+}
+.canvas.portrait{aspect-ratio:3/4}
+.canvas.landscape{aspect-ratio:4/3}
+.canvas::after{ /* 종이 결 */
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.35;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .5  0 0 0 0 .5  0 0 0 .55 0'/></filter><rect width='220' height='220' filter='url(%23n)'/></svg>");
+}
+.canvas img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;
+  animation:settle .9s ease-out both}
+@keyframes settle{from{opacity:0;filter:blur(6px) saturate(.6)}to{opacity:1;filter:none}}
+
+.empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;text-align:center;padding:24px;z-index:1}
+.empty .big{font-family:"Hahmlet",serif;font-size:22px;color:var(--ink-soft)}
+.empty .small{font-size:13px;color:var(--ink-faint);max-width:32ch}
+
+.working{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.bloom{position:absolute;width:40%;aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle,var(--ultramarine) 0%,transparent 68%);opacity:.22;
+  animation:bloom 3.4s ease-in-out infinite}
+.bloom.b2{left:52%;top:48%;width:30%;animation-delay:1.1s;background:radial-gradient(circle,#a8643a 0%,transparent 68%);opacity:.14}
+@keyframes bloom{0%{transform:scale(.35);opacity:0}45%{opacity:.26}100%{transform:scale(1.6);opacity:0}}
+.working .msg{position:relative;font-family:"Hahmlet",serif;font-size:18px;color:var(--ink)}
+.working .sec{position:relative;font-size:12px;color:var(--ink-soft)}
+@media (prefers-reduced-motion:reduce){
+  .bloom{animation:none;opacity:.18;transform:scale(1)}
+  .canvas img{animation:none}
+}
+
+.caption{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.meta{display:flex;flex-direction:column;gap:3px;min-width:0}
+.meta .subject{font-family:"Hahmlet",serif;font-size:16px;overflow-wrap:anywhere}
+.meta .spec{font-size:12px;color:var(--ink-faint)}
+.meta .en{font-size:12.5px;color:var(--ink-soft);overflow-wrap:anywhere}
+.actions{display:flex;gap:8px}
+.ghost{border:1px solid var(--line-strong);background:var(--sheet);border-radius:9px;padding:8px 14px;
+  cursor:pointer;font-size:13px;text-decoration:none;color:var(--ink);display:inline-flex;align-items:center}
+.ghost:hover{border-color:var(--ultramarine);color:var(--ultramarine)}
+
+.notice{border:1px solid var(--line-strong);background:var(--warn-wash);color:var(--warn);
+  border-radius:10px;padding:12px 15px;font-size:13.5px}
+
+/* ── 오늘 그린 그림 ── */
+.shelf{margin-top:46px;border-top:1px solid var(--line);padding-top:22px}
+.shelf h2{font-family:"Hahmlet",serif;font-weight:500;font-size:19px;margin:0 0 4px}
+.shelf .sub{margin:0 0 16px;font-size:13px;color:var(--ink-faint)}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:12px}
+.thumb{border:0;padding:6px;background:var(--sheet);border-radius:3px;cursor:pointer;text-align:left;
+  box-shadow:0 1px 3px var(--shadow);display:flex;flex-direction:column;gap:5px;transition:transform .15s}
+.thumb:hover{transform:translateY(-2px)}
+.thumb img{width:100%;aspect-ratio:1;object-fit:cover;display:block;border-radius:1px}
+.thumb span{font-size:11.5px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shelf-empty{font-size:13px;color:var(--ink-faint)}
+
+footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--ink-faint);line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <h1>물빛 화실</h1>
+      <span class="tagline">장면을 적으면 수채화로 그려 드립니다</span>
+    </div>
+    <div class="status"><span class="dot" id="dot"></span><span id="status">화실 여는 중</span></div>
+  </header>
+
+  <main class="studio">
+
+    <form class="palette" id="form" autocomplete="off">
+      <div class="group">
+        <label class="legend" for="subject">무엇을 그릴까요 <span class="aside"><span id="count">0</span>/500</span></label>
+        <textarea id="subject" maxlength="500">비 갠 오후, 골목 끝 작은 꽃집 앞에 세워둔 자전거와 물웅덩이에 비친 하늘</textarea>
+        <p class="tip">한국어로 적으면 영어로 옮긴 뒤 그립니다. 옮긴 문장은 그림 아래에 함께 보여 드립니다.</p>
+      </div>
+
+      <fieldset class="group">
+        <legend class="legend">종이 결</legend>
+        <div class="seg three" id="paper"></div>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend class="legend">물 양 <span class="aside water-now" id="waterNow"></span></legend>
+        <div class="water">
+          <input type="range" id="water" min="1" max="5" step="1" value="3" aria-describedby="waterNow">
+          <div class="scale"><span>마른붓</span><span>흠뻑 번짐</span></div>
+        </div>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend class="legend">안료</legend>
+        <div class="pigments" id="palette"></div>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend class="legend">화면</legend>
+        <div class="seg three" id="size"></div>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend class="legend">붓질</legend>
+        <div class="seg two" id="quality"></div>
+      </fieldset>
+
+      <details>
+        <summary>같은 그림 다시 그리기 (시드)</summary>
+        <div class="seed">
+          <input id="seed" inputmode="numeric" placeholder="비워두면 매번 새로 그립니다" aria-label="시드">
+          <button type="button" class="ghost" id="seedClear">비우기</button>
+        </div>
+      </details>
+
+      <button class="paint" id="paint" type="submit" disabled>그리기</button>
+      <p class="cost" id="usage"></p>
+    </form>
+
+    <section class="easel" aria-label="도화지">
+      <figure class="sheet">
+        <div class="canvas" id="canvas">
+          <div class="empty" id="empty">
+            <span class="big">아직 비어 있는 도화지</span>
+            <span class="small">왼쪽에서 장면과 종이·물·안료를 고르고 그리기를 눌러 주세요.</span>
+          </div>
+          <div class="working" id="working" hidden>
+            <span class="bloom"></span><span class="bloom b2"></span>
+            <span class="msg">물감을 번지게 하는 중</span>
+            <span class="sec mono" id="sec">0.0초</span>
+          </div>
+        </div>
+      </figure>
+
+      <div class="caption" id="caption" hidden>
+        <div class="meta">
+          <span class="subject" id="capSubject"></span>
+          <span class="spec en" id="capEn" hidden></span>
+          <span class="spec" id="capSpec"></span>
+          <span class="spec mono" id="capTech"></span>
+        </div>
+        <div class="actions">
+          <button type="button" class="ghost" id="reuse">이 시드로 다시</button>
+          <a class="ghost" id="download" href="#">내려받기</a>
+        </div>
+      </div>
+
+      <div class="notice" id="notice" role="alert" hidden></div>
+    </section>
+  </main>
+
+  <section class="shelf" aria-labelledby="shelfTitle">
+    <h2 id="shelfTitle">오늘 그린 그림</h2>
+    <p class="sub">서버가 켜져 있는 동안 최근 24장을 보관합니다. 누르면 도화지에 다시 올립니다.</p>
+    <div class="thumbs" id="thumbs"></div>
+    <p class="shelf-empty" id="shelfEmpty">아직 그린 그림이 없습니다.</p>
+  </section>
+
+  <footer>
+    그림은 fal.ai의 FLUX 모델로 생성됩니다. 생성된 이미지는 fal.ai 저장소에 일정 기간 보관되므로 마음에 드는 그림은 내려받아 두세요.
+    API 키는 서버에만 있고 이 화면으로 내려오지 않습니다.
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var $ = function (id) { return document.getElementById(id); };
+  var form = $("form"), subject = $("subject"), count = $("count");
+  var water = $("water"), waterNow = $("waterNow");
+  var paintBtn = $("paint"), usageEl = $("usage");
+  var canvas = $("canvas"), empty = $("empty"), working = $("working"), secEl = $("sec");
+  var caption = $("caption"), notice = $("notice");
+  var thumbs = $("thumbs"), shelfEmpty = $("shelfEmpty");
+
+  var options = null;
+  var current = null;
+  var busy = false;
+  var needPassword = false;
+  var timer = null;
+
+  // ── 암호 (서버가 APP_PASSWORD 를 켰을 때만) ──
+  function savedPw() { try { return sessionStorage.getItem("mulbit-pw") || ""; } catch (e) { return ""; } }
+  function askPw(msg) {
+    var pw = window.prompt(msg || "접속 암호를 입력해 주세요.");
+    if (pw === null) return "";
+    try { sessionStorage.setItem("mulbit-pw", pw); } catch (e) { /* 저장 불가 */ }
+    return pw;
+  }
+  function headers(json) {
+    var h = json ? { "Content-Type": "application/json" } : {};
+    if (needPassword) { var pw = savedPw() || askPw(); if (pw) h["x-app-password"] = pw; }
+    return h;
+  }
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  function showNotice(msg) { notice.textContent = msg; notice.hidden = false; }
+  function clearNotice() { notice.hidden = true; notice.textContent = ""; }
+
+  // ── 선택지 그리기 ──
+  function segment(container, name, list, valueKey, checkedIndex) {
+    container.textContent = "";
+    list.forEach(function (o, i) {
+      var lab = el("label", "opt");
+      var inp = el("input");
+      inp.type = "radio"; inp.name = name; inp.value = o[valueKey];
+      if (i === checkedIndex) inp.checked = true;
+      lab.appendChild(inp);
+      lab.appendChild(el("span", "l", o.label));
+      if (o.note) lab.appendChild(el("span", "n", o.note));
+      container.appendChild(lab);
+    });
+  }
+
+  function pigments(container, list, checkedIndex) {
+    container.textContent = "";
+    list.forEach(function (p, i) {
+      var lab = el("label", "pig");
+      var inp = el("input");
+      inp.type = "radio"; inp.name = "palette"; inp.value = p.id;
+      if (i === checkedIndex) inp.checked = true;
+      lab.appendChild(inp);
+      var chips = el("span", "chips");
+      p.swatch.forEach(function (c) { var d = el("i"); d.style.background = c; chips.appendChild(d); });
+      lab.appendChild(chips);
+      lab.appendChild(el("span", "l", p.label));
+      container.appendChild(lab);
+    });
+  }
+
+  function picked(name) {
+    var n = form.querySelector('input[name="' + name + '"]:checked');
+    return n ? n.value : null;
+  }
+
+  function updateWater() {
+    if (!options) return;
+    var w = options.water.find(function (x) { return String(x.level) === water.value; });
+    waterNow.textContent = w ? w.label : "";
+  }
+
+  function shapeCanvas(sizeId) {
+    canvas.classList.remove("portrait", "landscape");
+    if (sizeId && sizeId.indexOf("portrait") === 0) canvas.classList.add("portrait");
+    if (sizeId && sizeId.indexOf("landscape") === 0) canvas.classList.add("landscape");
+  }
+
+  // ── 도화지에 올리기 ──
+  function place(item) {
+    current = item;
+    var old = canvas.querySelector("img");
+    if (old) old.remove();
+
+    var sizeMatch = options && options.size.find(function (s) { return s.label === item.size; });
+    shapeCanvas(sizeMatch ? sizeMatch.id : "");
+
+    var img = new Image();
+    img.alt = "수채화: " + item.subject;
+    img.decoding = "async";
+    img.src = item.url;
+    canvas.insertBefore(img, working);
+    empty.hidden = true;
+
+    $("capSubject").textContent = item.subject;
+    var en = $("capEn");
+    if (item.translation === "ok" && item.subjectEn) {
+      en.textContent = "영문으로 옮긴 장면 · " + item.subjectEn;
+      en.hidden = false;
+    } else if (item.translation === "failed") {
+      en.textContent = "영문 변환에 실패해 한국어 그대로 그렸습니다. 영어로 적으면 더 정확합니다.";
+      en.hidden = false;
+    } else {
+      en.hidden = true;
+    }
+    $("capSpec").textContent = item.paper + " · 물 " + item.water + " · " + item.palette + " · " + item.size + " · " + item.quality;
+    $("capTech").textContent =
+      (item.seed != null ? "seed " + item.seed + " · " : "") +
+      (item.width && item.height ? item.width + "×" + item.height + " · " : "") +
+      item.seconds + "초";
+    $("download").href = "/api/download/" + encodeURIComponent(item.id);
+    caption.hidden = false;
+  }
+
+  function renderShelf(list) {
+    thumbs.textContent = "";
+    shelfEmpty.hidden = list.length > 0;
+    list.forEach(function (item) {
+      var b = el("button", "thumb");
+      b.type = "button";
+      b.title = item.subject;
+      var im = new Image();
+      im.src = item.url; im.alt = ""; im.loading = "lazy";
+      b.appendChild(im);
+      b.appendChild(el("span", null, item.subject));
+      b.addEventListener("click", function () { clearNotice(); place(item); window.scrollTo({ top: 0, behavior: "smooth" }); });
+      thumbs.appendChild(b);
+    });
+  }
+
+  function loadShelf() {
+    fetch("/api/gallery", { headers: headers(false) })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { if (j && j.success) renderShelf(j.data); })
+      .catch(function () { /* 선반은 없어도 된다 */ });
+  }
+
+  function setBusy(on) {
+    busy = on;
+    paintBtn.disabled = on || !options;
+    paintBtn.textContent = on ? "그리는 중" : "그리기";
+    working.hidden = !on;
+    clearInterval(timer);
+    if (on) {
+      var t0 = Date.now();
+      secEl.textContent = "0.0초";
+      timer = setInterval(function () { secEl.textContent = ((Date.now() - t0) / 1000).toFixed(1) + "초"; }, 100);
+    }
+  }
+
+  function refreshUsage() {
+    fetch("/api/health").then(function (r) { return r.json(); }).then(function (j) {
+      var d = (j && j.data) || {};
+      needPassword = Boolean(d.passwordRequired);
+      $("dot").className = d.keyConfigured ? "dot on" : "dot off";
+      $("status").textContent = d.keyConfigured ? "fal.ai 연결됨" : "fal.ai 키 없음";
+      if (d.usage) usageEl.textContent = "오늘 " + d.usage.paintsToday + " / " + d.usage.dailyLimit + "장";
+      if (!d.keyConfigured) showNotice("서버에 FAL_KEY가 설정되어 있지 않습니다. 설정 파일을 확인한 뒤 서버를 다시 실행해 주세요.");
+    }).catch(function () {
+      $("dot").className = "dot off";
+      $("status").textContent = "서버 연결 안 됨";
+      showNotice("서버에 연결하지 못했습니다. 터미널에서 node server.js 로 서버를 실행한 뒤 새로고침해 주세요.");
+    });
+  }
+
+  // ── 그리기 ──
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    if (busy) return;
+    var s = subject.value.trim();
+    if (!s) { showNotice("무엇을 그릴지 적어주세요."); subject.focus(); return; }
+
+    clearNotice();
+    shapeCanvas(picked("size"));
+    setBusy(true);
+
+    var body = {
+      subject: s,
+      paper: picked("paper"),
+      water: Number(water.value),
+      palette: picked("palette"),
+      size: picked("size"),
+      quality: picked("quality"),
+      seed: $("seed").value.trim()
+    };
+
+    try {
+      var r = await fetch("/api/paint", { method: "POST", headers: headers(true), body: JSON.stringify(body) });
+      var j = null;
+      try { j = await r.json(); } catch (x) { /* 비 JSON */ }
+
+      if (r.status === 401 && j && j.code === "auth_required") {
+        needPassword = true;
+        try { sessionStorage.removeItem("mulbit-pw"); } catch (x) { /* 무시 */ }
+        askPw("접속 암호가 필요합니다.");
+        showNotice("암호를 입력하셨으면 그리기를 한 번 더 눌러 주세요.");
+      } else if (!r.ok || !j || !j.success) {
+        showNotice((j && j.message) || "그림을 그리지 못했습니다. 잠시 후 다시 시도해 주세요.");
+      } else {
+        place(j.data);
+        loadShelf();
+      }
+    } catch (err) {
+      showNotice("서버에 연결하지 못했습니다. 서버가 켜져 있는지 확인해 주세요.");
+    } finally {
+      setBusy(false);
+      refreshUsage();
+    }
+  });
+
+  $("reuse").addEventListener("click", function () {
+    if (!current || current.seed == null) return;
+    $("seed").value = current.seed;
+    $("seed").closest("details").open = true;
+    subject.focus();
+  });
+  $("seedClear").addEventListener("click", function () { $("seed").value = ""; });
+
+  subject.addEventListener("input", function () { count.textContent = subject.value.length; });
+  water.addEventListener("input", updateWater);
+  form.addEventListener("change", function (e) { if (e.target.name === "size") shapeCanvas(e.target.value); });
+
+  // ── 시작 ──
+  count.textContent = subject.value.length;
+  refreshUsage();
+
+  fetch("/api/options").then(function (r) { return r.json(); }).then(function (j) {
+    options = j.data;
+    segment($("paper"), "paper", options.paper, "id", 1);
+    segment($("size"), "size", options.size, "id", 0);
+    segment($("quality"), "quality", options.quality, "id", 0);
+    pigments($("palette"), options.palette, 1);
+    updateWater();
+    paintBtn.disabled = false;
+    loadShelf();
+  }).catch(function () {
+    showNotice("선택지를 불러오지 못했습니다. 서버가 켜져 있는지 확인해 주세요.");
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>코인 시세 대시보드</title>
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <!-- 모든 CDN 버전 고정. Babel 은 반드시 7.x (8.x 는 인라인 text/babel 미지원) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.25.9/babel.min.js"></script>
+  <style>
+    /* Tailwind 유틸리티로 표현 불가능한 것만 커스텀 CSS 로 정의 */
+
+    /* 직전 갱신 대비 가격이 바뀌면 가격 텍스트 배경을 잠깐 번쩍이게 */
+    @keyframes flash-up   { from { background-color: rgba(52, 211, 153, .32); } to { background-color: transparent; } }
+    @keyframes flash-down { from { background-color: rgba(251, 113, 133, .32); } to { background-color: transparent; } }
+    .flash-up   { animation: flash-up 1.6s ease-out; }
+    .flash-down { animation: flash-down 1.6s ease-out; }
+
+    /* 로딩 스켈레톤 */
+    @keyframes shimmer { to { transform: translateX(100%); } }
+    .skeleton { position: relative; overflow: hidden; }
+    .skeleton::after {
+      content: ''; position: absolute; inset: 0; transform: translateX(-100%);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent);
+      animation: shimmer 1.4s infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .flash-up, .flash-down, .skeleton::after { animation: none; }
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 antialiased">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useCallback, useRef, useId } = React;
+
+    // ========================================
+    // ⚙️ Config — CoinGecko
+    // ========================================
+
+    // 키가 필요 없는 공개 엔드포인트. 무료 한도는 분당 수 회 수준이라 30초 주기면 여유 있다.
+    const API_BASE_URL = 'https://api.coingecko.com/api/v3';
+    const REFRESH_SECONDS = 30;
+    const COIN_COUNT = 12;
+    const CURRENCY_STORAGE_KEY = 'coin-dashboard:currency';
+
+    const CURRENCIES = {
+      krw: { label: 'KRW ₩', locale: 'ko-KR', code: 'KRW' },
+      usd: { label: 'USD $', locale: 'en-US', code: 'USD' },
+    };
+
+    // sparkline=true 는 최근 7일 시간봉(약 168개)을 준다. 카드에서는 마지막 24개만 쓴다.
+    const marketsUrl = (currency) =>
+      `${API_BASE_URL}/coins/markets?vs_currency=${currency}&order=market_cap_desc` +
+      `&per_page=${COIN_COUNT}&page=1&sparkline=true&price_change_percentage=24h`;
+
+    // ========================================
+    // 🔢 Formatters & Trend
+    // ========================================
+
+    function priceDigits(abs, currency) {
+      if (currency === 'krw' && abs >= 100) return 0;
+      if (abs >= 1) return 2;
+      if (abs >= 0.01) return 4;
+      return 6;
+    }
+
+    function formatPrice(value, currency) {
+      if (value == null) return '—';
+      const { locale, code } = CURRENCIES[currency];
+      const digits = priceDigits(Math.abs(value), currency);
+      return new Intl.NumberFormat(locale, {
+        style: 'currency', currency: code,
+        minimumFractionDigits: digits, maximumFractionDigits: digits,
+      }).format(value);
+    }
+
+    function formatSignedPrice(value, currency) {
+      if (value == null) return '—';
+      const sign = value > 0 ? '+' : value < 0 ? '−' : '';
+      return sign + formatPrice(Math.abs(value), currency);
+    }
+
+    function formatCompact(value, currency) {
+      if (value == null) return '—';
+      const { locale, code } = CURRENCIES[currency];
+      return new Intl.NumberFormat(locale, {
+        style: 'currency', currency: code, notation: 'compact', maximumFractionDigits: 1,
+      }).format(value);
+    }
+
+    function formatPercent(value) {
+      return value == null ? '—' : `${Math.abs(value).toFixed(2)}%`;
+    }
+
+    function formatTime(date) {
+      return [date.getHours(), date.getMinutes(), date.getSeconds()]
+        .map((n) => String(n).padStart(2, '0'))
+        .join(':');
+    }
+
+    function trendOf(value) {
+      if (value == null || value === 0) return 'flat';
+      return value > 0 ? 'up' : 'down';
+    }
+
+    // Tailwind Play CDN 은 런타임 DOM 을 스캔하므로 완성된 클래스 문자열로 둔다.
+    const TREND_STYLES = {
+      up:   { text: 'text-emerald-400', bg: 'bg-emerald-500/15', ring: 'ring-emerald-500/30', bar: 'bg-emerald-400', glow: 'from-emerald-500/10', stroke: '#34d399', arrow: '▲', label: '상승' },
+      down: { text: 'text-rose-400',    bg: 'bg-rose-500/15',    ring: 'ring-rose-500/30',    bar: 'bg-rose-400',    glow: 'from-rose-500/10',    stroke: '#fb7185', arrow: '▼', label: '하락' },
+      flat: { text: 'text-slate-400',   bg: 'bg-slate-500/15',   ring: 'ring-slate-700',      bar: 'bg-slate-500',   glow: 'from-slate-500/5',    stroke: '#94a3b8', arrow: '■', label: '보합' },
+    };
+
+    // ========================================
+    // 🎨 Design System Components
+    // ========================================
+
+    function Card({ as: Tag = 'div', ringClass = 'ring-slate-800', className = '', children, ...props }) {
+      return (
+        <Tag className={`rounded-2xl bg-slate-900/70 p-5 ring-1 ${ringClass} ${className}`} {...props}>
+          {children}
+        </Tag>
+      );
+    }
+
+    function Button({ variant = 'secondary', size = 'md', disabled = false, className = '', children, ...props }) {
+      const variants = {
+        primary: 'bg-sky-500 text-slate-950 hover:bg-sky-400',
+        secondary: 'bg-slate-800 text-slate-100 ring-1 ring-slate-700 hover:bg-slate-700',
+      };
+      const sizes = { sm: 'h-8 px-3 text-xs', md: 'h-10 px-4 text-sm' };
+      return (
+        <button
+          type="button"
+          disabled={disabled}
+          className={`inline-flex items-center justify-center gap-2 rounded-xl font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 disabled:cursor-not-allowed disabled:opacity-60 ${variants[variant]} ${sizes[size]} ${className}`}
+          {...props}
+        >
+          {children}
+        </button>
+      );
+    }
+
+    function SegmentedControl({ label, options, value, onChange }) {
+      return (
+        <div role="radiogroup" aria-label={label} className="inline-flex rounded-xl bg-slate-900 p-1 ring-1 ring-slate-800">
+          {options.map((opt) => {
+            const active = opt.value === value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => onChange(opt.value)}
+                className={`h-8 rounded-lg px-3 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${active ? 'bg-slate-700 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      );
+    }
+
+    function ChangeBadge({ value, className = '' }) {
+      const t = TREND_STYLES[trendOf(value)];
+      return (
+        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-sm font-semibold tabular-nums ${t.bg} ${t.text} ${className}`}>
+          <span aria-hidden="true" className="text-[10px]">{t.arrow}</span>
+          <span className="sr-only">{t.label}</span>
+          {formatPercent(value)}
+        </span>
+      );
+    }
+
+    function Skeleton({ className = '' }) {
+      return <div className={`skeleton rounded-md bg-slate-800/80 ${className}`} />;
+    }
+
+    function CountdownRing({ secondsLeft, total }) {
+      const r = 9;
+      const circumference = 2 * Math.PI * r;
+      return (
+        <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true" className="-rotate-90">
+          <circle cx="11" cy="11" r={r} fill="none" stroke="currentColor" strokeOpacity=".2" strokeWidth="2.5" />
+          <circle
+            cx="11" cy="11" r={r} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={circumference * (1 - secondsLeft / total)}
+            style={{ transition: 'stroke-dashoffset 1s linear' }}
+          />
+        </svg>
+      );
+    }
+
+    function Sparkline({ prices, color, height = 56 }) {
+      // useId 값의 콜론은 url(#...) 참조를 깨뜨릴 수 있어 제거
+      const gradientId = `spark-${useId().replace(/:/g, '')}`;
+      if (!prices || prices.length < 2) return <div style={{ height }} />;
+
+      const width = 260;
+      const pad = 3;
+      const min = Math.min(...prices);
+      const span = Math.max(...prices) - min || 1;
+      const line = prices
+        .map((p, i) => {
+          const x = (i / (prices.length - 1)) * width;
+          const y = pad + (1 - (p - min) / span) * (height - pad * 2);
+          return `${i ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`;
+        })
+        .join(' ');
+
+      return (
+        <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="w-full" style={{ height }} role="img" aria-label="최근 24시간 가격 추이">
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity=".3" />
+              <stop offset="100%" stopColor={color} stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <path d={`${line} L${width},${height} L0,${height} Z`} fill={`url(#${gradientId})`} />
+          <path d={line} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+        </svg>
+      );
+    }
+
+    function RangeBar({ low, high, current, currency, color }) {
+      const pct = high > low ? Math.min(100, Math.max(0, ((current - low) / (high - low)) * 100)) : 50;
+      return (
+        <div>
+          <div className="relative h-1.5 rounded-full bg-slate-800" role="img" aria-label={`24시간 저가 대비 현재 위치 ${Math.round(pct)}%`}>
+            <div className="absolute inset-y-0 left-0 rounded-full opacity-50" style={{ width: `${pct}%`, backgroundColor: color }} />
+            <div className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-slate-900" style={{ left: `${pct}%`, backgroundColor: color }} />
+          </div>
+          <div className="mt-1.5 flex justify-between gap-2 text-[11px] text-slate-500 tabular-nums">
+            <span>저 {formatPrice(low, currency)}</span>
+            <span>고 {formatPrice(high, currency)}</span>
+          </div>
+        </div>
+      );
+    }
+
+    // ========================================
+    // 📡 Data Hook — 30초 자동 갱신
+    // ========================================
+
+    function useCoinMarkets(currency) {
+      const [data, setData] = useState(null); // { coins, currency } — 응답과 통화를 함께 보관
+      const [error, setError] = useState(null);
+      const [refreshing, setRefreshing] = useState(false);
+      const [lastUpdated, setLastUpdated] = useState(null);
+      const [secondsLeft, setSecondsLeft] = useState(REFRESH_SECONDS);
+      const [ticks, setTicks] = useState({ version: 0, byId: {} });
+
+      const prevPricesRef = useRef({});
+      const nextRefreshAtRef = useRef(0);
+      const controllerRef = useRef(null);
+
+      const refresh = useCallback(async () => {
+        controllerRef.current?.abort();
+        const controller = new AbortController();
+        controllerRef.current = controller;
+
+        // 수동 새로고침·통화 변경 시에도 카운트다운을 처음부터 다시 센다
+        nextRefreshAtRef.current = Date.now() + REFRESH_SECONDS * 1000;
+        setSecondsLeft(REFRESH_SECONDS);
+        setRefreshing(true);
+
+        try {
+          const res = await fetch(marketsUrl(currency), { signal: controller.signal });
+          if (res.status === 429) throw new Error('CoinGecko 요청 한도를 잠시 초과했어요. 다음 주기에 다시 시도합니다.');
+          if (!res.ok) throw new Error(`시세를 불러오지 못했어요. (HTTP ${res.status})`);
+          const coins = await res.json();
+          if (!Array.isArray(coins)) throw new Error('예상하지 못한 응답 형식이에요.');
+
+          // 직전 갱신 대비 가격 방향 (통화별로 따로 비교)
+          const byId = {};
+          coins.forEach((coin) => {
+            const key = `${currency}:${coin.id}`;
+            const prev = prevPricesRef.current[key];
+            if (prev != null && coin.current_price !== prev) {
+              byId[coin.id] = coin.current_price > prev ? 'up' : 'down';
+            }
+            prevPricesRef.current[key] = coin.current_price;
+          });
+
+          setData({ coins, currency });
+          setTicks((t) => ({ version: t.version + 1, byId }));
+          setLastUpdated(new Date());
+          setError(null);
+        } catch (err) {
+          if (err.name === 'AbortError') return;
+          // 429 응답은 CORS 헤더 없이 와서 TypeError 로 떨어지는 경우가 많다
+          setError(err instanceof TypeError
+            ? '시세 서버에 연결하지 못했어요. 네트워크 상태나 요청 한도를 확인해 주세요.'
+            : err.message);
+        } finally {
+          if (controllerRef.current === controller) setRefreshing(false);
+        }
+      }, [currency]);
+
+      useEffect(() => {
+        refresh();
+        const timer = setInterval(() => {
+          const remaining = Math.ceil((nextRefreshAtRef.current - Date.now()) / 1000);
+          if (remaining <= 0) refresh();
+          else setSecondsLeft(remaining);
+        }, 1000);
+        return () => {
+          clearInterval(timer);
+          controllerRef.current?.abort();
+        };
+      }, [refresh]);
+
+      return { data, error, refreshing, lastUpdated, secondsLeft, ticks, refresh };
+    }
+
+    // ========================================
+    // 🧩 Dashboard Components
+    // ========================================
+
+    function CoinCard({ coin, currency, tick, tickVersion }) {
+      const pct = coin.price_change_percentage_24h;
+      const t = TREND_STYLES[trendOf(pct)];
+      const last24h = coin.sparkline_in_7d?.price?.slice(-24);
+      // API 의 price_change_24h 는 등락률과 기준 시점이 달라 부호가 어긋날 때가 있다.
+      // 배지와 색이 항상 일치하도록 등락률에서 금액을 역산한다.
+      const changeAmount = pct == null || coin.current_price == null
+        ? null
+        : coin.current_price - coin.current_price / (1 + pct / 100);
+
+      return (
+        <Card as="article" ringClass={t.ring} className={`relative overflow-hidden bg-gradient-to-br ${t.glow} to-transparent`}>
+          <div className={`absolute inset-x-0 top-0 h-1 ${t.bar}`} aria-hidden="true" />
+
+          <header className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <img src={coin.image} alt="" width="36" height="36" loading="lazy" className="h-9 w-9 shrink-0 rounded-full bg-slate-800" />
+              <div className="min-w-0">
+                <h2 className="truncate font-semibold text-slate-100">{coin.name}</h2>
+                <p className="text-xs text-slate-500">
+                  <span className="uppercase">{coin.symbol}</span> · #{coin.market_cap_rank ?? '—'}
+                </p>
+              </div>
+            </div>
+            <ChangeBadge value={coin.price_change_percentage_24h} />
+          </header>
+
+          <div className="mt-4">
+            {/* 가격이 바뀐 갱신마다 key 가 달라져 flash 애니메이션이 다시 재생된다 */}
+            <p
+              key={tick ? `${tick}-${tickVersion}` : 'static'}
+              className={`-mx-1 inline-block rounded-md px-1 text-2xl font-bold tracking-tight tabular-nums ${tick ? `flash-${tick}` : ''}`}
+            >
+              {formatPrice(coin.current_price, currency)}
+            </p>
+            <p className={`mt-0.5 text-sm tabular-nums ${t.text}`}>
+              {formatSignedPrice(changeAmount, currency)}
+              <span className="ml-1.5 text-slate-500">24시간</span>
+            </p>
+          </div>
+
+          <div className="mt-3">
+            <Sparkline prices={last24h} color={t.stroke} />
+          </div>
+
+          <div className="mt-3">
+            <RangeBar low={coin.low_24h} high={coin.high_24h} current={coin.current_price} currency={currency} color={t.stroke} />
+          </div>
+
+          <dl className="mt-4 grid grid-cols-2 gap-2 border-t border-slate-800 pt-3 text-xs">
+            <div>
+              <dt className="text-slate-500">시가총액</dt>
+              <dd className="mt-0.5 font-medium text-slate-300 tabular-nums">{formatCompact(coin.market_cap, currency)}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">거래량 (24h)</dt>
+              <dd className="mt-0.5 font-medium text-slate-300 tabular-nums">{formatCompact(coin.total_volume, currency)}</dd>
+            </div>
+          </dl>
+        </Card>
+      );
+    }
+
+    function CoinCardSkeleton() {
+      return (
+        <Card aria-hidden="true">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-9 w-9 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-3 w-14" />
+            </div>
+            <Skeleton className="h-7 w-16 rounded-full" />
+          </div>
+          <Skeleton className="mt-5 h-7 w-40" />
+          <Skeleton className="mt-2 h-4 w-28" />
+          <Skeleton className="mt-4 h-14 w-full" />
+          <Skeleton className="mt-4 h-1.5 w-full" />
+          <Skeleton className="mt-5 h-8 w-full" />
+        </Card>
+      );
+    }
+
+    function MarketSummary({ coins, lastUpdated }) {
+      const up = coins.filter((c) => c.price_change_percentage_24h > 0).length;
+      const down = coins.filter((c) => c.price_change_percentage_24h < 0).length;
+      const flat = coins.length - up - down;
+      const avg = coins.reduce((sum, c) => sum + (c.price_change_percentage_24h ?? 0), 0) / coins.length;
+      const share = (n) => `${(n / coins.length) * 100}%`;
+
+      return (
+        <Card className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-6">
+            <div>
+              <p className="text-xs text-slate-500">상승</p>
+              <p className="text-2xl font-bold text-emerald-400 tabular-nums">{up}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">하락</p>
+              <p className="text-2xl font-bold text-rose-400 tabular-nums">{down}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">평균 등락률</p>
+              <ChangeBadge value={avg} className="mt-1" />
+            </div>
+          </div>
+
+          <div className="w-full sm:max-w-sm">
+            <div className="flex h-2 overflow-hidden rounded-full bg-slate-800" role="img" aria-label={`상승 ${up}개, 보합 ${flat}개, 하락 ${down}개`}>
+              <div className="bg-emerald-400" style={{ width: share(up) }} />
+              <div className="bg-slate-500" style={{ width: share(flat) }} />
+              <div className="bg-rose-400" style={{ width: share(down) }} />
+            </div>
+            <p className="mt-2 text-xs text-slate-500 sm:text-right" aria-live="polite">
+              마지막 갱신 <span className="tabular-nums text-slate-300">{lastUpdated ? formatTime(lastUpdated) : '—'}</span>
+            </p>
+          </div>
+        </Card>
+      );
+    }
+
+    function ErrorState({ message, onRetry }) {
+      return (
+        <Card ringClass="ring-rose-500/30" className="py-12 text-center" role="alert">
+          <p className="text-3xl" aria-hidden="true">⚠️</p>
+          <h2 className="mt-3 font-semibold">시세를 불러오지 못했어요</h2>
+          <p className="mt-1 text-sm text-slate-400">{message}</p>
+          <Button variant="primary" className="mt-5" onClick={onRetry}>다시 시도</Button>
+        </Card>
+      );
+    }
+
+    function EmptyState() {
+      return (
+        <Card className="py-12 text-center">
+          <p className="text-3xl" aria-hidden="true">🪙</p>
+          <p className="mt-3 text-sm text-slate-400">표시할 코인 데이터가 없어요.</p>
+        </Card>
+      );
+    }
+
+    // ========================================
+    // 🚀 App Component
+    // ========================================
+
+    function App() {
+      const [currency, setCurrency] = useState(() => {
+        try {
+          const saved = localStorage.getItem(CURRENCY_STORAGE_KEY);
+          return CURRENCIES[saved] ? saved : 'krw';
+        } catch {
+          return 'krw';
+        }
+      });
+
+      useEffect(() => {
+        try { localStorage.setItem(CURRENCY_STORAGE_KEY, currency); } catch {}
+      }, [currency]);
+
+      const { data, error, refreshing, lastUpdated, secondsLeft, ticks, refresh } = useCoinMarkets(currency);
+      const currencyOptions = Object.entries(CURRENCIES).map(([value, c]) => ({ value, label: c.label }));
+
+      return (
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-400">
+                <span className="relative flex h-2 w-2" aria-hidden="true">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-60 motion-reduce:animate-none" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-sky-400" />
+                </span>
+                Live Market
+              </p>
+              <h1 className="mt-1 text-2xl font-bold sm:text-3xl">코인 시세 대시보드</h1>
+              <p className="mt-1 text-sm text-slate-400">
+                CoinGecko 시가총액 상위 {COIN_COUNT}개 · {REFRESH_SECONDS}초마다 자동 갱신
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <SegmentedControl label="표시 통화" options={currencyOptions} value={currency} onChange={setCurrency} />
+              <Button onClick={refresh} disabled={refreshing} aria-label={`지금 새로고침 (${secondsLeft}초 후 자동 갱신)`}>
+                <span className="text-sky-400"><CountdownRing secondsLeft={secondsLeft} total={REFRESH_SECONDS} /></span>
+                <span className="w-[4.5ch] text-left tabular-nums">{refreshing ? '갱신중' : `${secondsLeft}초`}</span>
+              </Button>
+            </div>
+          </header>
+
+          <main className="mt-6 space-y-5">
+            {data && error && (
+              <div role="status" className="rounded-xl bg-amber-500/10 px-4 py-3 text-sm text-amber-300 ring-1 ring-amber-500/30">
+                ⚠️ {error} 마지막으로 받은 시세를 표시하고 있어요.
+              </div>
+            )}
+
+            {!data && error && <ErrorState message={error} onRetry={refresh} />}
+
+            {!data && !error && (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-busy="true" aria-label="시세 불러오는 중">
+                {Array.from({ length: COIN_COUNT }, (_, i) => <CoinCardSkeleton key={i} />)}
+              </div>
+            )}
+
+            {data && data.coins.length === 0 && <EmptyState />}
+
+            {data && data.coins.length > 0 && (
+              <>
+                <MarketSummary coins={data.coins} lastUpdated={lastUpdated} />
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {data.coins.map((coin) => (
+                    <CoinCard
+                      key={coin.id}
+                      coin={coin}
+                      currency={data.currency}
+                      tick={ticks.byId[coin.id]}
+                      tickVersion={ticks.version}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </main>
+
+          <footer className="mt-10 text-center text-xs text-slate-600">
+            데이터 제공: CoinGecko · 무료 API는 1~2분 단위로 캐시되어 30초마다 값이 바뀌지 않을 수 있습니다 · 투자 판단의 근거로 사용하지 마세요
+          </footer>
+        </div>
+      );
+    }
+
+    // ========================================
+    // 🖥️ Rendering
+    // ========================================
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

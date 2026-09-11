@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>포켓몬 도감</title>
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <!-- ⚠️ 모든 CDN 버전 고정. Babel은 반드시 7.x (8.x는 인라인 text/babel 미지원) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.25.9/babel.min.js"></script>
+  <style>
+    /* Tailwind 유틸리티로 표현 불가능한 것만 커스텀 CSS로 처리 */
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes popIn { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: none; } }
+    @keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+    .anim-fade { animation: fadeIn .18s ease-out; }
+    .anim-pop { animation: popIn .22s cubic-bezier(.16,1,.3,1); }
+    .anim-float { animation: floaty 3.2s ease-in-out infinite; }
+    .stat-bar { transition: width .6s cubic-bezier(.16,1,.3,1); }
+  </style>
+</head>
+<body class="bg-slate-100">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useMemo, useEffect, useCallback } = React;
+
+    // ========================================
+    // 📚 Data — 포켓몬 도감 데이터
+    // ========================================
+
+    const TYPE_STYLE = {
+      '전기': { chip: 'bg-yellow-400 text-yellow-950', bg: 'from-yellow-200 to-amber-100' },
+      '물':   { chip: 'bg-sky-500 text-white',         bg: 'from-sky-200 to-cyan-100' },
+      '불꽃': { chip: 'bg-orange-500 text-white',      bg: 'from-orange-200 to-rose-100' },
+    };
+
+    const STAT_LABELS = [
+      { key: 'hp', label: 'HP' },
+      { key: 'attack', label: '공격' },
+      { key: 'defense', label: '방어' },
+      { key: 'spAttack', label: '특수공격' },
+      { key: 'spDefense', label: '특수방어' },
+      { key: 'speed', label: '스피드' },
+    ];
+
+    const MAX_STAT = 150; // 종족값 바 그래프 기준 최대치
+
+    const ART = (id) =>
+      `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
+
+    const POKEMONS = [
+      {
+        id: 25,
+        name: '피카츄',
+        enName: 'Pikachu',
+        genus: '쥐 포켓몬',
+        types: ['전기'],
+        height: 0.4,
+        weight: 6.0,
+        abilities: ['정전기'],
+        hiddenAbility: '피뢰침',
+        description:
+          '양쪽 볼에 작은 전기주머니를 가지고 있다. 위기에 처하면 주머니에 모아둔 전기를 한 번에 방출한다. 꼬리를 세워 주변 상황을 살피는 습성이 있다.',
+        stats: { hp: 35, attack: 55, defense: 40, spAttack: 50, spDefense: 50, speed: 90 },
+        evolution: ['피츄', '피카츄', '라이츄'],
+        sprite: ART(25),
+      },
+      {
+        id: 7,
+        name: '꼬부기',
+        enName: 'Squirtle',
+        genus: '꼬마거북 포켓몬',
+        types: ['물'],
+        height: 0.5,
+        weight: 9.0,
+        abilities: ['급류'],
+        hiddenAbility: '옹골참',
+        description:
+          '등껍질에 숨어 몸을 지키며, 반격할 때는 입에서 강한 물줄기를 뿜어낸다. 둥근 등껍질은 물의 저항을 줄여 헤엄치는 속도를 높여준다.',
+        stats: { hp: 44, attack: 48, defense: 65, spAttack: 50, spDefense: 64, speed: 43 },
+        evolution: ['꼬부기', '어니부기', '거북왕'],
+        sprite: ART(7),
+      },
+      {
+        id: 4,
+        name: '파이리',
+        enName: 'Charmander',
+        genus: '도마뱀 포켓몬',
+        types: ['불꽃'],
+        height: 0.6,
+        weight: 8.5,
+        abilities: ['맹화'],
+        hiddenAbility: '태양의힘',
+        description:
+          '태어날 때부터 꼬리 끝에 불꽃이 타오른다. 불꽃이 꺼지면 생명을 잃는다고 전해지며, 건강할수록 불꽃은 밝고 크게 타오른다.',
+        stats: { hp: 39, attack: 52, defense: 43, spAttack: 60, spDefense: 50, speed: 65 },
+        evolution: ['파이리', '리자드', '리자몽'],
+        sprite: ART(4),
+      },
+    ];
+
+    const ALL_TYPES = ['전체', ...Array.from(new Set(POKEMONS.flatMap((p) => p.types)))];
+
+    const padId = (id) => `No.${String(id).padStart(3, '0')}`;
+    const typeStyle = (type) =>
+      TYPE_STYLE[type] || { chip: 'bg-slate-400 text-white', bg: 'from-slate-200 to-slate-100' };
+
+    // ========================================
+    // 🎨 Design System Components
+    // ========================================
+
+    function Button({ variant = 'primary', size = 'md', disabled = false, onClick, className = '', children, ...rest }) {
+      const variants = {
+        primary: 'bg-slate-900 text-white hover:bg-slate-700',
+        secondary: 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50',
+        danger: 'bg-rose-600 text-white hover:bg-rose-500',
+        ghost: 'bg-transparent text-slate-600 hover:bg-slate-200/70',
+      };
+      const sizes = { sm: 'px-3 py-1.5 text-sm', md: 'px-4 py-2 text-sm', lg: 'px-6 py-3 text-base' };
+      return (
+        <button
+          type="button"
+          onClick={onClick}
+          disabled={disabled}
+          className={`inline-flex items-center justify-center gap-1.5 rounded-xl font-semibold transition
+            focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-slate-500
+            disabled:opacity-40 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${className}`}
+          {...rest}
+        >
+          {children}
+        </button>
+      );
+    }
+
+    function Input({ type = 'text', label, value, onChange, placeholder, error, disabled = false, className = '', ...rest }) {
+      return (
+        <label className={`block ${className}`}>
+          {label && <span className="mb-1.5 block text-sm font-semibold text-slate-700">{label}</span>}
+          <input
+            type={type}
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            disabled={disabled}
+            aria-invalid={!!error}
+            className={`w-full rounded-xl border bg-white px-4 py-2.5 text-slate-800 placeholder-slate-400 shadow-sm transition
+              focus:outline-none focus:ring-2 focus:ring-slate-400 disabled:bg-slate-100
+              ${error ? 'border-rose-400' : 'border-slate-300'}`}
+            {...rest}
+          />
+          {error && <span className="mt-1 block text-xs text-rose-600">{error}</span>}
+        </label>
+      );
+    }
+
+    function Card({ className = '', children, ...rest }) {
+      return (
+        <div className={`rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200/70 ${className}`} {...rest}>
+          {children}
+        </div>
+      );
+    }
+
+    function Badge({ className = '', children }) {
+      return (
+        <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold tracking-wide ${className}`}>
+          {children}
+        </span>
+      );
+    }
+
+    function Modal({ isOpen, onClose, title, size = 'md', children }) {
+      // ESC 키로 닫기 + 열려 있는 동안 배경 스크롤 잠금
+      useEffect(() => {
+        if (!isOpen) return;
+        const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+        const prevOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        window.addEventListener('keydown', onKey);
+        return () => {
+          window.removeEventListener('keydown', onKey);
+          document.body.style.overflow = prevOverflow;
+        };
+      }, [isOpen, onClose]);
+
+      if (!isOpen) return null;
+
+      const sizes = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl' };
+
+      return (
+        <div
+          className="anim-fade fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 backdrop-blur-sm sm:items-center sm:p-4"
+          onClick={onClose}
+          role="presentation"
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={title}
+            onClick={(e) => e.stopPropagation()}
+            className={`anim-pop max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl ${sizes[size]}`}
+          >
+            {children}
+          </div>
+        </div>
+      );
+    }
+
+    // ========================================
+    // 🧩 Common Components
+    // ========================================
+
+    function Header() {
+      return (
+        <header className="border-b border-slate-200 bg-white/80 backdrop-blur">
+          <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-5 sm:px-6">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-4 border-slate-900 bg-gradient-to-b from-rose-500 from-50% to-white to-50%">
+              <span className="h-3.5 w-3.5 rounded-full border-2 border-slate-900 bg-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-black tracking-tight text-slate-900 sm:text-2xl">포켓몬 도감</h1>
+              <p className="text-xs text-slate-500 sm:text-sm">카드를 눌러 상세 정보를 확인하세요</p>
+            </div>
+          </div>
+        </header>
+      );
+    }
+
+    function Footer({ total }) {
+      return (
+        <footer className="mt-12 border-t border-slate-200 py-6 text-center text-xs text-slate-500">
+          등록된 포켓몬 {total}마리 · 이미지 출처 PokeAPI Sprites
+        </footer>
+      );
+    }
+
+    function TypeChip({ type }) {
+      return <Badge className={typeStyle(type).chip}>{type}</Badge>;
+    }
+
+    function PokemonSprite({ pokemon, className = '' }) {
+      const [failed, setFailed] = useState(false);
+
+      // 이미지 로드 실패 시 도감 번호로 대체 표시
+      if (failed) {
+        return (
+          <div className={`flex items-center justify-center rounded-full bg-white/60 text-slate-400 ${className}`}>
+            <span className="text-lg font-black">{padId(pokemon.id)}</span>
+          </div>
+        );
+      }
+      return (
+        <img
+          src={pokemon.sprite}
+          alt={`${pokemon.name} 이미지`}
+          loading="lazy"
+          onError={() => setFailed(true)}
+          className={`object-contain drop-shadow-md ${className}`}
+        />
+      );
+    }
+
+    // ========================================
+    // 📄 Feature Components
+    // ========================================
+
+    function StatBar({ label, value }) {
+      const percent = Math.min(100, Math.round((value / MAX_STAT) * 100));
+      const tone = value >= 80 ? 'bg-emerald-500' : value >= 55 ? 'bg-amber-400' : 'bg-rose-400';
+      return (
+        <div className="flex items-center gap-3">
+          <span className="w-20 shrink-0 text-xs font-semibold text-slate-500">{label}</span>
+          <span className="w-9 shrink-0 text-right text-sm font-bold tabular-nums text-slate-800">{value}</span>
+          <div
+            className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-100"
+            role="progressbar"
+            aria-label={label}
+            aria-valuenow={value}
+            aria-valuemin={0}
+            aria-valuemax={MAX_STAT}
+          >
+            <div className={`stat-bar h-full rounded-full ${tone}`} style={{ width: `${percent}%` }} />
+          </div>
+        </div>
+      );
+    }
+
+    function PokemonCard({ pokemon, onSelect }) {
+      const style = typeStyle(pokemon.types[0]);
+      return (
+        <button
+          type="button"
+          onClick={() => onSelect(pokemon)}
+          aria-label={`${pokemon.name} 상세 보기`}
+          className="group w-full overflow-hidden rounded-2xl bg-white text-left shadow-sm ring-1 ring-slate-200/70 transition hover:-translate-y-1 hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
+        >
+          <div className={`relative flex h-44 items-center justify-center bg-gradient-to-br ${style.bg}`}>
+            <span className="absolute left-4 top-3 text-xs font-bold text-slate-500/80">{padId(pokemon.id)}</span>
+            <PokemonSprite pokemon={pokemon} className="anim-float h-32 w-32 transition-transform duration-300 group-hover:scale-110" />
+          </div>
+          <div className="space-y-2 p-4">
+            <div className="flex items-baseline gap-2">
+              <h3 className="text-lg font-extrabold text-slate-900">{pokemon.name}</h3>
+              <span className="text-xs font-medium text-slate-400">{pokemon.enName}</span>
+            </div>
+            <p className="text-xs text-slate-500">{pokemon.genus}</p>
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {pokemon.types.map((t) => <TypeChip key={t} type={t} />)}
+            </div>
+          </div>
+        </button>
+      );
+    }
+
+    function PokemonDetail({ pokemon, onClose }) {
+      const style = typeStyle(pokemon.types[0]);
+      const total = Object.values(pokemon.stats).reduce((sum, v) => sum + v, 0);
+
+      return (
+        <div>
+          <div className={`relative flex h-56 items-center justify-center bg-gradient-to-br ${style.bg}`}>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="닫기"
+              className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/70 text-xl leading-none text-slate-600 transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
+            >
+              ×
+            </button>
+            <span className="absolute left-5 top-4 text-sm font-bold text-slate-500/80">{padId(pokemon.id)}</span>
+            <PokemonSprite pokemon={pokemon} className="anim-float h-44 w-44" />
+          </div>
+
+          <div className="space-y-6 p-6">
+            <div>
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <h2 className="text-2xl font-black text-slate-900">{pokemon.name}</h2>
+                <span className="text-sm font-medium text-slate-400">{pokemon.enName}</span>
+              </div>
+              <p className="mt-1 text-sm text-slate-500">{pokemon.genus}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {pokemon.types.map((t) => <TypeChip key={t} type={t} />)}
+              </div>
+            </div>
+
+            <p className="rounded-2xl bg-slate-50 p-4 text-sm leading-relaxed text-slate-700">
+              {pokemon.description}
+            </p>
+
+            <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="rounded-xl bg-slate-50 p-3">
+                <dt className="text-xs text-slate-500">키</dt>
+                <dd className="mt-0.5 font-bold text-slate-900">{pokemon.height.toFixed(1)} m</dd>
+              </div>
+              <div className="rounded-xl bg-slate-50 p-3">
+                <dt className="text-xs text-slate-500">몸무게</dt>
+                <dd className="mt-0.5 font-bold text-slate-900">{pokemon.weight.toFixed(1)} kg</dd>
+              </div>
+              <div className="rounded-xl bg-slate-50 p-3">
+                <dt className="text-xs text-slate-500">특성</dt>
+                <dd className="mt-0.5 font-bold text-slate-900">{pokemon.abilities.join(', ')}</dd>
+              </div>
+              <div className="rounded-xl bg-slate-50 p-3">
+                <dt className="text-xs text-slate-500">숨겨진 특성</dt>
+                <dd className="mt-0.5 font-bold text-slate-900">{pokemon.hiddenAbility}</dd>
+              </div>
+            </dl>
+
+            <section>
+              <div className="mb-3 flex items-baseline justify-between">
+                <h3 className="text-sm font-extrabold text-slate-900">종족값</h3>
+                <span className="text-xs text-slate-500">합계 <b className="text-slate-800">{total}</b></span>
+              </div>
+              <div className="space-y-2.5">
+                {STAT_LABELS.map(({ key, label }) => (
+                  <StatBar key={key} label={label} value={pokemon.stats[key]} />
+                ))}
+              </div>
+            </section>
+
+            <section>
+              <h3 className="mb-3 text-sm font-extrabold text-slate-900">진화</h3>
+              <div className="flex flex-wrap items-center gap-2">
+                {pokemon.evolution.map((name, i) => (
+                  <React.Fragment key={name}>
+                    {i > 0 && <span aria-hidden="true" className="text-slate-300">→</span>}
+                    <span
+                      className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${
+                        name === pokemon.name ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      {name}
+                    </span>
+                  </React.Fragment>
+                ))}
+              </div>
+            </section>
+
+            <Button variant="secondary" size="lg" onClick={onClose} className="w-full">
+              닫기
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    function EmptyState({ keyword }) {
+      return (
+        <Card className="col-span-full flex flex-col items-center gap-2 py-16 text-center">
+          <span className="text-4xl" aria-hidden="true">🔍</span>
+          <p className="font-bold text-slate-800">검색 결과가 없습니다</p>
+          <p className="text-sm text-slate-500">
+            {keyword ? `'${keyword}'와(과) 일치하는 포켓몬을 찾지 못했어요.` : '조건에 맞는 포켓몬이 없어요.'}
+          </p>
+        </Card>
+      );
+    }
+
+    // ========================================
+    // 🚀 App Component
+    // ========================================
+
+    function App() {
+      const [keyword, setKeyword] = useState('');
+      const [activeType, setActiveType] = useState('전체');
+      const [selected, setSelected] = useState(null);
+
+      const filtered = useMemo(() => {
+        const q = keyword.trim().toLowerCase();
+        return POKEMONS.filter((p) => {
+          const matchType = activeType === '전체' || p.types.includes(activeType);
+          const matchKeyword =
+            !q ||
+            p.name.toLowerCase().includes(q) ||
+            p.enName.toLowerCase().includes(q) ||
+            String(p.id).includes(q);
+          return matchType && matchKeyword;
+        });
+      }, [keyword, activeType]);
+
+      const closeDetail = useCallback(() => setSelected(null), []);
+
+      return (
+        <div className="min-h-screen">
+          <Header />
+
+          <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
+            <div className="mb-6 space-y-4">
+              <Input
+                type="search"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                placeholder="이름 또는 도감 번호로 검색 (예: 피카츄, 25)"
+                aria-label="포켓몬 검색"
+              />
+              <div className="flex flex-wrap gap-2" role="group" aria-label="타입 필터">
+                {ALL_TYPES.map((type) => {
+                  const active = activeType === type;
+                  return (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setActiveType(type)}
+                      aria-pressed={active}
+                      className={`rounded-full px-4 py-1.5 text-sm font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 ${
+                        active
+                          ? 'bg-slate-900 text-white shadow'
+                          : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      {type}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {filtered.length === 0 ? (
+                <EmptyState keyword={keyword.trim()} />
+              ) : (
+                filtered.map((p) => <PokemonCard key={p.id} pokemon={p} onSelect={setSelected} />)
+              )}
+            </div>
+          </main>
+
+          <Modal isOpen={!!selected} onClose={closeDetail} title={selected ? `${selected.name} 상세 정보` : ''} size="lg">
+            {selected && <PokemonDetail pokemon={selected} onClose={closeDetail} />}
+          </Modal>
+
+          <Footer total={POKEMONS.length} />
+        </div>
+      );
+    }
+
+    // ========================================
+    // Rendering
+    // ========================================
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

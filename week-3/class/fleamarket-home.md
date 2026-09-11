@@ -1,0 +1,608 @@
+- generic [active] [ref=f65e1]:
+  - generic [ref=f65e2]:
+    - generic [ref=f65e4]:
+      - link [ref=f65e5] [cursor=pointer]:
+        - /url: /
+        - heading "N 플리마켓" [level=1] [ref=f65e6]
+      - generic [ref=f65e10]:
+        - link [ref=f65e11] [cursor=pointer]:
+          - /url: /search
+          - img "검색" [ref=f65e12]
+        - link "알림" [ref=f65e15] [cursor=pointer]:
+          - /url: /my-news
+        - link [ref=f65e19] [cursor=pointer]:
+          - /url: /my
+          - img "프로필" [ref=f65e22]
+    - generic [ref=f65e23]:
+      - generic [ref=f65e24]:
+        - generic [ref=f65e25]:
+          - button "홈" [ref=f65e26] [cursor=pointer]
+          - button [ref=f65e28] [cursor=pointer]:
+            - img "N+스토어" [ref=f65e29]
+        - strong [ref=f65e74]: 브랜드 중고·리퍼 상품도 있어요!
+      - generic [ref=f65e30]:
+        - generic [ref=f65e31]:
+          - link [ref=f65e82] [cursor=pointer]:
+            - /url: https://fleamarket.naver.com/exhibition/43249049
+            - img "레저 클리어런스 세일" [ref=f65e84]
+          - generic [ref=f65e35]:
+            - generic [ref=f65e87]:
+              - button "브랜드리세일" [ref=f65e88] [cursor=pointer]
+              - button "레저리퍼세일" [ref=f65e93] [cursor=pointer]
+              - button "라켓스포츠" [ref=f65e98] [cursor=pointer]
+              - button "취미·수집품" [ref=f65e103] [cursor=pointer]
+              - button "주얼리" [ref=f65e108] [cursor=pointer]
+              - button "캠핑" [ref=f65e113] [cursor=pointer]
+              - button "낚시" [ref=f65e118] [cursor=pointer]
+            - generic [ref=f65e123]:
+              - heading "지금 눈여겨볼 상품" [level=2] [ref=f65e126]
+              - button "구매자 보호 수수료 2.2% 별도 · 안전거래 등 안내" [ref=f65e128] [cursor=pointer]
+            - list [ref=f65e133]:
+              - listitem [ref=f65e134]:
+                - generic [ref=f65e135]:
+                  - generic [ref=f65e136]:
+                    - img "상품이미지" [ref=f65e138]
+                    - button "찜" [ref=f65e139] [cursor=pointer]
+                    - link "상세화면으로 이동" [ref=f65e142] [cursor=pointer]:
+                      - /url: /market-products/01KN34P0697R7JCXR687VY8VAY?
+                  - generic [ref=f65e144]:
+                    - link "상세화면으로 이동 어깨 수술후 보호기 20,000원" [ref=f65e145] [cursor=pointer]:
+                      - /url: /market-products/01KN34P0697R7JCXR687VY8VAY?
+                      - generic [ref=f65e146]: 상세화면으로 이동
+                      - generic [ref=f65e147]: 어깨 수술후 보호기
+                      - generic [ref=f65e148]:
+                        - strong [ref=f65e149]: 20,000
+                        - text: 원
+                    - generic [ref=f65e150]:
+                      - generic [ref=f65e151]: 배송비 4,000원
+                      - generic [ref=f65e152]:
+                        - generic [ref=f65e153]: 날짜
+                        - text: 04.01.
+              - listitem [ref=f65e154]:
+                - generic [ref=f65e155]:
+                  - generic [ref=f65e156]:
+                    - img "상품이미지" [ref=f65e158]
+                    - button "찜" [ref=f65e159] [cursor=pointer]
+                    - link "상세화면으로 이동" [ref=f65e162] [cursor=pointer]:
+                      - /url: /market-products/01KZ65F2J43VF8VZ8Z3QDX8MG4?
+                  - generic [ref=f65e164]:
+                    - link "상세화면으로 이동 GTS 스크린골프 연습기계 풀세트 아파트 골프연습장 회사 복지용 펜션골프 2,500,000원" [ref=f65e165] [cursor=pointer]:
+                      - /url: /market-products/01KZ65F2J43VF8VZ8Z3QDX8MG4?
+                      - generic [ref=f65e166]: 상세화면으로 이동
+                      - generic [ref=f65e167]: GTS 스크린골프 연습기계 풀세트 아파트 골프연습장 회사 복지용 펜션골프
+                      - generic [ref=f65e168]:
+                        - strong [ref=f65e169]: 2,500,000
+                        - text: 원
+                    - generic [ref=f65e171]:
+                      - generic [ref=f65e172]: 날짜
+                      - text: 08.04.
+              - listitem [ref=f65e173]:
+                - generic [ref=f65e174]:
+                  - generic [ref=f65e175]:
+                    - img "상품이미지" [ref=f65e177]
+                    - button "찜" [ref=f65e178] [cursor=pointer]
+                    - link "상세화면으로 이동" [ref=f65e181] [cursor=pointer]:
+                      - /url: /market-products/01KSM3YMEDD0P7CE0Q6138S5EZ?
+                  - generic [ref=f65e183]:
+                    - link "상세화면으로 이동 서울성북) 2자광폭 어항 및 물티 일괄 분양 70,000원" [ref=f65e184] [cursor=pointer]:
+                      - /url: /market-products/01KSM3YMEDD0P7CE0Q6138S5EZ?
+                      - generic [ref=f65e185]: 상세화면으로 이동
+                      - generic [ref=f65e186]: 서울성북) 2자광폭 어항 및 물티 일괄 분양
+                      - generic [ref=f65e187]:
+                        - strong [ref=f65e188]: 70,000
+                        - text: 원
+                    - generic [ref=f65e190]:
+                      - generic [ref=f65e191]: 날짜
+                      - text: 05.27.
+              - listitem [ref=f65e192]:
+                - generic [ref=f65e193]:
+                  - generic [ref=f65e194]:
+                    - img "상품이미지" [ref=f65e196]
+                    - button "찜" [ref=f65e197] [cursor=pointer]
+                    - link "상세화면으로 이동" [ref=f65e200] [cursor=pointer]:
+                      - /url: /market-products/01KKN7Q81RZF0PEBYGFBCN6V7A?
+                  - generic [ref=f65e202]:
+                    - link "상세화면으로 이동 서울 양천)네모 5자 초광폭 상면여과기 300,000원" [ref=f65e203] [cursor=pointer]:
+                      - /url: /market-products/01KKN7Q81RZF0PEBYGFBCN6V7A?
+                      - generic [ref=f65e204]: 상세화면으로 이동
+                      - generic [ref=f65e205]: 서울 양천)네모 5자 초광폭 상면여과기
+                      - generic [ref=f65e206]:
+                        - strong [ref=f65e207]: 300,000
+                        - text: 원
+                    - generic [ref=f65e209]:
+                      - generic [ref=f65e210]: 날짜
+                      - text: 03.14.
+            - generic [ref=f65e211]:
+              - generic [ref=f65e212]:
+                - heading [level=2] [ref=f65e213]:
+                  - img "N+ 스토어 플리마켓 Beta" [ref=f65e214]
+                - generic [ref=f65e215]:
+                  - generic [ref=f65e216]: N+스토어의 브랜드 리퍼 · 빈티지 상품을 한눈에
+                  - button "안내" [ref=f65e217] [cursor=pointer]
+              - list [ref=f65e222]:
+                - listitem [ref=f65e223]:
+                  - generic [ref=f65e225]:
+                    - generic [ref=f65e226]:
+                      - img "상품이미지" [ref=f65e228]
+                      - link "상세화면으로 이동" [ref=f65e229] [cursor=pointer]:
+                        - /url: https://m.smartstore.naver.com/main/products/13747662984
+                    - generic [ref=f65e231]:
+                      - link "앤처스 N+ 쇼핑 상세화면으로 이동 빈폴 롱스커트 [S] 235,000원 59,100 원 최대할인가" [ref=f65e232] [cursor=pointer]:
+                        - /url: https://m.smartstore.naver.com/main/products/13747662984
+                        - generic [ref=f65e233]:
+                          - generic [ref=f65e234]: 앤처스
+                          - img "N+ 쇼핑" [ref=f65e235]
+                        - generic [ref=f65e236]: 상세화면으로 이동
+                        - generic [ref=f65e237]: 빈폴 롱스커트 [S]
+                        - generic [ref=f65e238]:
+                          - generic [ref=f65e239]: 235,000원
+                          - generic [ref=f65e240]:
+                            - generic [ref=f65e241]
+                            - generic [ref=f65e244]: 최대할인가
+                      - generic [ref=f65e245]: 무료배송
+                - listitem [ref=f65e247]:
+                  - generic [ref=f65e249]:
+                    - generic [ref=f65e250]:
+                      - img "상품이미지" [ref=f65e252]
+                      - link "상세화면으로 이동" [ref=f65e253] [cursor=pointer]:
+                        - /url: https://m.smartstore.naver.com/main/products/13747662953
+                    - generic [ref=f65e255]:
+                      - link "앤처스 N+ 쇼핑 상세화면으로 이동 오즈세컨 롱스커트 [XS] 345,000원 84,250 원 최대할인가" [ref=f65e256] [cursor=pointer]:
+                        - /url: https://m.smartstore.naver.com/main/products/13747662953
+                        - generic [ref=f65e257]:
+                          - generic [ref=f65e258]: 앤처스
+                          - img "N+ 쇼핑" [ref=f65e259]
+                        - generic [ref=f65e260]: 상세화면으로 이동
+                        - generic [ref=f65e261]: 오즈세컨 롱스커트 [XS]
+                        - generic [ref=f65e262]:
+                          - generic [ref=f65e263]: 345,000원
+                          - generic [ref=f65e264]:
+                            - generic [ref=f65e265]
+                            - generic [ref=f65e268]: 최대할인가
+                      - generic [ref=f65e269]: 무료배송
+                - listitem [ref=f65e271]:
+                  - generic [ref=f65e273]:
+                    - generic [ref=f65e274]:
+                      - img "상품이미지" [ref=f65e276]
+                      - link "상세화면으로 이동" [ref=f65e277] [cursor=pointer]:
+                        - /url: https://m.smartstore.naver.com/main/products/13747662883
+                    - generic [ref=f65e279]:
+                      - link "앤처스 N+ 쇼핑 상세화면으로 이동 써스데이아일랜드 긴팔 원피스 [S] 228,000원 55,000 원 최대할인가" [ref=f65e280] [cursor=pointer]:
+                        - /url: https://m.smartstore.naver.com/main/products/13747662883
+                        - generic [ref=f65e281]:
+                          - generic [ref=f65e282]: 앤처스
+                          - img "N+ 쇼핑" [ref=f65e283]
+                        - generic [ref=f65e284]: 상세화면으로 이동
+                        - generic [ref=f65e285]: 써스데이아일랜드 긴팔 원피스 [S]
+                        - generic [ref=f65e286]:
+                          - generic [ref=f65e287]: 228,000원
+                          - generic [ref=f65e288]:
+                            - generic [ref=f65e289]
+                            - generic [ref=f65e292]: 최대할인가
+                      - generic [ref=f65e293]: 무료배송
+                - listitem [ref=f65e295]:
+                  - generic [ref=f65e297]:
+                    - generic [ref=f65e298]:
+                      - img "상품이미지" [ref=f65e300]
+                      - link "상세화면으로 이동" [ref=f65e301] [cursor=pointer]:
+                        - /url: https://m.smartstore.naver.com/main/products/13747662854
+                    - generic [ref=f65e303]:
+                      - link "앤처스 N+ 쇼핑 상세화면으로 이동 스튜디오톰보이 민소매 원피스 [ONE SIZE] 179,000원 42,750 원 최대할인가" [ref=f65e304] [cursor=pointer]:
+                        - /url: https://m.smartstore.naver.com/main/products/13747662854
+                        - generic [ref=f65e305]:
+                          - generic [ref=f65e306]: 앤처스
+                          - img "N+ 쇼핑" [ref=f65e307]
+                        - generic [ref=f65e308]: 상세화면으로 이동
+                        - generic [ref=f65e309]: 스튜디오톰보이 민소매 원피스 [ONE SIZE]
+                        - generic [ref=f65e310]:
+                          - generic [ref=f65e311]: 179,000원
+                          - generic [ref=f65e312]:
+                            - generic [ref=f65e313]
+                            - generic [ref=f65e316]: 최대할인가
+                      - generic [ref=f65e317]: 무료배송
+                - listitem [ref=f65e319]:
+                  - generic [ref=f65e321]:
+                    - generic [ref=f65e322]:
+                      - img "상품이미지" [ref=f65e324]
+                      - link "상세화면으로 이동" [ref=f65e325] [cursor=pointer]:
+                        - /url: https://m.smartstore.naver.com/main/products/13747662818
+                    - generic [ref=f65e327]:
+                      - link "앤처스 N+ 쇼핑 상세화면으로 이동 오즈세컨 롱스커트 [S] 301,000원 55,190 원 최대할인가" [ref=f65e328] [cursor=pointer]:
+                        - /url: https://m.smartstore.naver.com/main/products/13747662818
+                        - generic [ref=f65e329]:
+                          - generic [ref=f65e330]: 앤처스
+                          - img "N+ 쇼핑" [ref=f65e331]
+                        - generic [ref=f65e332]: 상세화면으로 이동
+                        - generic [ref=f65e333]: 오즈세컨 롱스커트 [S]
+                        - generic [ref=f65e334]:
+                          - generic [ref=f65e335]: 301,000원
+                          - generic [ref=f65e336]:
+                            - generic [ref=f65e337]
+                            - generic [ref=f65e340]: 최대할인가
+                      - generic [ref=f65e341]: 무료배송
+                - listitem [ref=f65e343]:
+                  - generic [ref=f65e345]:
+                    - generic [ref=f65e346]:
+                      - img "상품이미지" [ref=f65e348]
+                      - link "상세화면으로 이동" [ref=f65e349] [cursor=pointer]:
+                        - /url: https://m.smartstore.naver.com/main/products/13747662765
+                    - generic [ref=f65e351]:
+                      - link "앤처스 N+ 쇼핑 상세화면으로 이동 시스템 자켓 [XS] 616,000원 102,720 원 최대할인가" [ref=f65e352] [cursor=pointer]:
+                        - /url: https://m.smartstore.naver.com/main/products/13747662765
+                        - generic [ref=f65e353]:
+                          - generic [ref=f65e354]: 앤처스
+                          - img "N+ 쇼핑" [ref=f65e355]
+                        - generic [ref=f65e356]: 상세화면으로 이동
+                        - generic [ref=f65e357]: 시스템 자켓 [XS]
+                        - generic [ref=f65e358]:
+                          - generic [ref=f65e359]: 616,000원
+                          - generic [ref=f65e360]:
+                            - generic [ref=f65e361]
+                            - generic [ref=f65e364]: 최대할인가
+                      - generic [ref=f65e365]: 무료배송
+              - link "N+스토어 플리마켓 상품 더보기" [ref=f65e369] [cursor=pointer]:
+                - /url: /smartstore
+            - separator [aria-hidden] [ref=f65e373]
+            - list [ref=f65e376]:
+              - listitem [ref=f65e377]:
+                - generic [ref=f65e378]:
+                  - generic [ref=f65e379]:
+                    - img "상품이미지" [ref=f65e381]
+                    - generic [ref=f65e382]: 구매인증
+                    - button "찜" [ref=f65e385] [cursor=pointer]
+                    - link "상세화면으로 이동" [ref=f65e388] [cursor=pointer]:
+                      - /url: /market-products/01KKXEAE02XFNE06NMDYN9KX71?
+                  - generic [ref=f65e390]:
+                    - link "상세화면으로 이동 스릭슨 하프백 ZX 프레틱스 클럽케이스 남성 여성 경량 연습장 파3 35,000원" [ref=f65e391] [cursor=pointer]:
+                      - /url: /market-products/01KKXEAE02XFNE06NMDYN9KX71?
+                      - generic [ref=f65e392]: 상세화면으로 이동
+                      - generic [ref=f65e393]: 스릭슨 하프백 ZX 프레틱스 클럽케이스 남성 여성 경량 연습장 파3
+                      - generic [ref=f65e394]:
+                        - strong [ref=f65e395]: 35,000
+                        - text: 원
+                    - generic [ref=f65e396]:
+                      - generic [ref=f65e397]: 배송비 4,000원
+                      - generic [ref=f65e398]:
+                        - generic [ref=f65e399]: 날짜
+                        - text: 03.17.
+              - listitem [ref=f65e400]:
+                - generic [ref=f65e401]:
+                  - generic [ref=f65e402]:
+                    - img "상품이미지" [ref=f65e404]
+                    - button "찜" [ref=f65e405] [cursor=pointer]
+                    - link "상세화면으로 이동" [ref=f65e408] [cursor=pointer]:
+                      - /url: /market-products/01KM7BFC6SDMEMY2JH009VF8SC?
+                  - generic [ref=f65e410]:
+                    - link "상세화면으로 이동 전산회계1급, 전산세무2급, 회독표 6,000원" [ref=f65e411] [cursor=pointer]:
+                      - /url: /market-products/01KM7BFC6SDMEMY2JH009VF8SC?
+                      - generic [ref=f65e412]: 상세화면으로 이동
+                      - generic [ref=f65e413]: 전산회계1급, 전산세무2급, 회독표
+                      - generic [ref=f65e414]:
+                        - strong [ref=f65e415]: 6,000
+                        - text: 원
+                    - generic [ref=f65e417]:
+                      - generic [ref=f65e418]: 날짜
+                      - text: 03.21.
+              - listitem [ref=f65e419]:
+                - generic [ref=f65e420]:
+                  - generic [ref=f65e421]:
+                    - img "상품이미지" [ref=f65e423]
+                    - button "찜" [ref=f65e424] [cursor=pointer]
+                    - link "상세화면으로 이동" [ref=f65e427] [cursor=pointer]:
+                      - /url: /market-products/01KNNS0R58KC8T35DSAG2Z3MSZ?
+                  - generic [ref=f65e429]:
+                    - link "상세화면으로 이동 2026 세무회계연습 1, 2 15,000원" [ref=f65e430] [cursor=pointer]:
+                      - /url: /market-products/01KNNS0R58KC8T35DSAG2Z3MSZ?
+                      - generic [ref=f65e431]: 상세화면으로 이동
+                      - generic [ref=f65e432]: 2026 세무회계연습 1, 2
+                      - generic [ref=f65e433]:
+                        - strong [ref=f65e434]: 15,000
+                        - text: 원
+                    - generic [ref=f65e435]:
+                      - generic [ref=f65e436]: 배송비 4,000원
+                      - generic [ref=f65e437]:
+                        - generic [ref=f65e438]: 날짜
+                        - text: 04.08.
+              - listitem [ref=f65e439]:
+                - generic [ref=f65e440]:
+                  - generic [ref=f65e441]:
+                    - img "상품이미지" [ref=f65e443]
+                    - button "찜" [ref=f65e444] [cursor=pointer]
+                    - link "상세화면으로 이동" [ref=f65e447] [cursor=pointer]:
+                      - /url: /market-products/01KVN6SMB70VB3BW3MVC9SNXG0?
+                  - generic [ref=f65e449]:
+                    - link "상세화면으로 이동 트로이헥토르 1,000,000원" [ref=f65e450] [cursor=pointer]:
+                      - /url: /market-products/01KVN6SMB70VB3BW3MVC9SNXG0?
+                      - generic [ref=f65e451]: 상세화면으로 이동
+                      - generic [ref=f65e452]: 트로이헥토르
+                      - generic [ref=f65e453]:
+                        - strong [ref=f65e454]: 1,000,000
+                        - text: 원
+                    - generic [ref=f65e455]:
+                      - generic [ref=f65e456]: 배송비 3,600원
+                      - generic [ref=f65e457]:
+                        - generic [ref=f65e458]: 날짜
+                        - text: 06.21.
+            - separator [aria-hidden] [ref=f65e459]
+            - generic [ref=f65e460]:
+              - heading "새로 발견한 카페 상품" [level=2] [ref=f65e464]
+              - generic [ref=f65e465]:
+                - button "강사모" [ref=f65e466] [cursor=pointer]
+                - button "IT인프라&네전따" [ref=f65e468] [cursor=pointer]
+                - button "골프마니아클럽" [ref=f65e470] [cursor=pointer]
+                - button "나이키매니아-네이버" [ref=f65e472] [cursor=pointer]
+                - button "자동차도장" [ref=f65e474] [cursor=pointer]
+              - list [ref=f65e481]:
+                - listitem [ref=f65e482]:
+                  - generic [ref=f65e483]:
+                    - generic [ref=f65e484]:
+                      - img "상품이미지" [ref=f65e486]
+                      - link "상세화면으로 이동" [ref=f65e487] [cursor=pointer]:
+                        - /url: /market-products/01M1R22XQRYK3PT9GD3YFT6KVE
+                    - generic [ref=f65e489]:
+                      - link "상세화면으로 이동 루이독 트위드 퍼 어라운드백 그랑 230,000원" [ref=f65e490] [cursor=pointer]:
+                        - /url: /market-products/01M1R22XQRYK3PT9GD3YFT6KVE
+                        - generic [ref=f65e491]: 상세화면으로 이동
+                        - generic [ref=f65e492]: 루이독 트위드 퍼 어라운드백 그랑
+                        - generic [ref=f65e493]:
+                          - strong [ref=f65e494]: 230,000
+                          - text: 원
+                      - generic [ref=f65e495]: 배송비 4,000원
+                - listitem [ref=f65e497]:
+                  - generic [ref=f65e498]:
+                    - generic [ref=f65e499]:
+                      - img "상품이미지" [ref=f65e501]
+                      - link "상세화면으로 이동" [ref=f65e502] [cursor=pointer]:
+                        - /url: /market-products/01M1R16D9WQ1115GD6DYX01YXS
+                    - generic [ref=f65e504]:
+                      - link "상세화면으로 이동 루이독 마이큐티참 라벤더 26,000원" [ref=f65e505] [cursor=pointer]:
+                        - /url: /market-products/01M1R16D9WQ1115GD6DYX01YXS
+                        - generic [ref=f65e506]: 상세화면으로 이동
+                        - generic [ref=f65e507]: 루이독 마이큐티참 라벤더
+                        - generic [ref=f65e508]:
+                          - strong [ref=f65e509]: 26,000
+                          - text: 원
+                      - generic [ref=f65e510]: 배송비 3,600원
+                - listitem [ref=f65e512]:
+                  - generic [ref=f65e513]:
+                    - generic [ref=f65e514]:
+                      - img "상품이미지" [ref=f65e516]
+                      - link "상세화면으로 이동" [ref=f65e517] [cursor=pointer]:
+                        - /url: /market-products/01M1R10DB9N3VGZX1RNWJTCWH3
+                    - generic [ref=f65e519]:
+                      - link "상세화면으로 이동 루이독 하네스 S사이즈 98,000원" [ref=f65e520] [cursor=pointer]:
+                        - /url: /market-products/01M1R10DB9N3VGZX1RNWJTCWH3
+                        - generic [ref=f65e521]: 상세화면으로 이동
+                        - generic [ref=f65e522]: 루이독 하네스 S사이즈
+                        - generic [ref=f65e523]:
+                          - strong [ref=f65e524]: 98,000
+                          - text: 원
+                      - generic [ref=f65e525]: 배송비 3,600원
+                - listitem [ref=f65e527]:
+                  - generic [ref=f65e528]:
+                    - generic [ref=f65e529]:
+                      - img "상품이미지" [ref=f65e531]
+                      - link "상세화면으로 이동" [ref=f65e532] [cursor=pointer]:
+                        - /url: /market-products/01M1QYXQQPKHV1C15J5VRX7WAR
+                    - generic [ref=f65e534]:
+                      - link "상세화면으로 이동 강아지 옷, 용품들 일괄 판매 (미듐사이즈) 50,000원" [ref=f65e535] [cursor=pointer]:
+                        - /url: /market-products/01M1QYXQQPKHV1C15J5VRX7WAR
+                        - generic [ref=f65e536]: 상세화면으로 이동
+                        - generic [ref=f65e537]: 강아지 옷, 용품들 일괄 판매 (미듐사이즈)
+                        - generic [ref=f65e538]:
+                          - strong [ref=f65e539]: 50,000
+                          - text: 원
+                      - generic [ref=f65e540]: 배송비 3,600원
+                - listitem [ref=f65e542]:
+                  - generic [ref=f65e543]:
+                    - generic [ref=f65e544]:
+                      - img "상품이미지" [ref=f65e546]
+                      - link "상세화면으로 이동" [ref=f65e547] [cursor=pointer]:
+                        - /url: /market-products/01M1QVKR07B0Q0CND2ASMPZ39B
+                    - generic [ref=f65e549]:
+                      - link "상세화면으로 이동 디포독 지젤 니트 원피스 핑크 L 118,000원" [ref=f65e550] [cursor=pointer]:
+                        - /url: /market-products/01M1QVKR07B0Q0CND2ASMPZ39B
+                        - generic [ref=f65e551]: 상세화면으로 이동
+                        - generic [ref=f65e552]: 디포독 지젤 니트 원피스 핑크 L
+                        - generic [ref=f65e553]:
+                          - strong [ref=f65e554]: 118,000
+                          - text: 원
+                      - generic [ref=f65e555]: 배송비 4,500원
+                - listitem [ref=f65e557]:
+                  - generic [ref=f65e558]:
+                    - generic [ref=f65e559]:
+                      - img "상품이미지" [ref=f65e561]
+                      - link "상세화면으로 이동" [ref=f65e562] [cursor=pointer]:
+                        - /url: /market-products/01M1QSTZAXNNSWKQX06SPRJVK9
+                    - generic [ref=f65e564]:
+                      - link "상세화면으로 이동 림마이펫 새제품 SM사이즈 10,000원" [ref=f65e565] [cursor=pointer]:
+                        - /url: /market-products/01M1QSTZAXNNSWKQX06SPRJVK9
+                        - generic [ref=f65e566]: 상세화면으로 이동
+                        - generic [ref=f65e567]: 림마이펫 새제품 SM사이즈
+                        - generic [ref=f65e568]:
+                          - strong [ref=f65e569]: 10,000
+                          - text: 원
+                      - generic [ref=f65e570]: 배송비 3,600원
+              - separator [aria-hidden] [ref=f65e676]
+              - button "구매자 보호 수수료 2.2% 별도 · 안전거래 등 안내" [ref=f65e679] [cursor=pointer]
+              - link "강사모 바로가기" [ref=f65e683] [cursor=pointer]:
+                - /url: https://cafe.naver.com/dogpalza
+                - generic [ref=f65e684]:
+                  - generic [ref=f65e685]: 강사모
+                  - text: 바로가기
+            - separator [aria-hidden] [ref=f65e686]
+            - list [ref=f65e689]:
+              - listitem [ref=f65e690]:
+                - generic [ref=f65e691]:
+                  - generic [ref=f65e692]:
+                    - img "상품이미지" [ref=f65e694]
+                    - button "찜" [ref=f65e695] [cursor=pointer]
+                    - link "상세화면으로 이동" [ref=f65e698] [cursor=pointer]:
+                      - /url: /market-products/01KQW3DS2ATZVKGQ19YE94VZA3?
+                  - generic [ref=f65e700]:
+                    - link "상세화면으로 이동 트로이125 14년식 판매합니다. 2,600,000원" [ref=f65e701] [cursor=pointer]:
+                      - /url: /market-products/01KQW3DS2ATZVKGQ19YE94VZA3?
+                      - generic [ref=f65e702]: 상세화면으로 이동
+                      - generic [ref=f65e703]: 트로이125 14년식 판매합니다.
+                      - generic [ref=f65e704]:
+                        - strong [ref=f65e705]: 2,600,000
+                        - text: 원
+                    - generic [ref=f65e707]:
+                      - generic [ref=f65e708]: 날짜
+                      - text: 05.05.
+              - listitem [ref=f65e709]:
+                - generic [ref=f65e710]:
+                  - generic [ref=f65e711]:
+                    - img "상품이미지" [ref=f65e713]
+                    - button "찜" [ref=f65e714] [cursor=pointer]
+                    - link "상세화면으로 이동" [ref=f65e717] [cursor=pointer]:
+                      - /url: /market-products/01KWBCDQVAGNHS59H771CM7VZS?
+                  - generic [ref=f65e719]:
+                    - link "상세화면으로 이동 (신품급)예스골프 신형 스포티바 여성 골프채 풀세트 980,000원" [ref=f65e720] [cursor=pointer]:
+                      - /url: /market-products/01KWBCDQVAGNHS59H771CM7VZS?
+                      - generic [ref=f65e721]: 상세화면으로 이동
+                      - generic [ref=f65e722]: (신품급)예스골프 신형 스포티바 여성 골프채 풀세트
+                      - generic [ref=f65e723]:
+                        - strong [ref=f65e724]: 980,000
+                        - text: 원
+                    - generic [ref=f65e725]:
+                      - generic [ref=f65e726]: 무료배송
+                      - generic [ref=f65e727]:
+                        - generic [ref=f65e728]: 날짜
+                        - text: 06.30.
+              - listitem [ref=f65e729]:
+                - generic [ref=f65e730]:
+                  - generic [ref=f65e731]:
+                    - img "상품이미지" [ref=f65e733]
+                    - button "찜" [ref=f65e734] [cursor=pointer]
+                    - link "상세화면으로 이동" [ref=f65e737] [cursor=pointer]:
+                      - /url: /market-products/01M00A5C0BHQY9WGK6DMM7HYWE?
+                  - generic [ref=f65e739]:
+                    - link "상세화면으로 이동 골프존 키보드 40,000원" [ref=f65e740] [cursor=pointer]:
+                      - /url: /market-products/01M00A5C0BHQY9WGK6DMM7HYWE?
+                      - generic [ref=f65e741]: 상세화면으로 이동
+                      - generic [ref=f65e742]: 골프존 키보드
+                      - generic [ref=f65e743]:
+                        - strong [ref=f65e744]: 40,000
+                        - text: 원
+                    - generic [ref=f65e745]:
+                      - generic [ref=f65e746]: 배송비 3,600원
+                      - generic [ref=f65e747]:
+                        - generic [ref=f65e748]: 날짜
+                        - text: 3주 전
+              - listitem [ref=f65e749]:
+                - generic [ref=f65e750]:
+                  - generic [ref=f65e751]:
+                    - img "상품이미지" [ref=f65e753]
+                    - button "찜" [ref=f65e754] [cursor=pointer]
+                    - link "상세화면으로 이동" [ref=f65e757] [cursor=pointer]:
+                      - /url: /market-products/01KZ66QQVPF8KAGEEZZZQ1NE1Z?
+                  - generic [ref=f65e759]:
+                    - link "상세화면으로 이동 중고 프렌즈 스크린 T2 4대 골프존 SG골프 아파트 골프연습장 스크린골프 개인용 가정용 펜션 기업용 7,900,000원" [ref=f65e760] [cursor=pointer]:
+                      - /url: /market-products/01KZ66QQVPF8KAGEEZZZQ1NE1Z?
+                      - generic [ref=f65e761]: 상세화면으로 이동
+                      - generic [ref=f65e762]: 중고 프렌즈 스크린 T2 4대 골프존 SG골프 아파트 골프연습장 스크린골프 개인용 가정용 펜션 기업용
+                      - generic [ref=f65e763]:
+                        - strong [ref=f65e764]: 7,900,000
+                        - text: 원
+                    - generic [ref=f65e766]:
+                      - generic [ref=f65e767]: 날짜
+                      - text: 08.04.
+              - listitem [ref=f65e768]:
+                - generic [ref=f65e769]:
+                  - generic [ref=f65e770]:
+                    - img "상품이미지" [ref=f65e772]
+                    - button "찜" [ref=f65e773] [cursor=pointer]
+                    - link "상세화면으로 이동" [ref=f65e776] [cursor=pointer]:
+                      - /url: /market-products/01M0056WJJE50ZHS2K1F41WET6?
+                  - generic [ref=f65e778]:
+                    - link "상세화면으로 이동 (치이마 품절)치이카와 영화 인어섬의비밀 수면 아크릴 키링 6종 세트 100,000원" [ref=f65e779] [cursor=pointer]:
+                      - /url: /market-products/01M0056WJJE50ZHS2K1F41WET6?
+                      - generic [ref=f65e780]: 상세화면으로 이동
+                      - generic [ref=f65e781]: (치이마 품절)치이카와 영화 인어섬의비밀 수면 아크릴 키링 6종 세트
+                      - generic [ref=f65e782]:
+                        - strong [ref=f65e783]: 100,000
+                        - text: 원
+                    - generic [ref=f65e784]:
+                      - generic [ref=f65e785]: 배송비 4,000원
+                      - generic [ref=f65e786]:
+                        - generic [ref=f65e787]: 날짜
+                        - text: 3주 전
+              - listitem [ref=f65e788]:
+                - generic [ref=f65e789]:
+                  - generic [ref=f65e790]:
+                    - img "상품이미지" [ref=f65e792]
+                    - button "찜" [ref=f65e793] [cursor=pointer]
+                    - link "상세화면으로 이동" [ref=f65e796] [cursor=pointer]:
+                      - /url: /market-products/01KZ64JNEPQT05D483D51HMY4A?
+                  - generic [ref=f65e798]:
+                    - link "상세화면으로 이동 골프백 라커 골프연습장 캐비넷 스크린골프 골프아카데미 미용실 헬스클럽 짐 25,000원" [ref=f65e799] [cursor=pointer]:
+                      - /url: /market-products/01KZ64JNEPQT05D483D51HMY4A?
+                      - generic [ref=f65e800]: 상세화면으로 이동
+                      - generic [ref=f65e801]: 골프백 라커 골프연습장 캐비넷 스크린골프 골프아카데미 미용실 헬스클럽 짐
+                      - generic [ref=f65e802]:
+                        - strong [ref=f65e803]: 25,000
+                        - text: 원
+                    - generic [ref=f65e805]:
+                      - generic [ref=f65e806]: 날짜
+                      - text: 08.04.
+              - listitem [ref=f65e807]:
+                - generic [ref=f65e808]:
+                  - generic [ref=f65e809]:
+                    - img "상품이미지" [ref=f65e811]
+                    - button "찜" [ref=f65e812] [cursor=pointer]
+                    - link "상세화면으로 이동" [ref=f65e815] [cursor=pointer]:
+                      - /url: /market-products/01KPSGPF7M2AX0SNKZ3D4TKHVR?
+                  - generic [ref=f65e817]:
+                    - link "상세화면으로 이동 영화로 만나는 치유의 심리학 5,000원" [ref=f65e818] [cursor=pointer]:
+                      - /url: /market-products/01KPSGPF7M2AX0SNKZ3D4TKHVR?
+                      - generic [ref=f65e819]: 상세화면으로 이동
+                      - generic [ref=f65e820]: 영화로 만나는 치유의 심리학
+                      - generic [ref=f65e821]:
+                        - strong [ref=f65e822]: 5,000
+                        - text: 원
+                    - generic [ref=f65e823]:
+                      - generic [ref=f65e824]: 배송비 3,000원
+                      - generic [ref=f65e825]:
+                        - generic [ref=f65e826]: 날짜
+                        - text: 04.22.
+              - listitem [ref=f65e827]:
+                - generic [ref=f65e828]:
+                  - generic [ref=f65e829]:
+                    - img "상품이미지" [ref=f65e831]
+                    - button "찜" [ref=f65e832] [cursor=pointer]
+                    - link "상세화면으로 이동" [ref=f65e835] [cursor=pointer]:
+                      - /url: /market-products/01M0RXMT9R09X3PMRNTS2YXENA?
+                  - generic [ref=f65e837]:
+                    - link "상세화면으로 이동 김포 2022 로드글라이드 스페셜 한정컬러 백마 관리최상 12000km 34,000,000원" [ref=f65e838] [cursor=pointer]:
+                      - /url: /market-products/01M0RXMT9R09X3PMRNTS2YXENA?
+                      - generic [ref=f65e839]: 상세화면으로 이동
+                      - generic [ref=f65e840]: 김포 2022 로드글라이드 스페셜 한정컬러 백마 관리최상 12000km
+                      - generic [ref=f65e841]:
+                        - strong [ref=f65e842]: 34,000,000
+                        - text: 원
+                    - generic [ref=f65e844]:
+                      - generic [ref=f65e845]: 날짜
+                      - text: 1주 전
+            - generic [ref=f65e846]: 로딩중...
+        - button "판매하기" [ref=f65e55] [cursor=pointer]
+    - generic [ref=f65e59]:
+      - generic [ref=f65e61]:
+        - link "N플리마켓 이용약관" [ref=f65e62] [cursor=pointer]:
+          - /url: /terms-and-policy
+        - link "개인정보처리방침" [ref=f65e63] [cursor=pointer]:
+          - /url: https://policy.naver.com/rules/privacy.html
+        - link "공지사항" [ref=f65e64] [cursor=pointer]:
+          - /url: https://notice.naver.com/notices/nflea
+        - link "고객센터" [ref=f65e65] [cursor=pointer]:
+          - /url: https://help.pay.naver.com/faq/alias/fleamarket.help
+      - paragraph [ref=f65e66]: 네이버(주)는 통신판매 중개자이며, 통신판매 당사자가 아닙니다. 상품, 상품정보, 거래에 관한 의무 및 책임은 개별 판매자에게 있습니다.
+      - button "네이버(주) 사업자 정보" [ref=f65e68] [cursor=pointer]
+  - alert [ref=f65e72]
+  - generic:
+    - generic [ref=f65e852]:
+      - link [ref=f65e858] [cursor=pointer]:
+        - /url: https://fleamarket.naver.com/exhibition/43249049?tc=nflea_home
+        - img "레저 클리어런스 세일" [ref=f65e860]
+      - button "닫기" [ref=f65e862] [cursor=pointer]
+    - button "바텀시트 닫기" [ref=f65e864] [cursor=pointer]

@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>온담 API 상담실</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap">
+<style>
+:root{
+  --paper:#f7f6f2; --surface:#fffefb;
+  --ink:#1e2a26; --ink-soft:#5c6a64; --ink-faint:#8b968f;
+  --sage:#5b7c6f; --sage-deep:#33564a; --sage-wash:#eaeeea;
+  --slate-wash:#edf0f4;
+  --line:#e2e5de; --line-strong:#cdd3ca;
+  --warn:#8a6d3b; --warn-wash:#f6f0e2;
+  --focus:#5b7c6f;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#141917; --surface:#1a201d;
+    --ink:#e4e9e5; --ink-soft:#a3aeaa; --ink-faint:#77837e;
+    --sage:#8fb3a3; --sage-deep:#a7c6b8; --sage-wash:#1f2b26;
+    --slate-wash:#1d242c;
+    --line:#28312d; --line-strong:#3a453f;
+    --warn:#d0b184; --warn-wash:#2a2418;
+    --focus:#8fb3a3;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141917; --surface:#1a201d;
+  --ink:#e4e9e5; --ink-soft:#a3aeaa; --ink-faint:#77837e;
+  --sage:#8fb3a3; --sage-deep:#a7c6b8; --sage-wash:#1f2b26;
+  --slate-wash:#1d242c;
+  --line:#28312d; --line-strong:#3a453f;
+  --warn:#d0b184; --warn-wash:#2a2418;
+  --focus:#8fb3a3;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  line-height:1.75;-webkit-font-smoothing:antialiased}
+.page{max-width:720px;margin:0 auto;padding:44px 22px 0;display:flex;flex-direction:column;min-height:100vh}
+
+.masthead{padding-bottom:26px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--sage);margin:0 0 14px;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--ink-faint);display:inline-block}
+.dot.on{background:var(--sage)}
+.dot.off{background:#c46b5e}
+.namerow{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+h1{font-family:"Gowun Batang","Apple SD Gothic Neo",serif;font-size:clamp(30px,6vw,42px);
+  font-weight:700;letter-spacing:-.01em;margin:0;line-height:1.15;text-wrap:balance}
+.role{font-size:13.5px;color:var(--ink-faint)}
+.intro{margin:14px 0 0;color:var(--ink-soft);font-size:15px;font-weight:300;max-width:56ch}
+.fields{display:flex;flex-wrap:wrap;gap:6px;margin-top:18px}
+.field{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;
+  color:var(--ink-soft);background:var(--sage-wash);padding:4px 10px;border-radius:3px}
+
+.thread{flex:1;padding:34px 0 8px;display:flex;flex-direction:column;gap:30px}
+.turn-agent{display:grid;grid-template-columns:auto 1fr;gap:0 16px}
+.rule{width:2px;background:var(--sage);border-radius:2px;opacity:.55}
+.turn-agent .who{grid-column:2;font-size:11.5px;font-weight:500;
+  letter-spacing:.14em;color:var(--sage);margin-bottom:7px}
+.turn-agent .said{grid-column:2;font-size:15.5px}
+.said p{margin:0 0 .9em}
+.said p:last-child{margin-bottom:0}
+.said strong{font-weight:600}
+.said ul,.said ol{margin:.5em 0 .9em;padding-left:1.25em}
+.said li{margin:.3em 0}
+.said code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.88em;
+  background:var(--sage-wash);padding:1px 5px;border-radius:3px}
+.turn-user{display:flex;justify-content:flex-end}
+.turn-user .said{background:var(--slate-wash);border:1px solid var(--line);
+  border-radius:14px 14px 4px 14px;padding:13px 17px;font-size:15px;max-width:82%;
+  white-space:pre-wrap;word-break:break-word}
+
+.thinking{grid-column:2;font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:12px;letter-spacing:.1em;color:var(--ink-faint)}
+.thinking span{display:inline-block;animation:breathe 1.9s ease-in-out infinite}
+.thinking span:nth-child(2){animation-delay:.28s}
+.thinking span:nth-child(3){animation-delay:.56s}
+@keyframes breathe{0%,100%{opacity:.25}50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.thinking span{animation:none;opacity:.7}}
+
+.notice{border:1px solid var(--line-strong);background:var(--warn-wash);color:var(--warn);
+  border-radius:10px;padding:13px 16px;font-size:13.5px;grid-column:2}
+
+.composer-zone{position:sticky;bottom:0;
+  background:linear-gradient(to bottom,transparent,var(--paper) 22%);padding:24px 0 0}
+.prompts{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.prompt{font-family:inherit;font-size:13px;text-align:left;color:var(--sage-deep);
+  background:var(--surface);border:1px solid var(--line);border-radius:999px;
+  padding:7px 14px;cursor:pointer;transition:border-color .18s,background .18s}
+.prompt:hover{border-color:var(--sage);background:var(--sage-wash)}
+.composer{background:var(--surface);border:1px solid var(--line-strong);border-radius:16px;
+  padding:12px 12px 12px 18px;display:flex;align-items:flex-end;gap:10px;transition:border-color .18s}
+.composer:focus-within{border-color:var(--sage)}
+textarea{flex:1;border:0;background:transparent;color:var(--ink);font-family:inherit;
+  font-size:15px;line-height:1.65;resize:none;outline:none;padding:6px 0;max-height:180px}
+textarea::placeholder{color:var(--ink-faint)}
+.send,.stop{font-family:inherit;font-size:13.5px;font-weight:500;border-radius:11px;
+  padding:9px 17px;cursor:pointer;border:1px solid transparent;white-space:nowrap;transition:opacity .18s}
+.send{background:var(--sage-deep);color:#fff}
+.send:disabled{opacity:.35;cursor:default}
+.stop{background:transparent;color:var(--ink-soft);border-color:var(--line-strong)}
+.stop:hover{border-color:var(--sage)}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .send{color:#131a17}
+}
+:root[data-theme="dark"] .send{color:#131a17}
+button:focus-visible,textarea:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.hint{font-size:11.5px;color:var(--ink-faint);margin:9px 2px 0;
+  display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.linkish{background:none;border:0;padding:0;font:inherit;color:var(--ink-faint);
+  text-decoration:underline;cursor:pointer}
+.linkish:hover{color:var(--sage)}
+footer{margin-top:30px;padding:20px 0 34px;border-top:1px solid var(--line);
+  font-size:12px;color:var(--ink-faint);line-height:1.7}
+footer b{color:var(--ink-soft);font-weight:500}
+@media (max-width:520px){.page{padding:30px 16px 0}.turn-user .said{max-width:92%}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <p class="eyebrow">
+      <span>병원 홍보 상담</span>
+      <span class="dot" id="dot"></span>
+      <span id="engine">연결 확인 중</span>
+    </p>
+    <div class="namerow">
+      <h1>온담</h1>
+      <span class="role">병원 홍보 전문 상담 에이전트</span>
+    </div>
+    <p class="intro">
+      환자가 어떻게 우리 병원을 찾아오는지, 그 길을 함께 살펴봅니다.
+      급하게 답을 내기보다 상황을 먼저 여쭙고, 의료법 안에서 실제로 해볼 수 있는 것만 말씀드립니다.
+    </p>
+    <div class="fields">
+      <span class="field">네이버 플레이스</span>
+      <span class="field">블로그 · 카페</span>
+      <span class="field">인스타그램</span>
+      <span class="field">의료광고 심의</span>
+      <span class="field">신환 유입 분석</span>
+      <span class="field">재진 관리</span>
+      <span class="field">개원 초기</span>
+    </div>
+  </header>
+
+  <main class="thread" id="thread" aria-live="polite" aria-label="상담 내용"></main>
+
+  <div class="composer-zone">
+    <div class="prompts" id="prompts"></div>
+    <div class="composer">
+      <textarea id="input" rows="1" placeholder="병원 상황을 편하게 적어주세요. 예: 개원 6개월 차인데 신환이 늘지 않습니다." aria-label="질문 입력"></textarea>
+      <button class="send" id="send" type="button">보내기</button>
+      <button class="stop" id="stop" type="button" hidden>멈춤</button>
+    </div>
+    <div class="hint">
+      <span>Enter 전송 · Shift+Enter 줄바꿈</span>
+      <span>
+        <span id="status"></span>
+        <button class="linkish" id="reset" type="button">대화 새로 시작</button>
+      </span>
+    </div>
+  </div>
+
+  <footer>
+    <p><b>참고해 주세요.</b> 온담의 답변은 상담을 위한 참고 의견입니다.
+    의료광고는 의료법 제56조에 따라 사전심의 대상일 수 있으며, 실제 집행 전에는 관할 보건소나 의료광고심의위원회 확인이 필요합니다.
+    환자 사진·후기·치료 전후 이미지는 별도 규정을 받습니다.</p>
+    <p style="margin:8px 0 0">대화는 서버 메모리에만 잠시 보관되며, 서버를 다시 켜면 사라집니다. API 키는 서버에만 있고 이 화면으로 내려오지 않습니다.</p>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var thread   = document.getElementById("thread");
+  var promptsEl= document.getElementById("prompts");
+  var input    = document.getElementById("input");
+  var sendBtn  = document.getElementById("send");
+  var stopBtn  = document.getElementById("stop");
+  var statusEl = document.getElementById("status");
+  var resetBtn = document.getElementById("reset");
+  var dot      = document.getElementById("dot");
+  var engineEl = document.getElementById("engine");
+
+  var busy = false;
+  var ctl = null;
+  var sessionId = "s-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+
+  // 서버가 APP_PASSWORD 를 설정한 경우에만 사용합니다.
+  // 암호는 이 탭의 sessionStorage 에만 두고, 탭을 닫으면 사라집니다.
+  var needPassword = false;
+  function savedPassword() {
+    try { return sessionStorage.getItem("ondam-pw") || ""; } catch (e) { return ""; }
+  }
+  function askPassword(reason) {
+    var pw = window.prompt(reason || "접속 암호를 입력해 주세요.");
+    if (pw === null) return "";
+    try { sessionStorage.setItem("ondam-pw", pw); } catch (e) { /* 저장 불가 시 이번 요청에만 사용 */ }
+    return pw;
+  }
+  function authHeaders() {
+    var h = { "Content-Type": "application/json" };
+    if (needPassword) {
+      var pw = savedPassword() || askPassword();
+      if (pw) h["x-app-password"] = pw;
+    }
+    return h;
+  }
+
+  var SUGGESTIONS = [
+    "네이버 플레이스 순위를 올리려면 뭐부터 손대야 할까요",
+    "인스타그램에 수술 전후 사진을 올려도 되나요",
+    "블로그 체험단, 비용 대비 효과가 있을까요",
+    "개원 3개월째인데 신환이 하루 두세 명입니다",
+    "재진율을 높이는 방법이 궁금합니다"
+  ];
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  function addAgentTurn() {
+    var wrap = el("div", "turn-agent");
+    wrap.appendChild(el("div", "rule"));
+    wrap.appendChild(el("div", "who", "온담"));
+    var said = el("div", "said");
+    wrap.appendChild(said);
+    thread.appendChild(wrap);
+    return said;
+  }
+
+  function addUserTurn(text) {
+    var wrap = el("div", "turn-user");
+    wrap.appendChild(el("div", "said", text));
+    thread.appendChild(wrap);
+  }
+
+  function addNotice(text) {
+    var wrap = el("div", "turn-agent");
+    wrap.appendChild(el("div", "rule"));
+    wrap.appendChild(el("div", "notice", text));
+    thread.appendChild(wrap);
+    scrollDown();
+  }
+
+  function inline(node, text) {
+    var parts = String(text).split(/(\*\*[^*]+\*\*|`[^`]+`)/);
+    for (var i = 0; i < parts.length; i++) {
+      var s = parts[i];
+      if (!s) continue;
+      if (s.length > 4 && s.slice(0, 2) === "**" && s.slice(-2) === "**") {
+        node.appendChild(el("strong", null, s.slice(2, -2)));
+      } else if (s.length > 2 && s[0] === "`" && s[s.length - 1] === "`") {
+        node.appendChild(el("code", null, s.slice(1, -1)));
+      } else {
+        node.appendChild(document.createTextNode(s));
+      }
+    }
+  }
+
+  function render(said, raw) {
+    said.textContent = "";
+    var blocks = String(raw).split(/\n{2,}/);
+    for (var i = 0; i < blocks.length; i++) {
+      var b = blocks[i].trim();
+      if (!b) continue;
+      var lines = b.split("\n");
+      var bullets = lines.every(function (l) { return /^\s*([-*•]|\d+[.)])\s+/.test(l); });
+      if (bullets && lines.length > 1) {
+        var list = el(/^\s*\d/.test(lines[0]) ? "ol" : "ul");
+        for (var j = 0; j < lines.length; j++) {
+          var li = el("li");
+          inline(li, lines[j].replace(/^\s*([-*•]|\d+[.)])\s+/, ""));
+          list.appendChild(li);
+        }
+        said.appendChild(list);
+      } else {
+        var p = el("p");
+        inline(p, b.replace(/\n/g, " "));
+        said.appendChild(p);
+      }
+    }
+  }
+
+  function scrollDown() {
+    window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+  }
+
+  function setBusy(on) {
+    busy = on;
+    sendBtn.disabled = on;
+    stopBtn.hidden = !on;
+    statusEl.textContent = on ? "답변을 쓰는 중입니다 · " : "";
+  }
+
+  function autosize() {
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight, 180) + "px";
+  }
+
+  function buildPrompts() {
+    promptsEl.textContent = "";
+    SUGGESTIONS.forEach(function (q) {
+      var b = el("button", "prompt", q);
+      b.type = "button";
+      b.addEventListener("click", function () { input.value = q; autosize(); ask(); });
+      promptsEl.appendChild(b);
+    });
+  }
+
+  // SSE 를 fetch 로 직접 읽습니다 (POST 가 필요해 EventSource 를 쓰지 않습니다)
+  async function ask() {
+    if (busy) return;
+    var q = input.value.trim();
+    if (!q) return;
+
+    input.value = "";
+    autosize();
+    promptsEl.hidden = true;
+    addUserTurn(q);
+    scrollDown();
+
+    var said = addAgentTurn();
+    var pending = el("div", "thinking");
+    pending.appendChild(el("span", null, "생각하는"));
+    pending.appendChild(el("span", null, " 중입"));
+    pending.appendChild(el("span", null, "니다"));
+    said.appendChild(pending);
+    scrollDown();
+
+    setBusy(true);
+    ctl = new AbortController();
+
+    var answer = "";
+    var failed = null;
+
+    try {
+      var res = await fetch("/api/chat", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ sessionId: sessionId, message: q }),
+        signal: ctl.signal
+      });
+
+      if (res.status === 401) {
+        needPassword = true;
+        try { sessionStorage.removeItem("ondam-pw"); } catch (e) { /* 무시 */ }
+        askPassword("접속 암호가 필요합니다. 암호를 입력해 주세요.");
+        failed = "암호를 입력하셨으면 같은 질문을 한 번 더 보내주세요.";
+      } else if (!res.ok || !res.body) {
+        var j = null;
+        try { j = await res.json(); } catch (e) { /* 비 JSON 응답 */ }
+        failed = (j && j.message) || "서버가 응답하지 않습니다. 서버가 실행 중인지 확인해 주세요.";
+      } else {
+        var reader = res.body.getReader();
+        var decoder = new TextDecoder();
+        var buf = "";
+
+        while (true) {
+          var r = await reader.read();
+          if (r.done) break;
+          buf += decoder.decode(r.value, { stream: true });
+
+          var frames = buf.split("\n\n");
+          buf = frames.pop() || "";
+
+          for (var i = 0; i < frames.length; i++) {
+            var ev = "message", data = "";
+            var lines = frames[i].split("\n");
+            for (var k = 0; k < lines.length; k++) {
+              if (lines[k].indexOf("event:") === 0) ev = lines[k].slice(6).trim();
+              else if (lines[k].indexOf("data:") === 0) data += lines[k].slice(5).trim();
+            }
+            if (!data) continue;
+            var payload;
+            try { payload = JSON.parse(data); } catch (e) { continue; }
+
+            if (ev === "delta" && payload.delta) {
+              answer += payload.delta;
+              render(said, answer);
+              scrollDown();
+            } else if (ev === "done") {
+              render(said, payload.text || answer);
+            } else if (ev === "error") {
+              failed = payload.message || "요청을 처리하지 못했습니다.";
+            }
+          }
+        }
+      }
+    } catch (e) {
+      if (e.name === "AbortError") {
+        if (!answer) { said.textContent = "여기서 멈췄습니다."; said.style.color = "var(--ink-faint)"; }
+        setBusy(false);
+        return;
+      }
+      failed = "서버에 연결하지 못했습니다. node server.js 로 서버가 켜져 있는지 확인해 주세요.";
+    }
+
+    if (failed) {
+      if (answer) {
+        render(said, answer);
+        said.appendChild(el("p", null, "— " + failed));
+      } else {
+        said.parentNode.remove();
+        addNotice(failed);
+      }
+    }
+    setBusy(false);
+    scrollDown();
+  }
+
+  function greet() {
+    var greeting = addAgentTurn();
+    render(greeting,
+      "안녕하세요. 병원 홍보를 함께 살펴보는 온담입니다.\n\n" +
+      "무엇부터 여쭤볼지 정하지 않으셨어도 괜찮습니다. " +
+      "요즘 병원에서 가장 아쉬운 점 하나만 편하게 적어주세요. " +
+      "신환이 줄었다거나, 광고비는 쓰는데 문의가 없다거나, 블로그를 시작해야 할지 모르겠다거나 하는 것들 말입니다.\n\n" +
+      "진료과목과 개원 시기, 지금 하고 계신 채널을 함께 알려주시면 더 구체적으로 말씀드릴 수 있습니다."
+    );
+  }
+
+  greet();
+  buildPrompts();
+  autosize();
+
+  input.addEventListener("input", autosize);
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask(); }
+  });
+  sendBtn.addEventListener("click", ask);
+  stopBtn.addEventListener("click", function () { if (ctl) ctl.abort(); });
+
+  resetBtn.addEventListener("click", async function () {
+    if (busy && ctl) ctl.abort();
+    try {
+      await fetch("/api/reset", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ sessionId: sessionId })
+      });
+    } catch (e) { /* 서버가 꺼져 있어도 화면은 초기화합니다 */ }
+    sessionId = "s-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+    thread.textContent = "";
+    greet();
+    promptsEl.hidden = false;
+    setBusy(false);
+    input.focus();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  // 서버 상태 확인
+  fetch("/api/health").then(function (r) { return r.json(); }).then(function (j) {
+    var d = (j && j.data) || {};
+    needPassword = Boolean(d.passwordRequired);
+    var used = d.usage ? (d.usage.requestsToday + "/" + d.usage.dailyRequestLimit + "회") : "";
+    engineEl.textContent = "OpenAI · " + (d.model || "모델 미확인") + (used ? " · 오늘 " + used : "");
+    dot.className = d.keyConfigured ? "dot on" : "dot off";
+    if (!d.keyConfigured) {
+      addNotice("서버에 OPENAI_API_KEY가 설정되어 있지 않습니다. .env 파일을 확인한 뒤 서버를 다시 실행해 주세요.");
+    }
+  }).catch(function () {
+    engineEl.textContent = "서버 연결 안 됨";
+    dot.className = "dot off";
+    addNotice("서버에 연결하지 못했습니다. 터미널에서 node server.js 로 서버를 실행한 뒤 새로고침해 주세요.");
+  });
+
+  input.focus();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+- generic [active] [ref=f66e1]:
+  - generic [ref=f66e3]:
+    - generic [ref=f66e5]:
+      - button [ref=f66e6] [cursor=pointer]:
+        - img "이전으로" [ref=f66e7]
+      - generic [ref=f66e11]:
+        - searchbox "어떤 상품을 찾고 계세요?" [ref=f66e15]: 차량용 핸드폰 거치대
+        - button "삭제하기" [ref=f66e23] [cursor=pointer]
+    - generic [ref=f66e16]:
+      - generic [ref=f66e28]:
+        - button "안전거래 상품" [ref=f66e29] [cursor=pointer]
+        - button "N+스토어 상품" [ref=f66e31] [cursor=pointer]
+      - generic [ref=f66e37]:
+        - generic [ref=f66e39]:
+          - button "필터" [ref=f66e40] [cursor=pointer]
+          - button "네이버 구매인증" [ref=f66e44] [cursor=pointer]
+          - button "배송 방법" [ref=f66e46] [cursor=pointer]
+          - button "지역" [ref=f66e50] [cursor=pointer]
+          - button "가격" [ref=f66e54] [cursor=pointer]
+          - button "카테고리" [ref=f66e58] [cursor=pointer]
+          - button "상품 상태" [ref=f66e62] [cursor=pointer]
+          - button "판매완료 포함" [ref=f66e66] [cursor=pointer]
+        - button "다음 필터" [ref=f66e68] [cursor=pointer]
+      - generic [ref=f66e71]:
+        - generic [ref=f66e72]:
+          - button "구매자 보호 수수료 2.2% 별도 · 안전거래 등 안내" [ref=f66e74] [cursor=pointer]
+          - button "관련도순" [ref=f66e77] [cursor=pointer]
+        - generic [ref=f66e81]:
+          - list [ref=f66e84]:
+            - listitem [ref=f66e85]
+            - listitem [ref=f66e106]
+            - listitem [ref=f66e129]
+            - listitem [ref=f66e151]
+            - listitem [ref=f66e175]
+            - listitem [ref=f66e200]
+          - list [ref=f66e225]:
+            - listitem [ref=f66e226]
+            - listitem [ref=f66e249]
+            - listitem [ref=f66e271]
+            - listitem [ref=f66e293]
+            - listitem [ref=f66e319]
+            - listitem [ref=f66e342]
+            - listitem [ref=f66e368]
+            - listitem [ref=f66e390]
+            - listitem [ref=f66e413]
+            - listitem [ref=f66e437]
+            - listitem [ref=f66e460]
+            - listitem [ref=f66e482]
+            - listitem [ref=f66e507]
+            - listitem [ref=f66e530]
+            - listitem [ref=f66e603]
+            - listitem [ref=f66e625]
+            - listitem [ref=f66e647]
+            - listitem [ref=f66e667]
+            - listitem [ref=f66e688]
+  - alert [ref=f66e22]: "차량용 핸드폰 거치대 검색 : N플리마켓"

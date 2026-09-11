@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>퍼터 살까 말까 — 중고나라 · 카페후기 · 쿠팡 교차검증 리포트</title>
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <!-- CDN 버전 전부 고정. Babel 은 7.x 고정(8.x 는 인라인 text/babel 미지원) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.25.9/babel.min.js"></script>
+  <style>
+    body { font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif; }
+    @keyframes growBar { from { width: 0 } }
+    .bar-anim { animation: growBar .7s ease-out both; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <div id="root"></div>
+
+  <script type="text/babel">
+// ========================================
+// React Hooks
+// ========================================
+const { useState, useMemo } = React;
+
+// ========================================
+// 📊 DATA — 2026-09-08 수집 원본
+// ========================================
+
+const META = {
+  collectedAt: "2026-09-08",
+  joonggoTitles: 242,
+  cafeSearch1: { query: "퍼터 후기", total: 72, real: 22 },
+  cafeSearch2: { query: "제로토크 퍼터 시타", total: 60, real: 14 },
+};
+
+// 중고나라 퍼터 매물 242건 제목의 브랜드/키워드 분포
+const JOONGGO_BRANDS = [
+  { name: "오디세이 (캘러웨이)", count: 57 },
+  { name: "스카티카메론", count: 48 },
+  { name: "제로토크 (키워드)", count: 21 },
+  { name: "테일러메이드 스파이더", count: 20 },
+  { name: "핑 (PLD·앤서·스캇데일)", count: 15 },
+  { name: "PXG", count: 10 },
+  { name: "베티나르디", count: 10 },
+  { name: "예스 (YES)", count: 6 },
+  { name: "버크", count: 6 },
+  { name: "툴롱", count: 5 },
+  { name: "레이쿡", count: 4 },
+  { name: "L.A.B. 골프 (랩퍼터)", count: 4 },
+  { name: "크로스펏", count: 2 },
+  { name: "클리블랜드", count: 1 },
+];
+
+// 네이버 카페 검색 결과 — 실사용 후기 (골프 전문 카페)
+const REAL_REVIEWS = [
+  { title: "랩퍼터 df3i 샤프트 길이(34→35인치) 연장후기", cafe: "랩퍼터 사용자들의 모임", date: "2026.09.07",
+    quote: "제로토크는 단점이 퍼팅시 무게감이 덜 느껴진다는 후기들 처럼 저 또한…",
+    tag: "단점" },
+  { title: "VZN.1i 시타 및 구매 후기", cafe: "랩퍼터 사용자들의 모임", date: "2026.08.24",
+    quote: "스트로크할 때 헤드 흔들리는 느낌이 적고 그냥 툭 밀어주면…",
+    tag: "장점" },
+  { title: "vzn.1i 시타 해보길 잘 했네요~", cafe: "랩퍼터 사용자들의 모임", date: "2026.08.19",
+    quote: "퍼터만큼은 꼭 직접 쳐보는게 좋은 것 같습니다~ 저도 후기만 보고 주문했다면 괜찮겠지정도였을 텐데",
+    tag: "시타필수" },
+  { title: "대구 골프샵에서 제로토크 퍼터 직접 시타해본 후기", cafe: "골프장비연구소", date: "2026.08.18",
+    quote: "퍼터를 단순히 추천받기보다는 여러 종류를 직접 시타해보고 친구 스트로크에 맞는 제품을 찾아보기로 했습니다",
+    tag: "시타필수" },
+  { title: "거리감 좋은 제로토크 퍼터 찾고 있습니다", cafe: "랩퍼터 사용자들의 모임", date: "2026.08.13",
+    quote: "오딧세이 S2S 트라이핫 7번 / 랩골프 링크2.2 / 랩골프 DF3i / 스파이더 5K ZT … 4개 다 시타는 해본 적 없어요",
+    tag: "후보군" },
+  { title: "랩퍼터 입문 및 4개월 사용 후기", cafe: "랩퍼터 사용자들의 모임", date: "2026.08.10",
+    quote: "비용도 많이 들어가고, 피팅이 필수라는 말에 타브랜드 제로토크 퍼터만 몇번 바꿔가며…",
+    tag: "단점" },
+  { title: "스틸 샤프트도 괜찮은가요?", cafe: "랩퍼터 사용자들의 모임", date: "2026.08.10",
+    quote: "랩퍼터에는 tpt 장착하면 진짜 좋다는 후기가 많던데 tpt 샤프트 가격대가 좀 있던데",
+    tag: "추가비용" },
+  { title: "랩골코 부산점 방문 후기", cafe: "랩퍼터 사용자들의 모임", date: "2026.08.06",
+    quote: "시타 가능한 커스터마이징 퍼터가 많더라고요 … 저한테 맞는",
+    tag: "시타필수" },
+  { title: "백순이 퍼터고민요", cafe: "★골프어때 (골프 동호회)", date: "2026.01.12",
+    quote: "오딧세이 1. Ai-ONE Square 2 Square Jailbird 32만원 2. S2S Tri-Hot 60만원 — 저는 사실 뭐가 차이가 있는지 모르겠는데",
+    tag: "초보주의" },
+  { title: "제로토크 퍼터 추천", cafe: "★골프어때 (골프 동호회)", date: "2025.11.16",
+    quote: "에델은 조금 묵직한느낌이고 버크는 조금 가벼운느낌인데 둘다 직진성 좋고",
+    tag: "장점" },
+  { title: "PXG 뱃어택 제로토크 퍼터 사용기", cafe: "★골프어때 (골프 동호회)", date: "2025.07.23",
+    quote: "예약구매로 시타없이 구매한 거라 받을 때까지 잘…",
+    tag: "시타필수" },
+  { title: "안티도트 제로토크 퍼터 시타 후기", cafe: "클럽 베티", date: "2025.06.07",
+    quote: "한줄평 : 가볍게 잘 맞습니다. (랩퍼터 보다 가격도 착함) 무게감 있는 퍼터 선호하시는 분들은 비추",
+    tag: "단점" },
+];
+
+// 광고로 분류해 제외한 글 (제휴마케팅 문구 · 골프와 무관한 카페)
+const AD_REVIEWS = [
+  { title: "오디세이 AI one 퍼터 특가", cafe: "르노 필랑트 공식동호회", reason: "\"이 포스팅은 제휴마케팅이 포함된 광고로 커미션을 지급 받습니다\" 명시" },
+  { title: "캘러웨이 정품 오디세이 Ai-ONE S2S 맥스1 퍼터 특가!", cafe: "◆코인테크◆ 가상화폐 카페", reason: "가상화폐 카페에 올라온 구매 링크 유도글" },
+  { title: "테일러메이드 코리아 스파이더 5K ZT 퍼터 후기", cafe: "★혼결모★ 혼수·결혼 준비", reason: "혼수 카페 · 골프와 무관" },
+  { title: "테일러메이드 24 스파이더 고스트 화이트 퍼터 비교", cafe: "마비노기 모바일", reason: "게임 카페 · 동일 작성자 연속 도배" },
+  { title: "테일러메이드 스파이더 5K ZT 퍼터 사용 후기", cafe: "메이플 스토리 듀프", reason: "게임 카페 · 골프와 무관" },
+  { title: "벤세이어스 RS21 말렛 스파이더 퍼터 실제 사용 후기", cafe: "쿠팡 네쇼커 핫딜몰", reason: "쿠팡 파트너스 핫딜 카페" },
+  { title: "오디세이 Ai-ONE 트리플트랙 #7 후기", cafe: "네사모 (가전 카페)", reason: "\"네이버 온라인판매처▼ 후기 최저 가격 확인\" 링크 유도" },
+  { title: "테일러메이드 스파이더 GTX 퍼터 솔직 후기 및 41%할인구매 꿀팁", cafe: "할인리뷰카페", reason: "할인 링크 유도 전용 카페" },
+];
+
+// 쿠팡 실측 — 광고 상품 여부 표시
+const COUPANG = [
+  { brand: "오디세이", name: "Ai 듀얼 S2S 7번 제로토크 33인치", price: 356000, list: null, rating: 5.0, reviews: 37, ad: false, note: "캘러웨이코리아 정품 2026" },
+  { brand: "오디세이", name: "Ai 듀얼 S2S 7번 제로토크 34인치", price: 376170, list: 530000, rating: 5.0, reviews: 37, ad: false, note: "29% 할인 표기" },
+  { brand: "오디세이", name: "Ai 듀얼 S2S 제일버드 35인치", price: 356210, list: 630000, rating: 4.5, reviews: 27, ad: false, note: "43% 할인 표기" },
+  { brand: "오디세이", name: "화이트핫 버사 피스톨 33인치", price: 169000, list: null, rating: 5.0, reviews: 10, ad: false, note: "구형 · 제로토크 아님" },
+  { brand: "오디세이", name: "화이트핫 버사 오버사이즈 33인치", price: 188990, list: null, rating: 5.0, reviews: 5, ad: false, note: "구형 · 제로토크 아님" },
+  { brand: "테일러메이드", name: "스파이더 ZT 블랙 34인치", price: 522990, list: null, rating: 5.0, reviews: 11, ad: false, note: "제로토크" },
+  { brand: "테일러메이드", name: "스파이더 ZT 35인치", price: 525000, list: null, rating: 4.5, reviews: 3, ad: false, note: "제로토크" },
+  { brand: "테일러메이드", name: "(26) 스파이더 ZT MAX 34인치", price: 527990, list: null, rating: 5.0, reviews: 2, ad: false, note: "신형" },
+  { brand: "L.A.B. 골프", name: "DF3 밸런스드 제로 블랙 34인치", price: 208000, list: 260000, rating: 5.0, reviews: 1, ad: false, note: "리뷰 1건" },
+  { brand: "L.A.B. 골프", name: "메즈1 맥스 제로토크 34인치", price: 590000, list: null, rating: 5.0, reviews: 1, ad: false, note: "리뷰 1건" },
+  { brand: "L.A.B. 골프", name: "OZ.1i 34인치", price: 750000, list: null, rating: null, reviews: 0, ad: false, note: "리뷰 없음" },
+  { brand: "핑", name: "2025 PLD MILLED ANSER 4D 34인치", price: 590000, list: null, rating: 5.0, reviews: 1, ad: false, note: "삼양 정품" },
+  { brand: "핑", name: "PLD ANSER 33인치", price: 590000, list: null, rating: null, reviews: 0, ad: false, note: "리뷰 없음" },
+  { brand: "스카티카메론", name: "스페셜 셀렉트 플로우백 5.5 (중고)", price: 440000, list: 790000, rating: null, reviews: 0, ad: false, note: "중고 · 리뷰 없음" },
+  { brand: "스카티카메론", name: "모토 델마 34.5인치", price: 1500000, list: null, rating: null, reviews: 0, ad: false, note: "리뷰 없음" },
+  { brand: "L.A.B. 골프", name: "MEZZ.1 블랙 말렛 제로토크", price: 449000, list: 900000, rating: 4.5, reviews: 33, ad: true, note: "정가 90만 → 50% 할인 표기" },
+  { brand: "L.A.B. 골프", name: "MEZZ.1 블루 말렛 제로토크", price: 499000, list: 1100000, rating: 5.0, reviews: 37, ad: true, note: "정가 110만 → 54% 할인 표기" },
+  { brand: "노브랜드", name: "벤세이어스 RS21 말렛 스파이더 33인치", price: 82170, list: 380000, rating: 4.0, reviews: 61, ad: true, note: "정가 38만 → 78% 할인 표기" },
+  { brand: "노브랜드", name: "데이비드 투어 제로토크 퍼터 34인치", price: 319000, list: 399000, rating: 4.5, reviews: 18, ad: true, note: "광고 노출" },
+];
+
+const VERDICT_REASONS = [
+  { n: 1, head: "카페 후기의 70~77%가 광고였다",
+    body: "‘퍼터 후기’ 검색 72건 중 골프 카페 글은 22건(30.6%)뿐이었습니다. ‘제로토크 퍼터 시타’ 60건 중에서는 14건(23.3%)만 남았습니다. 나머지는 게임·가상화폐·혼수·가전 카페에 올라온 제휴 링크 글이었습니다. 검색으로 만나는 후기의 대부분이 광고라면, 그 후기를 근거로 60만 원짜리 클럽을 사기는 어렵습니다." },
+  { n: 2, head: "쿠팡의 정품 퍼터는 리뷰가 사실상 없다",
+    body: "광고를 뺀 정품 15개 중 리뷰 10건 이상은 5개뿐입니다. L.A.B. DF3(★5.0)는 리뷰 1건, 스파이더 ZT MAX(★5.0)는 2건, 핑 PLD는 0~1건입니다. 리뷰 1건짜리 별점 5.0은 정보가 아니라 우연입니다. 가격·별점·리뷰수로 비교하려던 세 축 중 두 축이 무너집니다." },
+  { n: 3, head: "리뷰가 많은 상품은 전부 광고 노출 상품이었다",
+    body: "리뷰 61건(벤세이어스), 37건·33건(L.A.B. MEZZ.1)으로 상위권인 항목은 모두 ‘광고’ 딱지가 붙어 있었습니다. 게다가 정가 38만 원 → 8만 원(78% 할인), 정가 110만 원 → 49.9만 원(54% 할인) 같은 표기는 정가 자체를 의심하게 만듭니다." },
+  { n: 4, head: "진짜 후기가 하나같이 ‘시타하고 사라’고 말한다",
+    body: "골프 카페 실사용 후기 12건 중 4건이 시타의 중요성을 직접 언급했습니다. “후기만 보고 주문했다면 괜찮겠지 정도였을 텐데”(랩퍼터 카페), “예약구매로 시타 없이 구매한 거라”(PXG 사용기). 퍼터는 스트로크 궤도에 맞춰야 하는 클럽이라 온라인 구매 자체가 구조적으로 불리합니다." },
+  { n: 5, head: "지금 사려는 제로토크는 호불호가 갈리는 신기술이다",
+    body: "장점은 “헤드가 흔들리지 않는다 · 직진성이 좋다”로 일치합니다. 단점도 일치합니다 — “퍼팅 시 무게감이 덜 느껴진다”, “무게감 있는 퍼터 선호하시는 분들은 비추”. 취향이 갈리는 항목이라 남의 후기로는 판정할 수 없습니다." },
+  { n: 6, head: "같은 모델이 중고나라에 계속 올라온다",
+    body: "중고 매물 242건에서 오디세이 57건, 스카티카메론 48건, 제로토크 키워드 21건이 잡혔습니다. 신제품 제로토크가 이미 중고로 흘러나오고 있다는 뜻이고, 그만큼 ‘사고 나서 안 맞아 되파는’ 사례가 있다는 신호입니다. 동시에, 급하지 않다면 중고로 싸게 살 기회이기도 합니다." },
+];
+
+// ========================================
+// 🎨 Design System Components
+// ========================================
+
+function Card({ children, className = "" }) {
+  return (
+    <div className={"bg-white rounded-2xl border border-slate-200 shadow-sm " + className}>
+      {children}
+    </div>
+  );
+}
+
+function Badge({ children, tone = "slate", className = "" }) {
+  const tones = {
+    slate: "bg-slate-100 text-slate-700",
+    green: "bg-emerald-100 text-emerald-800",
+    red: "bg-rose-100 text-rose-700",
+    amber: "bg-amber-100 text-amber-800",
+    blue: "bg-blue-100 text-blue-800",
+    violet: "bg-violet-100 text-violet-800",
+  };
+  return (
+    <span className={"inline-block text-xs font-semibold px-2.5 py-1 rounded-full " + tones[tone] + " " + className}>
+      {children}
+    </span>
+  );
+}
+
+function Button({ children, variant = "primary", size = "md", onClick, disabled, className = "" }) {
+  const base = "inline-flex items-center justify-center rounded-lg font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed";
+  const variants = {
+    primary: "bg-slate-900 text-white hover:bg-slate-700",
+    secondary: "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50",
+    ghost: "text-slate-600 hover:bg-slate-100",
+  };
+  const sizes = { sm: "text-xs px-3 py-1.5", md: "text-sm px-4 py-2", lg: "text-base px-5 py-2.5" };
+  return (
+    <button className={[base, variants[variant], sizes[size], className].join(" ")} onClick={onClick} disabled={disabled}>
+      {children}
+    </button>
+  );
+}
+
+function Section({ num, title, desc, children }) {
+  return (
+    <section className="mt-16">
+      <div className="flex items-baseline gap-3">
+        <span className="text-blue-600 font-extrabold tabular-nums text-lg">{num}</span>
+        <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">{title}</h2>
+      </div>
+      {desc && <p className="mt-2 text-slate-500 text-sm leading-relaxed max-w-3xl">{desc}</p>}
+      <div className="mt-6">{children}</div>
+    </section>
+  );
+}
+
+function Stat({ label, value, sub, tone = "slate" }) {
+  const tones = { slate: "text-slate-900", red: "text-rose-600", green: "text-emerald-600", blue: "text-blue-600" };
+  return (
+    <Card className="p-5">
+      <div className="text-xs text-slate-500 font-medium">{label}</div>
+      <div className={"mt-1.5 text-3xl font-extrabold tabular-nums tracking-tight " + tones[tone]}>{value}</div>
+      {sub && <div className="mt-1 text-xs text-slate-400">{sub}</div>}
+    </Card>
+  );
+}
+
+// ========================================
+// 🧩 Common Components
+// ========================================
+
+function Header() {
+  return (
+    <header className="border-b-4 border-slate-900 pb-8">
+      <Badge tone="violet">중고나라 · 네이버카페 · 쿠팡 교차검증</Badge>
+      <h1 className="mt-4 text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
+        퍼터, 지금 사도 될까?
+      </h1>
+      <p className="mt-3 text-slate-600 text-base sm:text-lg max-w-2xl">
+        중고나라 퍼터 매물 242건에서 인기 모델을 추리고, 네이버 카페 후기에서 광고를 걷어낸 뒤,
+        쿠팡 가격·별점·리뷰수로 검증했습니다.
+      </p>
+      <div className="mt-5 flex flex-wrap gap-2 text-xs text-slate-500">
+        <span className="px-2.5 py-1 rounded-md bg-slate-100">조사일 {META.collectedAt}</span>
+        <span className="px-2.5 py-1 rounded-md bg-slate-100">중고 매물 {META.joonggoTitles}건</span>
+        <span className="px-2.5 py-1 rounded-md bg-slate-100">카페 글 132건 검토</span>
+        <span className="px-2.5 py-1 rounded-md bg-slate-100">쿠팡 상품 19개 실측</span>
+      </div>
+    </header>
+  );
+}
+
+function Verdict() {
+  return (
+    <div className="mt-10 rounded-2xl overflow-hidden border-2 border-rose-200 bg-gradient-to-br from-rose-50 to-white">
+      <div className="p-6 sm:p-8">
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-4xl">🛑</span>
+          <div>
+            <Badge tone="red">최종 결론</Badge>
+            <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold text-rose-900">
+              지금 쿠팡에서 퍼터를 사지 마세요
+            </h2>
+          </div>
+        </div>
+        <p className="mt-4 text-slate-700 leading-relaxed">
+          제품이 나빠서가 아닙니다. <strong>판단할 근거가 없어서</strong>입니다.
+          카페 후기는 70% 이상이 광고였고, 쿠팡의 정품 퍼터는 리뷰가 0~37건에 불과해
+          별점이 통계로서 의미가 없습니다. 가격·별점·리뷰수 세 축 중 두 축이 비어 있는 상태에서
+          40~75만 원을 지출하는 것은 정보에 근거한 구매가 아니라 도박에 가깝습니다.
+        </p>
+        <div className="mt-5 grid sm:grid-cols-3 gap-3">
+          <div className="bg-white/70 rounded-xl p-4 border border-rose-100">
+            <div className="text-xs text-rose-700 font-bold">대신 이렇게</div>
+            <div className="mt-1 font-bold">① 매장 시타 먼저</div>
+            <div className="mt-1 text-xs text-slate-600">실사용 후기 12건 중 4건이 직접 언급한 유일한 공통 조언</div>
+          </div>
+          <div className="bg-white/70 rounded-xl p-4 border border-rose-100">
+            <div className="text-xs text-rose-700 font-bold">그래도 산다면</div>
+            <div className="mt-1 font-bold">② 오디세이 S2S 34인치</div>
+            <div className="mt-1 text-xs text-slate-600">37.6만 원 · ★5.0 · 리뷰 37건 — 유일하게 표본이 있는 제로토크</div>
+          </div>
+          <div className="bg-white/70 rounded-xl p-4 border border-rose-100">
+            <div className="text-xs text-rose-700 font-bold">가성비라면</div>
+            <div className="mt-1 font-bold">③ 중고나라</div>
+            <div className="mt-1 text-xs text-slate-600">오디세이 57건 · 카메론 48건이 지금 매물로 나와 있음</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="mt-20 pt-8 border-t border-slate-200 text-xs text-slate-500 leading-relaxed">
+      <p className="font-semibold text-slate-600">조사 방법</p>
+      <p className="mt-1">
+        Playwright로 세 사이트를 직접 열어 수집했습니다.
+        ① 네이버 카페 중고나라(cafe id 10050146)에서 ‘퍼터’ 제목 검색 6페이지 · 매물 제목 242건 수집.
+        ② 네이버 카페 통합검색에서 ‘퍼터 후기’ 72건, ‘제로토크 퍼터 시타’ 60건을 수집한 뒤,
+        골프 전문 카페 글만 남기고 제휴마케팅 문구·주제 무관 카페 글은 광고로 분류해 제외.
+        ③ 쿠팡에서 6개 검색어로 상품 19개의 가격·별점·리뷰수·광고 여부를 실측.
+      </p>
+      <p className="mt-3">
+        카페 본문은 로그인이 필요해 열람하지 않았고, 검색 결과에 노출되는 제목과 본문 앞부분만 사용했습니다.
+        쿠팡 가격은 {META.collectedAt} 기준이며 수시로 변동합니다. 본 리포트는 개인 참고용이며 특정 상품의 구매를 권유하지 않습니다.
+      </p>
+    </footer>
+  );
+}
+
+// ========================================
+// 📄 Page Sections
+// ========================================
+
+function JoonggoChart() {
+  const max = JOONGGO_BRANDS[0].count;
+  return (
+    <Card className="p-6">
+      <div className="space-y-3">
+        {JOONGGO_BRANDS.map((b, i) => (
+          <div key={b.name} className="flex items-center gap-3">
+            <div className="w-40 sm:w-52 shrink-0 text-sm text-slate-700 truncate">{b.name}</div>
+            <div className="flex-1 bg-slate-100 rounded-full h-5 overflow-hidden">
+              <div
+                className={"h-full rounded-full bar-anim " + (i < 3 ? "bg-blue-600" : i < 6 ? "bg-blue-400" : "bg-slate-300")}
+                style={{ width: (b.count / max * 100) + "%", animationDelay: (i * 40) + "ms" }}
+              />
+            </div>
+            <div className="w-10 text-right text-sm font-bold tabular-nums">{b.count}</div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-5 text-xs text-slate-500 leading-relaxed">
+        중고나라 ‘퍼터’ 검색 매물 제목 242건에서 브랜드 키워드를 센 결과입니다. 한 제목에 두 키워드가 있으면 중복 집계됩니다.
+        오디세이와 스카티카메론이 전체의 43%를 차지하고, <strong>‘제로토크’ 키워드가 21건</strong>으로 신형 트렌드가 이미 중고 시장에 진입한 것이 보입니다.
+      </p>
+    </Card>
+  );
+}
+
+function ReviewFilter() {
+  const [mode, setMode] = useState("real");
+  const tagTone = { 장점: "green", 단점: "red", 시타필수: "amber", 후보군: "blue", 추가비용: "violet", 초보주의: "slate" };
+
+  return (
+    <div>
+      <div className="flex flex-wrap gap-2 mb-5">
+        <Button variant={mode === "real" ? "primary" : "secondary"} size="sm" onClick={() => setMode("real")}>
+          실사용 후기 {REAL_REVIEWS.length}건
+        </Button>
+        <Button variant={mode === "ad" ? "primary" : "secondary"} size="sm" onClick={() => setMode("ad")}>
+          광고로 제외 {AD_REVIEWS.length}건
+        </Button>
+      </div>
+
+      {mode === "real" ? (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {REAL_REVIEWS.map((r) => (
+            <Card key={r.title} className="p-5">
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="font-bold text-sm leading-snug">{r.title}</h3>
+                <Badge tone={tagTone[r.tag] || "slate"}>{r.tag}</Badge>
+              </div>
+              <p className="mt-3 text-sm text-slate-600 leading-relaxed border-l-2 border-slate-200 pl-3">
+                “{r.quote}”
+              </p>
+              <div className="mt-3 text-xs text-slate-400">{r.cafe} · {r.date}</div>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {AD_REVIEWS.map((r) => (
+            <Card key={r.title} className="p-5 bg-slate-50 border-dashed">
+              <h3 className="font-bold text-sm leading-snug text-slate-500 line-through decoration-slate-300">{r.title}</h3>
+              <div className="mt-2 text-xs text-slate-500">{r.cafe}</div>
+              <p className="mt-2 text-xs text-rose-600 font-medium">제외 사유 · {r.reason}</p>
+            </Card>
+          ))}
+          <Card className="p-5 border-rose-200 bg-rose-50 sm:col-span-2">
+            <p className="text-sm text-rose-900 leading-relaxed">
+              <strong>광고 판별 기준</strong> — ① “이 포스팅은 제휴마케팅이 포함된 광고” 등 대가성 문구가 있는 글,
+              ② 골프와 무관한 카페(게임·가상화폐·혼수·가전·주식)에 올라온 글,
+              ③ “아래 링크 통해 최대 할인”처럼 구매 링크 유도가 본문 목적인 글.
+              이 셋 중 하나라도 걸리면 제외했습니다.
+            </p>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CoupangTable() {
+  const [hideAds, setHideAds] = useState(true);
+  const [sortKey, setSortKey] = useState("reviews");
+
+  const rows = useMemo(() => {
+    let r = hideAds ? COUPANG.filter((x) => !x.ad) : [...COUPANG];
+    r.sort((a, b) => {
+      if (sortKey === "price") return a.price - b.price;
+      if (sortKey === "rating") return (b.rating || 0) - (a.rating || 0);
+      return (b.reviews || 0) - (a.reviews || 0);
+    });
+    return r;
+  }, [hideAds, sortKey]);
+
+  const won = (n) => n.toLocaleString("ko-KR") + "원";
+  const reviewTone = (n) => (n >= 20 ? "text-slate-900 font-bold" : n >= 5 ? "text-amber-600 font-semibold" : "text-rose-600 font-semibold");
+
+  return (
+    <div>
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <Button variant={hideAds ? "primary" : "secondary"} size="sm" onClick={() => setHideAds(!hideAds)}>
+          {hideAds ? "광고 제외됨" : "광고 포함됨"}
+        </Button>
+        <span className="text-slate-300">|</span>
+        {[["reviews", "리뷰 많은 순"], ["price", "낮은 가격순"], ["rating", "별점 높은 순"]].map(([k, label]) => (
+          <Button key={k} variant={sortKey === k ? "primary" : "ghost"} size="sm" onClick={() => setSortKey(k)}>
+            {label}
+          </Button>
+        ))}
+      </div>
+
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[720px]">
+            <thead>
+              <tr className="bg-slate-50 text-slate-500 text-xs">
+                <th className="text-left font-semibold px-4 py-3">브랜드</th>
+                <th className="text-left font-semibold px-4 py-3">모델</th>
+                <th className="text-right font-semibold px-4 py-3">쿠팡가</th>
+                <th className="text-right font-semibold px-4 py-3">별점</th>
+                <th className="text-right font-semibold px-4 py-3">리뷰수</th>
+                <th className="text-left font-semibold px-4 py-3">비고</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r, i) => (
+                <tr key={r.name + i} className={"border-t border-slate-100 " + (r.ad ? "bg-amber-50/60" : "hover:bg-slate-50")}>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span className="font-semibold">{r.brand}</span>
+                    {r.ad && <Badge tone="amber" className="ml-2">광고</Badge>}
+                  </td>
+                  <td className="px-4 py-3">{r.name}</td>
+                  <td className="px-4 py-3 text-right tabular-nums font-semibold whitespace-nowrap">
+                    {won(r.price)}
+                    {r.list && <div className="text-xs text-slate-400 line-through">{won(r.list)}</div>}
+                  </td>
+                  <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap">
+                    {r.rating ? "★ " + r.rating.toFixed(1) : <span className="text-slate-300">—</span>}
+                  </td>
+                  <td className={"px-4 py-3 text-right tabular-nums whitespace-nowrap " + reviewTone(r.reviews)}>
+                    {r.reviews > 0 ? r.reviews : "0"}
+                  </td>
+                  <td className="px-4 py-3 text-xs text-slate-500">{r.note}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <div className="mt-4 grid sm:grid-cols-3 gap-3">
+        <Card className="p-4">
+          <div className="text-xs text-slate-500">리뷰 20건 이상 (정품)</div>
+          <div className="mt-1 text-2xl font-extrabold text-rose-600 tabular-nums">3 / 15</div>
+          <div className="mt-1 text-xs text-slate-400">오디세이 3개 모델뿐</div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-xs text-slate-500">리뷰 0~2건 (정품)</div>
+          <div className="mt-1 text-2xl font-extrabold text-rose-600 tabular-nums">7 / 15</div>
+          <div className="mt-1 text-xs text-slate-400">별점이 있어도 표본 부족</div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-xs text-slate-500">리뷰 최다 상품</div>
+          <div className="mt-1 text-2xl font-extrabold text-amber-600 tabular-nums">61건</div>
+          <div className="mt-1 text-xs text-slate-400">전부 광고 노출 상품</div>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+function Reasons() {
+  const [open, setOpen] = useState(1);
+  return (
+    <div className="space-y-3">
+      {VERDICT_REASONS.map((r) => {
+        const isOpen = open === r.n;
+        return (
+          <Card key={r.n} className={"overflow-hidden transition " + (isOpen ? "ring-2 ring-blue-500" : "")}>
+            <button
+              className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-slate-50"
+              onClick={() => setOpen(isOpen ? 0 : r.n)}
+              aria-expanded={isOpen}
+            >
+              <span className="w-8 h-8 shrink-0 rounded-lg bg-slate-900 text-white grid place-items-center font-bold text-sm">{r.n}</span>
+              <span className="flex-1 font-bold text-sm sm:text-base">{r.head}</span>
+              <span className={"text-slate-400 transition-transform " + (isOpen ? "rotate-180" : "")}>▾</span>
+            </button>
+            {isOpen && (
+              <div className="px-5 pb-5 pl-[4.5rem] text-sm text-slate-600 leading-relaxed">{r.body}</div>
+            )}
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+function BuyGuide() {
+  const cases = [
+    { who: "구력 1년 미만 · 100타 안팎", verdict: "사지 마세요", tone: "red",
+      why: "카페 글 “저는 사실 뭐가 차이가 있는지 모르겠는데”가 정확히 이 구간의 이야기입니다. 스트로크가 아직 굳지 않아 장비 차이를 체감하기 어렵고, 20만 원짜리 오디세이 화이트핫 버사(리뷰 10건)로 충분합니다." },
+    { who: "쓰리펏이 잦고 방향성이 문제", verdict: "시타 후 구매", tone: "amber",
+      why: "제로토크가 실제로 도움이 될 수 있는 유일한 구간입니다. 다만 “무게감이 덜 느껴진다”는 단점이 취향과 정면으로 부딪히므로, 매장에서 기존 퍼터와 나란히 굴려보고 결정하세요." },
+    { who: "이미 제로토크를 써봤고 확신이 있다", verdict: "구매 가능", tone: "green",
+      why: "이 경우에만 온라인 구매가 합리적입니다. 쿠팡 오디세이 Ai 듀얼 S2S 7번 34인치 37.6만 원(★5.0·리뷰 37)이 정품·표본·가격 세 가지를 모두 만족하는 유일한 선택지입니다." },
+    { who: "가성비 우선 · 브랜드 상관없음", verdict: "중고나라", tone: "blue",
+      why: "중고 매물 242건 중 오디세이 57건, 스카티카메론 48건이 나와 있습니다. 신품 대비 크게 저렴하고, 안 맞으면 다시 되팔 때 손실도 적습니다. 단 직거래·정품 확인은 필수입니다." },
+  ];
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      {cases.map((c) => (
+        <Card key={c.who} className="p-5">
+          <Badge tone={c.tone}>{c.verdict}</Badge>
+          <h3 className="mt-3 font-bold">{c.who}</h3>
+          <p className="mt-2 text-sm text-slate-600 leading-relaxed">{c.why}</p>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+// ========================================
+// 🚀 App
+// ========================================
+
+function App() {
+  return (
+    <div className="max-w-5xl mx-auto px-5 py-10 sm:py-14">
+      <Header />
+      <Verdict />
+
+      <Section num="01" title="조사 개요"
+        desc="세 사이트에서 각각 무엇을 얼마나 모았는지, 그리고 그중 얼마가 쓸 만했는지입니다.">
+        <div className="grid gap-3 sm:grid-cols-4">
+          <Stat label="중고나라 퍼터 매물" value="242건" sub="제목 6페이지 수집" />
+          <Stat label="카페 글 검토" value="132건" sub="퍼터 후기 72 + 제로토크 60" />
+          <Stat label="광고 제외 후 남은 후기" value="36건" tone="red" sub="전체의 27%" />
+          <Stat label="쿠팡 실측 상품" value="19개" sub="정품 15 · 광고 4" />
+        </div>
+      </Section>
+
+      <Section num="02" title="중고나라는 지금 무엇을 팔고 있나"
+        desc="매물 제목 242건의 브랜드 분포입니다. 어떤 퍼터가 시장에 많이 도는지가 곧 어떤 퍼터를 사람들이 사고 되파는지입니다.">
+        <JoonggoChart />
+      </Section>
+
+      <Section num="03" title="카페 후기 — 광고를 걷어내면 남는 것"
+        desc="검색으로 나온 카페 글 132건 중 광고를 빼면 36건이 남습니다. 그중 판단에 실제로 도움이 된 12건과, 왜 나머지를 버렸는지를 함께 실었습니다.">
+        <ReviewFilter />
+      </Section>
+
+      <Section num="04" title="쿠팡 가격 · 별점 · 리뷰수"
+        desc="카페에서 언급된 모델을 쿠팡에서 찾아 실측했습니다. 광고 상품은 노란색으로 구분했습니다.">
+        <CoupangTable />
+      </Section>
+
+      <Section num="05" title="사지 말라는 근거 6가지"
+        desc="항목을 눌러 펼쳐 보세요.">
+        <Reasons />
+      </Section>
+
+      <Section num="06" title="그래도 사야 한다면 — 경우별 판단"
+        desc="‘무조건 사지 마라’는 답은 게으릅니다. 조건이 맞으면 사도 됩니다.">
+        <BuyGuide />
+      </Section>
+
+      <Footer />
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

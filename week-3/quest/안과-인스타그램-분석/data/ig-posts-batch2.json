@@ -1,0 +1,119 @@
+{
+  "collectedAt": "2026-09-08T06:42:20.835Z",
+  "out": {
+    "bgn.eyeclinic.jamsil": [
+      {
+        "url": "/bgn.eyeclinic.jamsil/p/DcuxE9rCU1W/",
+        "likes": 5,
+        "comments": 2,
+        "date": "August 31, 2026"
+      },
+      {
+        "url": "/bgn.eyeclinic.jamsil/p/DRmCWQLEv5u/",
+        "likes": 16,
+        "comments": 1,
+        "date": "November 28, 2025"
+      },
+      {
+        "url": "/bgn.eyeclinic.jamsil/p/DXa5o0CiU4P/",
+        "likes": 33,
+        "comments": 1,
+        "date": "April 21, 2026"
+      },
+      {
+        "url": "/bgn.eyeclinic.jamsil/reel/DcxzBHugVQ5/",
+        "likes": 1,
+        "comments": 0,
+        "date": "September 2, 2026"
+      },
+      {
+        "url": "/bgn.eyeclinic.jamsil/reel/Dck5vp5AkBF/",
+        "likes": null,
+        "comments": null,
+        "date": "August 28, 2026"
+      },
+      {
+        "url": "/bgn.eyeclinic.jamsil/reel/Dch0pb1AMKN/",
+        "likes": null,
+        "comments": null,
+        "date": "August 26, 2026"
+      }
+    ],
+    "gs_eyecenter": [
+      {
+        "url": "/gs_eyecenter/reel/DYEbDHlvk2y/",
+        "likes": null,
+        "comments": null,
+        "date": "May 8, 2026"
+      },
+      {
+        "url": "/gs_eyecenter/p/DRJXXhHD1M4/",
+        "likes": null,
+        "comments": null,
+        "date": "November 16, 2025"
+      },
+      {
+        "url": "/gs_eyecenter/p/DKO0FLev4nF/",
+        "likes": null,
+        "comments": null,
+        "date": "May 29, 2025"
+      },
+      {
+        "url": "/gs_eyecenter/p/Dc-y_sIP4P3/",
+        "likes": null,
+        "comments": null,
+        "date": "September 7, 2026"
+      },
+      {
+        "url": "/gs_eyecenter/p/DcvVl_kPczF/",
+        "likes": null,
+        "comments": null,
+        "date": "September 1, 2026"
+      },
+      {
+        "url": "/gs_eyecenter/p/Dbu5lYuPS98/",
+        "likes": null,
+        "comments": null,
+        "date": "August 7, 2026"
+      }
+    ],
+    "highmyopia": [
+      {
+        "url": "/highmyopia/reel/DaL6J1qP3VQ/",
+        "likes": 8350,
+        "comments": 242,
+        "date": "June 29, 2026"
+      },
+      {
+        "url": "/highmyopia/reel/DXuvnxoDxZa/",
+        "likes": 712,
+        "comments": 44,
+        "date": "April 29, 2026"
+      },
+      {
+        "url": "/highmyopia/reel/DW-k_-nMERG/",
+        "likes": 239,
+        "comments": 29,
+        "date": "April 10, 2026"
+      },
+      {
+        "url": "/highmyopia/reel/Dcw7xstMHTV/",
+        "likes": 559,
+        "comments": 5,
+        "date": "September 1, 2026"
+      },
+      {
+        "url": "/highmyopia/reel/Dco4s7AMDjR/",
+        "likes": 925,
+        "comments": 3,
+        "date": "August 29, 2026"
+      },
+      {
+        "url": "/highmyopia/reel/DcjumNrsP39/",
+        "likes": 496,
+        "comments": 1,
+        "date": "August 27, 2026"
+      }
+    ]
+  }
+}

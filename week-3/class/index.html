@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>인스타그램 댄스 챌린지 트렌드 리서치</title>
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <!-- 모든 CDN 버전 고정. Babel 은 7.x 만 인라인 text/babel 을 지원한다 -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.25.9/babel.min.js"></script>
+  <style>
+    @keyframes fadeUp { from { opacity:0; transform:translateY(16px);} to {opacity:1; transform:none;} }
+    .fade-up { animation: fadeUp .5s ease both; }
+    @keyframes shimmer { 0%{background-position:0% 50%} 100%{background-position:200% 50%} }
+    .ig-gradient {
+      background: linear-gradient(90deg,#F58529,#DD2A7B,#8134AF,#515BD4,#F58529);
+      background-size: 200% auto;
+      animation: shimmer 6s linear infinite;
+    }
+    .no-scrollbar::-webkit-scrollbar { display:none; }
+    .no-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 antialiased">
+  <div id="root"></div>
+
+  <script type="text/babel">
+// ========================================
+// React Hooks
+// ========================================
+const { useState, useMemo, useEffect, useCallback } = React;
+
+// ========================================
+// 📊 Research Data (2026-09-05 수집 스냅샷)
+// ========================================
+const RESEARCH = {
+  collectedAt: '2026-09-05',
+  stats: { fetched: 161, recent90d: 55, keywords: 10, challenges: 6 },
+  challenges: [
+    {
+      id: 'guap',
+      rank: 1, tier: 'top',
+      name: 'GUAP',
+      artist: '에메트사운드',
+      accent: 'from-orange-500 to-pink-600',
+      peak: '7월 초 ~ 8월',
+      summary: '알고리즘을 접수한 밈성 댄스',
+      detail: '원본이 7월 초에 올라온 뒤 싸이, 프로미스나인, 일본 아방가르디까지 번지며 8월까지 확산이 이어진 케이스입니다. 안무에 공식 이름이 없어 아티스트가 직접 "이 춤 이름을 정해달라"는 게시물을 올린 것도 화제가 됐습니다.',
+      posts: [
+        { code:'Dbme5ZTR3cr', title:'싸이 버전', account:'@42psy42', date:'2026-08-04', views:7889885 },
+        { code:'DaU4FaVznOi', title:'원본 챌린지', account:'@emetsound', date:'2026-07-03', views:7727940 },
+        { code:'DaaVjlvRkmi', title:'춤 이름 공모 영상', account:'@emetsound', date:'2026-07-05', views:4471705 },
+        { code:'Db2n4S3RPFD', title:'일본 아방가르디 콜라보', account:'@emetsound', date:'2026-08-10', views:4012991 },
+        { code:'DbHwcynh4wv', title:'프로미스나인 · 더시즌즈', account:'@theseasons2023', date:'2026-07-23', views:2321306 }
+      ]
+    },
+    {
+      id: 'summer',
+      rank: 2, tier: 'top',
+      name: '여름아 부탁해',
+      artist: '볼빨간사춘기',
+      accent: 'from-sky-500 to-emerald-500',
+      peak: '7월 ~ 8월 (진행 중)',
+      summary: '아이돌 릴레이에서 개사 챌린지로 진화',
+      detail: '2002년 곡을 리메이크한 써머송. 공식 계정이 아이돌을 릴레이로 캐스팅하는 구조로 굴러가며, 최근에는 원곡 가사 "그대를 가질 수 있다면 드라마도 끊겠어요"를 자기 버전으로 바꿔 부르는 개사 챌린지로 진화했습니다. 최예나(말랑이도 끊겠어요), 최다니엘(담배라도 끊겠어요), 잔망루피(뽀로로도 끊겠어요) 등이 참여했습니다. 세 챌린지 중 가장 최근까지 살아있습니다.',
+      posts: [
+        { code:'DbF7jBfzJMO', title:'리센느 원이', account:'@official_bol4', date:'2026-07-22', views:6091501 },
+        { code:'DbISxTtJrrn', title:'IVE 리즈', account:'@official_bol4', date:'2026-07-23', views:5334055 },
+        { code:'DcI4FhSTQik', title:'프로미스나인 송하영', account:'@official_bol4', date:'2026-08-17', views:2979949 },
+        { code:'DcQ0lrwvBA8', title:'개사 챌린지 정리', account:'@sogon.mag', date:'2026-08-20', views:1495130 }
+      ]
+    },
+    {
+      id: 'ggez',
+      rank: 3, tier: 'top',
+      name: 'GG EZ',
+      artist: 'm.sasuke · 안무 @lulu_lunapi',
+      accent: 'from-violet-500 to-indigo-600',
+      peak: '6월 ~ 7월 (정점 지남)',
+      summary: '아이돌 퍼포먼스 챌린지의 표준',
+      detail: '게임 용어에서 따온 곡으로, 아이돌 퍼포먼스 챌린지로 자리잡았습니다. 정국(BTS), 투어스 경민, 라이즈 쇼타로, 엔하이픈 선우, 앤더블 규빈, 오마이걸 미미, ITZY 예지 등이 참여했습니다. 손동작 위주라 따라하기 쉬운 것이 확산 요인입니다.',
+      posts: [
+        { code:'DZxSsv1ye_L', title:'ITZY 예지', account:'@itzy.all.in.us', date:'2026-06-19', views:5175411 },
+        { code:'DaKsN3qzv2L', title:'손댄스 튜토리얼 (거울모드)', account:'@dancing_____duck', date:'2026-06-29', views:1473054 },
+        { code:'DbKW21vTF_2', title:'전신 버전', account:'@baby_aria815', date:'2026-07-24', views:1225009 },
+        { code:'DaBFWPGhGFK', title:'정국 합류 정리', account:'@uping_magazine', date:'2026-06-25', views:177978 }
+      ]
+    },
+    {
+      id: 'digidi',
+      rank: 4, tier: 'other',
+      name: 'DIGIDI DIGIDI',
+      artist: '디기디디기디',
+      accent: 'from-amber-400 to-orange-500',
+      peak: '5월 ~ 7월',
+      summary: '라인댄스와 셔플로 퍼져 전 연령 확산',
+      detail: '댄스 챌린지 중 유일하게 라인댄스·셔플 쪽으로 퍼져 키즈와 중장년층까지 확산된 케이스. 발레·유산소 운동 콘텐츠로도 변형되고 있습니다.',
+      posts: [
+        { code:'Da2UuKZzW99', title:'전신 유산소 버전', account:'@ballet_therafit', date:'2026-07-16', views:5363318 },
+        { code:'DZLnjN-TYL2', title:'대표 영상', account:'@baechuu___', date:'2026-06-04', views:1867222 }
+      ]
+    },
+    {
+      id: 'gorilla',
+      rank: 5, tier: 'other',
+      name: '고릴라 챌린지',
+      artist: '—',
+      accent: 'from-lime-500 to-teal-600',
+      peak: '8월',
+      summary: '검색 노이즈가 많아 판단 유보',
+      detail: '"고릴라 챌린지"로 검색하면 AI로 생성된 춤추는 고릴라 영상, 고릴라 에너지드링크 광고 등 다른 맥락의 콘텐츠가 섞여 나옵니다. 순수한 댄스 챌린지로 보기는 어렵습니다.',
+      caution: true,
+      posts: [
+        { code:'Dbv8dERTl_H', title:'김소윤 버전', account:'@sunhyang.an', date:'2026-08-07', views:2590109 }
+      ]
+    },
+    {
+      id: 'pocket',
+      rank: 6, tier: 'other',
+      name: 'Pocket Locket',
+      artist: '해외발 트렌드',
+      accent: 'from-rose-500 to-fuchsia-600',
+      peak: '8월',
+      summary: '국내 확산은 아직 제한적',
+      detail: '해외에서 먼저 퍼진 트렌드로, 국내 게시물은 아직 많지 않습니다.',
+      posts: [
+        { code:'Dbu8k2Puhod', title:'대표 영상', account:'@batt_mad', date:'2026-08-07', views:3008767 }
+      ]
+    }
+  ],
+  excluded: [
+    { name:'간바레 챌린지', artist:'박지훈', reason:'초기 탐색에서 잡혀 확인했으나, 최근 120일 이내 게시물이 0건이었습니다. 이미 지나간 트렌드로 판단해 제외했습니다.' }
+  ],
+  method: [
+    { step:1, title:'키워드 수집', body:'댄스챌린지, 챌린지, 릴스챌린지, 커버댄스, kpop챌린지 등 10개 키워드로 게시물 161건을 수집했습니다.' },
+    { step:2, title:'이름 추출', body:'최근 90일 이내 게시물 55건의 캡션에서 실제 곡·챌린지 이름을 추출했습니다.' },
+    { step:3, title:'재검색 검증', body:'추출한 이름별로 재검색해 조회수와 업로드 날짜로 실제 활성도를 검증했습니다.' }
+  ],
+  limits: [
+    '인스타그램 웹 검색은 관련도순 정렬이라, 조회수 상위가 곧 최신 트렌드는 아닐 수 있습니다.',
+    '수집 표본은 검색 API가 반환한 상위 결과(키워드당 약 18건)로, 전수 조사가 아닙니다.',
+    '조회수는 2026-09-05 기준 스냅샷이며 이후 변동됩니다.'
+  ]
+};
+
+const THUMB = (code) => `dance-challenges/thumbs/${code}.jpg`;
+const REEL = (code) => `https://www.instagram.com/reel/${code}/`;
+
+// ========================================
+// 🛠 Utils
+// ========================================
+function formatViews(n) {
+  if (n >= 100000000) return (n / 100000000).toFixed(1).replace(/\.0$/, '') + '억';
+  if (n >= 10000) return Math.round(n / 10000).toLocaleString() + '만';
+  return n.toLocaleString();
+}
+
+function formatDate(iso) {
+  const parts = iso.split('-');
+  return Number(parts[1]) + '/' + parts[2];
+}
+
+// ========================================
+// 🎨 Design System Components
+// ========================================
+function Badge({ children, variant = 'default', className = '' }) {
+  const variants = {
+    default: 'bg-slate-800 text-slate-300 ring-slate-700',
+    accent: 'bg-pink-500/15 text-pink-300 ring-pink-500/30',
+    warn: 'bg-amber-500/15 text-amber-300 ring-amber-500/30',
+    muted: 'bg-slate-800/60 text-slate-400 ring-slate-700/60'
+  };
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${variants[variant]} ${className}`}>
+      {children}
+    </span>
+  );
+}
+
+function Card({ children, className = '' }) {
+  return (
+    <div className={`rounded-2xl bg-slate-900/70 ring-1 ring-slate-800 backdrop-blur ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+function Button({ children, variant = 'primary', size = 'md', className = '', ...rest }) {
+  const variants = {
+    primary: 'bg-white text-slate-900 hover:bg-slate-200',
+    secondary: 'bg-slate-800 text-slate-100 hover:bg-slate-700 ring-1 ring-slate-700',
+    ghost: 'text-slate-300 hover:bg-slate-800/70'
+  };
+  const sizes = { sm: 'px-3 py-1.5 text-xs', md: 'px-4 py-2 text-sm', lg: 'px-5 py-2.5 text-base' };
+  return (
+    <button
+      className={`inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 disabled:opacity-50 ${variants[variant]} ${sizes[size]} ${className}`}
+      {...rest}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Modal({ isOpen, onClose, title, children }) {
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+      onClick={onClose}
+    >
+      <div
+        className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-slate-900 ring-1 ring-slate-700 no-scrollbar"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-slate-800 p-5">
+          <h3 className="text-lg font-bold">{title}</h3>
+          <button
+            onClick={onClose}
+            aria-label="닫기"
+            className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+            </svg>
+          </button>
+        </div>
+        <div className="p-5">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+function Tabs({ tabs, value, onChange }) {
+  return (
+    <div className="flex flex-wrap gap-2" role="tablist">
+      {tabs.map((t) => (
+        <button
+          key={t.value}
+          role="tab"
+          aria-selected={value === t.value}
+          onClick={() => onChange(t.value)}
+          className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+            value === t.value
+              ? 'bg-white text-slate-900'
+              : 'bg-slate-900 text-slate-400 ring-1 ring-slate-800 hover:text-slate-200'
+          }`}
+        >
+          {t.label}
+          <span className="ml-1.5 text-xs opacity-60">{t.count}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ========================================
+// 🧩 Common Components
+// ========================================
+function Thumb({ post, onOpen }) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <button
+      onClick={() => onOpen(post)}
+      className="group relative block w-full overflow-hidden rounded-xl bg-slate-800 ring-1 ring-slate-800 transition hover:ring-pink-500/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
+      style={{ aspectRatio: '9 / 16' }}
+      aria-label={`${post.title} 자세히 보기`}
+    >
+      {failed ? (
+        <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-3 text-center text-slate-500">
+          <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="5" />
+            <circle cx="12" cy="12" r="4" />
+            <circle cx="17.5" cy="6.5" r="1" fill="currentColor" />
+          </svg>
+          <span className="text-[11px] leading-tight">썸네일 없음</span>
+        </div>
+      ) : (
+        <img
+          src={THUMB(post.code)}
+          alt={`${post.title} 썸네일`}
+          loading="lazy"
+          onError={() => setFailed(true)}
+          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+        />
+      )}
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-3 pt-8 text-left">
+        <p className="truncate text-xs font-semibold text-white">{post.title}</p>
+        <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-slate-300">
+          <svg className="h-3 w-3 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M4 4.5A1.5 1.5 0 0 1 6.23 3.2l9.1 5.5a1.5 1.5 0 0 1 0 2.6l-9.1 5.5A1.5 1.5 0 0 1 4 15.5v-11Z" />
+          </svg>
+          {formatViews(post.views)}
+          <span className="opacity-50">·</span>
+          {formatDate(post.date)}
+        </p>
+      </div>
+    </button>
+  );
+}
+
+function ChallengeCard({ challenge, onOpenPost }) {
+  const total = challenge.posts.reduce((s, p) => s + p.views, 0);
+  return (
+    <Card className="fade-up overflow-hidden">
+      <div className={`h-1 w-full bg-gradient-to-r ${challenge.accent}`} />
+      <div className="p-5 sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${challenge.accent} text-sm font-black text-white`}>
+                {challenge.rank}
+              </span>
+              <h3 className="text-xl font-black tracking-tight sm:text-2xl">{challenge.name}</h3>
+              {challenge.tier === 'top' && <Badge variant="accent">TOP 3</Badge>}
+              {challenge.caution && <Badge variant="warn">노이즈 주의</Badge>}
+            </div>
+            <p className="mt-1.5 text-sm text-slate-400">{challenge.artist}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-lg font-bold tabular-nums text-white">{formatViews(total)}</p>
+            <p className="text-[11px] text-slate-500">대표 {challenge.posts.length}건 합계</p>
+          </div>
+        </div>
+
+        <p className="mt-4 text-sm font-semibold text-slate-200">{challenge.summary}</p>
+        <p className="mt-2 text-sm leading-relaxed text-slate-400">{challenge.detail}</p>
+
+        <div className="mt-4">
+          <Badge variant="muted">확산 시기 · {challenge.peak}</Badge>
+        </div>
+
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {challenge.posts.map((p) => (
+            <Thumb key={p.code} post={p} onOpen={(post) => onOpenPost(post, challenge)} />
+          ))}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function StatTile({ label, value, sub }) {
+  return (
+    <Card className="p-4">
+      <p className="text-2xl font-black tabular-nums text-white sm:text-3xl">{value}</p>
+      <p className="mt-1 text-sm font-semibold text-slate-300">{label}</p>
+      {sub && <p className="mt-0.5 text-xs text-slate-500">{sub}</p>}
+    </Card>
+  );
+}
+
+function Header() {
+  return (
+    <header className="border-b border-slate-800/80">
+      <div className="mx-auto max-w-6xl px-5 py-12 sm:py-16">
+        <div className="fade-up">
+          <Badge variant="accent">Instagram · 트렌드 리서치</Badge>
+          <h1 className="mt-4 text-4xl font-black leading-tight tracking-tight sm:text-6xl">
+            지금 유행하는<br />
+            <span className="ig-gradient bg-clip-text text-transparent">댄스 챌린지</span>
+          </h1>
+          <p className="mt-5 max-w-2xl text-base leading-relaxed text-slate-400 sm:text-lg">
+            인스타그램 검색으로 최근 90일 게시물을 수집해, 캡션에서 실제 곡과 챌린지 이름을 추출하고
+            조회수와 업로드 날짜로 검증한 결과입니다.
+          </p>
+          <p className="mt-4 text-sm text-slate-500">
+            조사일 {RESEARCH.collectedAt} · 조회수는 수집 시점 스냅샷
+          </p>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="border-t border-slate-800/80 py-10">
+      <div className="mx-auto max-w-6xl px-5 text-sm text-slate-500">
+        <p>인스타그램 댄스 챌린지 트렌드 리서치 · {RESEARCH.collectedAt}</p>
+        <p className="mt-1">썸네일과 지표는 각 게시물 소유자에게 저작권이 있으며, 리서치 인용 목적으로만 사용했습니다.</p>
+      </div>
+    </footer>
+  );
+}
+
+// ========================================
+// 📄 Page Sections
+// ========================================
+function MethodSection() {
+  return (
+    <section className="mt-16">
+      <h2 className="text-2xl font-black tracking-tight sm:text-3xl">조사 방법</h2>
+      <Card className="mt-4 border-l-2 border-amber-500/50 p-5">
+        <p className="text-sm leading-relaxed text-slate-300">
+          <strong className="font-bold text-amber-300">#댄스챌린지 태그를 그대로 훑는 방식은 쓸모가 없었습니다.</strong>{' '}
+          인스타그램 웹 검색이 최신순이 아닌 <strong className="text-white">관련도순</strong>으로 정렬되기 때문에,
+          상위 결과가 학교·기업 이벤트 공지나 2024년 게시물로 채워졌기 때문입니다. 그래서 아래 순서로 접근했습니다.
+        </p>
+      </Card>
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+        {RESEARCH.method.map((m) => (
+          <Card key={m.step} className="p-5">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-800 text-sm font-black text-pink-400">
+              {m.step}
+            </span>
+            <h3 className="mt-3 font-bold text-white">{m.title}</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-400">{m.body}</p>
+          </Card>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ExcludedSection() {
+  return (
+    <section className="mt-16">
+      <h2 className="text-2xl font-black tracking-tight sm:text-3xl">제외한 항목</h2>
+      <div className="mt-4 grid gap-4">
+        {RESEARCH.excluded.map((e) => (
+          <Card key={e.name} className="p-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-lg font-bold text-slate-300 line-through decoration-slate-600">{e.name}</h3>
+              <span className="text-sm text-slate-500">{e.artist}</span>
+              <Badge variant="warn">최근 120일 게시물 0건</Badge>
+            </div>
+            <p className="mt-2 text-sm leading-relaxed text-slate-400">{e.reason}</p>
+          </Card>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function LimitsSection() {
+  return (
+    <section className="mt-16">
+      <h2 className="text-2xl font-black tracking-tight sm:text-3xl">한계</h2>
+      <Card className="mt-4 p-5">
+        <ul className="space-y-3">
+          {RESEARCH.limits.map((l, i) => (
+            <li key={i} className="flex gap-3 text-sm leading-relaxed text-slate-400">
+              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-600" aria-hidden="true" />
+              {l}
+            </li>
+          ))}
+        </ul>
+      </Card>
+    </section>
+  );
+}
+
+function PostModal({ state, onClose }) {
+  const [failed, setFailed] = useState(false);
+  const post = state ? state.post : null;
+  const challenge = state ? state.challenge : null;
+
+  useEffect(() => { setFailed(false); }, [post ? post.code : null]);
+
+  if (!post) return null;
+  return (
+    <Modal isOpen={true} onClose={onClose} title={`${challenge.name} · ${post.title}`}>
+      <div className="grid gap-5 sm:grid-cols-[220px_1fr]">
+        <div className="overflow-hidden rounded-xl bg-slate-800 ring-1 ring-slate-700" style={{ aspectRatio: '9 / 16' }}>
+          {failed ? (
+            <div className="flex h-full items-center justify-center text-sm text-slate-500">썸네일 없음</div>
+          ) : (
+            <img
+              src={THUMB(post.code)}
+              alt={`${post.title} 썸네일`}
+              onError={() => setFailed(true)}
+              className="h-full w-full object-cover"
+            />
+          )}
+        </div>
+        <div className="min-w-0">
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="accent">{challenge.name}</Badge>
+            <Badge variant="muted">{challenge.artist}</Badge>
+          </div>
+          <dl className="mt-4 space-y-3 text-sm">
+            <div className="flex justify-between gap-4 border-b border-slate-800 pb-2">
+              <dt className="text-slate-500">계정</dt>
+              <dd className="font-semibold text-slate-200">{post.account}</dd>
+            </div>
+            <div className="flex justify-between gap-4 border-b border-slate-800 pb-2">
+              <dt className="text-slate-500">업로드</dt>
+              <dd className="font-semibold tabular-nums text-slate-200">{post.date}</dd>
+            </div>
+            <div className="flex justify-between gap-4 border-b border-slate-800 pb-2">
+              <dt className="text-slate-500">조회수</dt>
+              <dd className="font-semibold tabular-nums text-slate-200">
+                {formatViews(post.views)}
+                <span className="ml-1.5 text-xs font-normal text-slate-500">({post.views.toLocaleString()})</span>
+              </dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-slate-500">게시물 코드</dt>
+              <dd className="font-mono text-xs text-slate-400">{post.code}</dd>
+            </div>
+          </dl>
+          <a href={REEL(post.code)} target="_blank" rel="noopener noreferrer" className="mt-5 block">
+            <Button className="w-full" size="lg">
+              인스타그램에서 보기
+              <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path d="M11 3a1 1 0 1 0 0 2h1.586l-5.293 5.293a1 1 0 1 0 1.414 1.414L14 6.414V8a1 1 0 1 0 2 0V4a1 1 0 0 0-1-1h-4Z" />
+                <path d="M5 5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-3a1 1 0 1 0-2 0v3H5V7h3a1 1 0 0 0 0-2H5Z" />
+              </svg>
+            </Button>
+          </a>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+// ========================================
+// 🚀 App
+// ========================================
+function App() {
+  const [filter, setFilter] = useState('all');
+  const [modalState, setModalState] = useState(null);
+
+  const tabs = useMemo(() => [
+    { value: 'all', label: '전체', count: RESEARCH.challenges.length },
+    { value: 'top', label: 'TOP 3', count: RESEARCH.challenges.filter((c) => c.tier === 'top').length },
+    { value: 'other', label: '그 외', count: RESEARCH.challenges.filter((c) => c.tier === 'other').length }
+  ], []);
+
+  const visible = useMemo(
+    () => RESEARCH.challenges.filter((c) => filter === 'all' || c.tier === filter),
+    [filter]
+  );
+
+  const totalPosts = useMemo(
+    () => RESEARCH.challenges.reduce((s, c) => s + c.posts.length, 0),
+    []
+  );
+
+  const openPost = useCallback((post, challenge) => setModalState({ post, challenge }), []);
+  const closeModal = useCallback(() => setModalState(null), []);
+
+  return (
+    <div className="min-h-screen">
+      <Header />
+
+      <main className="mx-auto max-w-6xl px-5 pb-16">
+        <section className="-mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <StatTile label="수집 게시물" value={RESEARCH.stats.fetched} sub="10개 키워드" />
+          <StatTile label="최근 90일" value={RESEARCH.stats.recent90d} sub="분석 대상" />
+          <StatTile label="식별 챌린지" value={RESEARCH.stats.challenges} sub="검증 완료" />
+          <StatTile label="대표 게시물" value={totalPosts} sub="썸네일 수록" />
+        </section>
+
+        <section className="mt-16">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <h2 className="text-2xl font-black tracking-tight sm:text-3xl">챌린지별 정리</h2>
+            <Tabs tabs={tabs} value={filter} onChange={setFilter} />
+          </div>
+
+          <div className="mt-6 space-y-6">
+            {visible.length === 0 ? (
+              <Card className="p-10 text-center text-slate-500">해당하는 챌린지가 없습니다.</Card>
+            ) : (
+              visible.map((c) => (
+                <ChallengeCard key={c.id} challenge={c} onOpenPost={openPost} />
+              ))
+            )}
+          </div>
+          <p className="mt-4 text-xs text-slate-500">
+            썸네일을 클릭하면 상세 정보와 원본 게시물 링크가 열립니다.
+          </p>
+        </section>
+
+        <MethodSection />
+        <ExcludedSection />
+        <LimitsSection />
+      </main>
+
+      <Footer />
+      <PostModal state={modalState} onClose={closeModal} />
+    </div>
+  );
+}
+
+// ========================================
+// Rendering
+// ========================================
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
