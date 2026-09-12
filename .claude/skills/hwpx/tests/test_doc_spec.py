@@ -1,0 +1,337 @@
+#!/usr/bin/env python
+"""doc_spec.py — 편집 규범 추출·조판 회귀 테스트.
+
+이 도구의 존재 이유를 고정한다: 내용 길이가 원본과 아무리 달라도
+레이아웃이 어긋나지 않아야 한다(줄배치 캐시를 만들지 않으므로).
+"""
+
+import sys as _sys  # Windows 콘솔(cp949/cp1252) UTF-8 고정 — 한글·기호 출력 크래시 방지
+for _stream in (_sys.stdin, _sys.stdout, _sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[union-attr]
+    except Exception:
+        pass
+import json
+import re
+import subprocess
+import sys
+import tempfile
+import zipfile
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+DS = ROOT / "scripts" / "doc_spec.py"
+FILL = ROOT / "scripts" / "fill_hwpx.py"
+VALIDATE = ROOT / "scripts" / "validate.py"
+REF = ROOT / "assets" / "gyehoek-reference.hwpx"
+
+PASS = FAIL = 0
+
+
+def check(cond, label):
+    global PASS, FAIL
+    if cond:
+        PASS += 1
+        print(f"  ✓ {label}")
+    else:
+        FAIL += 1
+        print(f"  ✗ {label}")
+
+
+def run(*args):
+    return subprocess.run([sys.executable, *map(str, args)],
+                          capture_output=True, text=True, encoding="utf-8", errors="replace")
+
+
+def section_of(path):
+    with zipfile.ZipFile(path) as z:
+        return z.read("Contents/section0.xml").decode("utf-8")
+
+
+def main():
+    tmp = Path(tempfile.mkdtemp())
+    spec_dir = tmp / "spec"
+
+    # ── 추출 ──
+    r = run(DS, "analyze", REF, "-o", spec_dir)
+    check(r.returncode == 0, "analyze 성공")
+    spec = json.loads((spec_dir / "spec.json").read_text(encoding="utf-8"))
+    check(len(spec["levels"]) >= 5, f"본문 계층 추출({len(spec['levels'])}종)")
+    check(any(k.startswith("banner") for k in spec["banners"]), "제목 배너 추출")
+    check("callout" in spec["blocks"], "강조 박스 추출")
+    check(any(k.startswith("table_") for k in spec["tables"]), "데이터 표 추출")
+    check((spec_dir / "base.hwpx").is_file(), "스타일 공급용 base 보관")
+
+    # ── 조판: 표가 내용 크기대로 만들어지는가 ──
+    md = tmp / "c.md"
+    rows = "\n".join(f"| 분야{i} | 과제 {i} | {i%4+1}분기 |" for i in range(1, 26))
+    md.write_text(
+        "# 제목\n## Ⅰ. 장\n### 1 절\n"
+        "ㅇ 첫 항목\n- 하위 항목\n* 각주\n"
+        "⇒ 결론 문장\n"
+        "::: <상자 제목>\n￭ 가\n￭ 나\n￭ 다\n:::\n"
+        "| 분야 | 과제명 | 일정 |\n| --- | --- | --- |\n" + rows + "\n",
+        encoding="utf-8")
+    out = tmp / "out.hwpx"
+    r = run(DS, "render", spec_dir, md, "-o", out)
+    check(r.returncode == 0, "render 성공")
+
+    sec = section_of(out)
+    check("<hp:linesegarray>" not in sec,
+          "줄배치 캐시 0개 — 한컴이 재계산하므로 레이아웃이 안 어긋남")
+    m = [x for x in re.finditer(r'rowCnt="(\d+)" colCnt="(\d+)"', sec)
+         if int(x.group(1)) >= 4]
+    check(bool(m) and m[0].group(1) == "26" and m[0].group(2) == "3",
+          f"표가 내용 크기대로 26행x3열 (실제 {m[0].groups() if m else None})")
+    check("과제 25" in sec, "표 마지막 행 내용이 실제로 들어감")
+    check(":::" not in sec, "박스 닫는 표식이 본문에 새지 않음")
+
+    # ── 게이트 ──
+    check(run(VALIDATE, out, "--layout").returncode == 0, "validate --layout 통과")
+    r = run(FILL, "check", out, "--strict")
+    check(r.returncode == 0 and json.loads(r.stdout)["ok"], "check --strict 통과")
+
+    # ── 극단 길이에서도 깨지지 않는가 ──
+    tiny = tmp / "t.md"
+    tiny.write_text("# 짧게\nㅇ 한 줄.\n", encoding="utf-8")
+    out2 = tmp / "tiny.hwpx"
+    check(run(DS, "render", spec_dir, tiny, "-o", out2).returncode == 0,
+          "최소 내용도 조판됨")
+    check(run(FILL, "check", out2, "--strict").returncode == 0,
+          "최소 내용 결과가 strict 통과")
+
+    big = tmp / "b.md"
+    big.write_text("# 김\n## Ⅰ. 장\nㅇ " + ("아주 긴 문장입니다 " * 80) + "\n",
+                   encoding="utf-8")
+    out3 = tmp / "big.hwpx"
+    check(run(DS, "render", spec_dir, big, "-o", out3).returncode == 0,
+          "초장문도 조판됨")
+    check(run(FILL, "check", out3, "--strict").returncode == 0,
+          "초장문 결과가 strict 통과")
+
+    # ── 긴 제목이 배너에서 여러 줄로 접히지 않는가 ──
+    bmd = tmp / "bn.md"
+    bmd.write_text("# 표지\n## Ⅰ. 짧은 장\n### 1 기관 현황\n"
+                   "### 2 인공지능 및 데이터 경제 활성화 추진\n", encoding="utf-8")
+    outb = tmp / "bn.hwpx"
+    check(run(DS, "render", spec_dir, bmd, "-o", outb).returncode == 0,
+          "배너 조판됨")
+    secb = section_of(outb)
+    widths = {}
+    for mt in re.finditer(r"<hp:tbl\b.*?</hp:tbl>", secb, re.S):
+        frag = mt.group()
+        cells = re.findall(r"<hp:tc\b.*?</hp:tc>", frag, re.S)
+        if not cells:
+            continue
+        txt = re.sub(r"<[^>]*>", "", cells[-1]).strip()
+        w = re.search(r'<hp:cellSz width="(\d+)"', cells[-1])
+        if txt and w:
+            widths[txt] = int(w.group(1))
+    long_t = next((k for k in widths if "인공지능" in k), None)
+    short_t = next((k for k in widths if "기관 현황" in k), None)
+    check(long_t is not None and short_t is not None, "배너 제목 칸을 찾음")
+    if long_t and short_t:
+        check(widths[long_t] > widths[short_t],
+              f"긴 제목 칸이 더 넓게 잡힘 ({widths[long_t]} > {widths[short_t]})")
+        # 17자 한글이 한 줄에 들어가려면 대략 2200*17 이상은 되어야 한다
+        check(widths[long_t] >= 2200 * 12,
+              "긴 제목이 한 줄에 들어갈 만큼 넓음(여러 줄 접힘 방지)")
+    check(run(FILL, "check", outb, "--strict").returncode == 0,
+          "배너 결과가 strict 통과")
+
+    # ── 긴 셀 텍스트가 겹쳐 찍히지 않는가 (lineWrap SQUEEZE 사고) ──
+    wmd = tmp / "w.md"
+    wmd.write_text(
+        "# 표\n## Ⅰ. 장\n"
+        "| 분야 | 사업명 | 주요 내용 | 기대 효과 |\n| --- | --- | --- | --- |\n"
+        "| AI | AI Hub | " + ("국내 최대 AI 학습 데이터 통합 플랫폼 고도화 및 민간 개방 확대 ")
+        + "| 비용 절감 |\n", encoding="utf-8")
+    outw = tmp / "wrap.hwpx"
+    check(run(DS, "render", spec_dir, wmd, "-o", outw).returncode == 0,
+          "긴 셀 텍스트 표 조판됨")
+    secw = section_of(outw)
+    check('lineWrap="SQUEEZE"' not in secw,
+          "SQUEEZE 없음 — 있으면 자간을 줄여 글자가 겹쳐 찍힌다")
+    check('lineWrap="BREAK"' in secw, "셀 줄바꿈이 BREAK 로 설정됨")
+    check(run(FILL, "check", outw, "--strict").returncode == 0,
+          "긴 셀 결과가 strict 통과")
+
+    # ── 마크다운 굵게가 별표로 새지 않는가 (실사용에서 10곳 발생) ──
+    emd = tmp / "e.md"
+    emd.write_text("# 제목\n## Ⅰ. 장\n"
+                   "ㅇ 본문에 **강조** 가 있다\n"
+                   "| 구분 | 내용 |\n| --- | --- |\n"
+                   "| **AI 인프라** | 설명 |\n| 데이터 | **중요** |\n",
+                   encoding="utf-8")
+    oute = tmp / "emph.hwpx"
+    check(run(DS, "render", spec_dir, emd, "-o", oute).returncode == 0,
+          "굵게 포함 원고 조판됨")
+    sece = section_of(oute)
+    texts = re.findall(r"<hp:t>(.*?)</hp:t>", sece, re.S)
+    check(not any("**" in t for t in texts),
+          "별표가 글자로 남지 않음 (한글은 마크다운 렌더러가 아님)")
+    check("강조" in sece and "AI 인프라" in sece, "강조 텍스트 자체는 보존됨")
+    # 굵게 charPr 이 실제로 쓰였는지 — 본문 charPr 과 다른 id 가 등장해야 한다
+    from xml.etree import ElementTree as ET
+    with zipfile.ZipFile(oute) as z:
+        hdr = ET.fromstring(z.read("Contents/header.xml"))
+    ns = {"hh": "http://www.hancom.co.kr/hwpml/2011/head"}
+    bold_ids = {c.get("id") for c in hdr.findall(".//hh:charProperties/hh:charPr", ns)
+                if c.find("hh:bold", ns) is not None}
+    used = set(re.findall(r'charPrIDRef="(\d+)"', sece))
+    check(bool(used & bold_ids), "굵게 charPr 이 실제로 적용됨(별표만 지운 게 아님)")
+    check(run(FILL, "check", oute, "--strict").returncode == 0,
+          "굵게 결과가 strict 통과")
+
+    # ── 원본 문구가 섞여 나오지 않는가 ──
+    mp = ROOT / "scripts" / "map_preflight.py"
+    r = run(mp, "residue", out, "--against", REF)
+    check(r.returncode == 0, "산출물에 레퍼런스 원문 잔재 없음")
+
+    # ── 같은 입력이면 항상 같은 바이트가 나오는가 (결정론) ──
+    import hashlib, time
+    d1 = tmp / "d1.hwpx"
+    d2 = tmp / "d2.hwpx"
+    run(DS, "render", spec_dir, md, "-o", d1)
+    time.sleep(1.2)                    # 압축 시각이 섞이는지 보려면 초를 넘겨야 한다
+    run(DS, "render", spec_dir, md, "-o", d2)
+    h1 = hashlib.md5(d1.read_bytes()).hexdigest()
+    h2 = hashlib.md5(d2.read_bytes()).hexdigest()
+    check(h1 == h2, "같은 입력 → 같은 산출물 바이트(결정론)")
+
+    # 압축 시각이 고정돼 있어야 한다 — 안 그러면 실행할 때마다 파일이 달라진다
+    with zipfile.ZipFile(d1) as z:
+        stamps = {i.date_time for i in z.infolist()}
+    check(all(st[0] == 1980 for st in stamps),
+          f"모든 엔트리의 압축 시각이 고정됨 {sorted(stamps)[:2]}")
+
+    # ── 조판 품질 검문 (결정론과 별개로 '품질'을 지키는 장치) ──
+    r = run(DS, "lint", out)
+    check(r.returncode == 0, "정상 산출물은 품질 검문 통과")
+    check("통과" in r.stdout or "오류 없음" in r.stdout, "검문 결과 문구 출력")
+
+    # 레퍼런스 원본은 SQUEEZE·줄배치 캐시가 있어 반드시 걸려야 한다
+    r = run(DS, "lint", REF)
+    check(r.returncode == 2, "결함 있는 문서는 검문에서 걸림(exit 2)")
+    check("SQUEEZE" in r.stdout, "글자 겹침 원인(SQUEEZE)을 지목")
+    check("줄배치 캐시" in r.stdout, "줄배치 캐시를 지목")
+
+    # 표 행 높이가 내용 줄 수에 맞게 늘어나는가
+    tall = tmp / "tall.md"
+    tall.write_text(
+        "# 표\n## Ⅰ. 장\n| 구분 | 내용 |\n| --- | --- |\n"
+        "| 짧음 | 한 줄 |\n"
+        "| 김 | " + ("아주 긴 설명이 이어지는 칸입니다 " * 4) + "|\n",
+        encoding="utf-8")
+    outt = tmp / "tall.hwpx"
+    check(run(DS, "render", spec_dir, tall, "-o", outt).returncode == 0,
+          "긴 칸 포함 표 조판됨")
+    sect = section_of(outt)
+    hs = [int(m.group(1)) for m in
+          re.finditer(r'<hp:cellSz width="\d+" height="(\d+)"', sect)]
+    check(len(set(hs)) > 1, "행 높이가 내용에 따라 달라짐(일괄 복제 아님)")
+    check(run(DS, "lint", outt).returncode == 0, "긴 칸 표도 품질 검문 통과")
+
+    # ── 기관마다 다른 마커 기호를 같은 층위로 인식하는가 ──
+    import importlib.util
+    sp = importlib.util.spec_from_file_location("ds", DS)
+    ds = importlib.util.module_from_spec(sp)
+    sp.loader.exec_module(ds)
+    check(ds.classify("○ (개요) 내용") == ds.classify("ㅇ 내용"),
+          "'○'(흰 원)과 'ㅇ'(한글 이응)을 같은 층위로 인식")
+    check(ds.classify("▶ 항목") == "tri" and ds.classify("＊ 각주") == "note",
+          "다른 기관 표기(▶, ＊)도 인식")
+
+    # ── 첫 문단이 원본 제목 배너를 물고 오지 않는가 ──
+    # 한컴은 제목 표를 secPr 과 같은 문단에 넣기도 한다. 그대로 두면 조판하는
+    # 모든 문서에 원본 제목이 딸려 들어간다.
+    fp = (spec_dir / "templates" / "first_para.xml").read_text(encoding="utf-8")
+    check("<hp:secPr" in fp, "first_para 가 페이지 설정을 보존")
+    check("<hp:tbl" not in fp and "<hp:pic" not in fp,
+          "first_para 에 원본 표·그림이 딸려오지 않음")
+
+    # ── 큰 글꼴 행의 높이가 그 행 글꼴 기준으로 잡히는가 ──
+    bg = tmp / "bg.md"
+    bg.write_text("# 표\n## Ⅰ. 장\n| 아주 긴 일차 제목행이 들어가는 자리입니다 | |\n"
+                  "| --- | --- |\n| 시간 | 프로그램(안) |\n"
+                  "| 10:00~10:30 | 오프닝 |\n", encoding="utf-8")
+    outg = tmp / "bg.hwpx"
+    check(run(DS, "render", spec_dir, bg, "-o", outg).returncode == 0,
+          "큰 글꼴 제목행 표 조판됨")
+    r = run(DS, "lint", outg)
+    check("칸이 낮다" not in r.stdout,
+          "제목행 칸이 내용보다 낮게 잡히지 않음")
+
+    # ── 표지·목차·들여쓰기 계층 (문서 구조 규약) ──
+    st = tmp / "st.md"
+    st.write_text("# 조사 보고\n"
+                  "## Ⅰ. 개요\n### 1 배경\n"
+                  "- 최상위 항목\n  - 한 단계 아래\n"
+                  "## Ⅱ. 결과\n### 1 요약\n- 항목\n", encoding="utf-8")
+    outs = tmp / "st.hwpx"
+    r = run(DS, "render", spec_dir, st, "-o", outs,
+            "--cover-page", "--toc", "--org", "조사팀", "--date", "2026. 8. 21.")
+    check(r.returncode == 0, "표지·목차 조판 성공")
+    sects = section_of(outs)
+    txt = " ".join(re.findall(r"<hp:t>(.*?)</hp:t>", sects, re.S))
+    check("목  차" in txt, "목차 쪽이 생성됨")
+    check("Ⅰ. 개요" in txt and "Ⅱ. 결과" in txt, "목차에 장 제목이 모임")
+    check("조사팀" in txt and "2026. 8. 21." in txt, "표지에 기관·날짜가 들어감")
+    check(len(re.findall(r'pageBreak="1"', sects)) >= 2,
+          "표지·목차 뒤에 쪽 나눔이 들어감")
+    # 들여쓰기 깊이가 계층 기호로 바뀌는가
+    lv = json.loads((spec_dir / "spec.json").read_text(encoding="utf-8"))["levels"]
+    bmk = lv.get("bullet", {}).get("marker", "")
+    check(bool(bmk) and f"{bmk} 최상위 항목" in txt,
+          "목록 0단계가 중항목 기호로 조판됨")
+    check("- 한 단계 아래" in txt, "목록 1단계가 소항목 기호로 조판됨")
+    check(run(FILL, "check", outs, "--strict").returncode == 0,
+          "표지·목차 결과가 strict 통과")
+
+    # ── 레퍼런스에 서식이 없어도 내용을 잃지 않는가 ──
+    # 표지·장·절 배너가 없는 레퍼런스로 조판하면 제목이 통째로 사라지던 사고
+    import importlib.util as _il
+    sp2 = _il.spec_from_file_location("ds2", DS)
+    ds2 = _il.module_from_spec(sp2)
+    sp2.loader.exec_module(ds2)
+
+    bare = tmp / "bare"          # 배너·표 템플릿을 지운 반쪽 spec
+    import shutil as _sh
+    _sh.copytree(spec_dir, bare)
+    bspec = json.loads((bare / "spec.json").read_text(encoding="utf-8"))
+    bspec["banners"], bspec["tables"], bspec["blocks"] = {}, {}, {}
+    (bare / "spec.json").write_text(json.dumps(bspec, ensure_ascii=False),
+                                    encoding="utf-8")
+    bmd = tmp / "bare.md"
+    bmd.write_text("# 표지제목ABC\n## Ⅰ. 장제목DEF\n### 1 절제목GHI\n"
+                   "- 본문 항목\n| 가 | 나 |\n| --- | --- |\n| 1 | 2 |\n",
+                   encoding="utf-8")
+    outb2 = tmp / "bare.hwpx"
+    r = run(DS, "render", bare, bmd, "-o", outb2)
+    check(r.returncode == 0, "서식 없는 레퍼런스로도 조판됨")
+    sb = section_of(outb2)
+    for word in ("표지제목ABC", "장제목DEF", "절제목GHI"):
+        check(word in sb, f"'{word}' 가 유실되지 않음")
+    check("대체함" in r.stderr, "대체 사실을 경고로 알림")
+    check(run(FILL, "check", outb2, "--strict").returncode == 0,
+          "대체 조판 결과도 strict 통과")
+
+    # ── 템플릿에 페이지 설정이 딸려오지 않는가 ──
+    # 한컴은 제목 배너를 secPr 이 든 첫 문단에 넣기도 한다. 그 블록을 배너
+    # 템플릿으로 그대로 뽑으면 조판 결과에 secPr 이 두 번 들어가 제목이
+    # 안 보이거나 앞에 빈 쪽이 생긴다.
+    for tf in (spec_dir / "templates").glob("*.xml"):
+        if tf.name == "first_para.xml":
+            continue
+        body = tf.read_text(encoding="utf-8")
+        check("<hp:secPr" not in body, f"{tf.name} 에 페이지 설정이 없음")
+    sec_all = section_of(out)
+    check(sec_all.count("<hp:secPr") == 1,
+          f"조판 결과의 페이지 설정은 1개 (실제 {sec_all.count('<hp:secPr')})")
+
+    print(f"\n{PASS} passed, {FAIL} failed")
+    return 1 if FAIL else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

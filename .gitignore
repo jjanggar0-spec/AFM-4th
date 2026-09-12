@@ -33,3 +33,15 @@ build/
 .env.local
 *.env
 !.env.example
+
+# 미디어 원본 (yt-dlp 다운로드본 - 최대 1.2GB, 재다운로드로 복구 가능)
+*.mp4
+*.mp3
+*.webm
+*.m4a
+
+# Vercel CLI 로컬 링크 정보
+.vercel/
+
+# Playwright MCP 세션 스냅샷
+.playwright-mcp/

@@ -1,0 +1,1049 @@
+- generic [ref=f59e3]:
+  - generic:
+    - link "메인 메뉴로 바로가기" [ref=f59e4] [cursor=pointer]:
+      - /url: "#gnbMenu"
+    - link "본문 바로가기" [ref=f59e5] [cursor=pointer]:
+      - /url: "#mainContainer"
+    - link "웹 접근성이 좋은 모바일 웹에서 사용하겠습니까?" [ref=f59e6] [cursor=pointer]:
+      - /url: https://m.cafe.naver.com/
+  - banner [ref=f59e7]:
+    - generic [ref=f59e8]:
+      - heading [level=1] [ref=f59e9]:
+        - link "NAVER" [ref=f59e10] [cursor=pointer]:
+          - /url: https://www.naver.com
+        - link "카페" [ref=f59e12] [cursor=pointer]:
+          - /url: https://section.cafe.naver.com
+        - link "플리마켓" [ref=f59e15] [cursor=pointer]:
+          - /url: https://fleamarket.naver.com
+      - search [ref=f59e17]:
+        - textbox "원하는 카페, 글을 찾아보세요" [ref=f59e18]
+        - button "카페 검색 TIP" [ref=f59e19] [cursor=pointer]:
+          - img "Tip"
+        - button "자동완성 펼침" [ref=f59e20] [cursor=pointer]
+        - button "검색" [ref=f59e21] [cursor=pointer]
+      - generic [ref=f59e23]:
+        - strong [ref=f59e24]: 사용자 링크
+        - list [ref=f59e25]:
+          - listitem [ref=f59e26]:
+            - link "내 프로필 이미지 맛집투어 내정보 보기" [active] [ref=f59e28] [cursor=pointer]:
+              - /url: javascript:;
+              - img "내 프로필 이미지" [ref=f59e29]
+              - generic [ref=f59e31]: 맛집투어
+              - emphasis [ref=f59e32]: 내정보 보기
+            - generic [ref=f59e34]:
+              - generic [ref=f59e35]:
+                - generic [ref=f59e36]:
+                  - img "프로필 이미지" [ref=f59e38]
+                  - link "프로필 사진 변경" [ref=f59e39] [cursor=pointer]:
+                    - /url: https://nid.naver.com/user2/api/naverProfile?m=checkIdType
+                - generic [ref=f59e41]:
+                  - paragraph [ref=f59e42]:
+                    - generic [ref=f59e43]:
+                      - link "맛집투어" [ref=f59e44] [cursor=pointer]:
+                        - /url: https://nid.naver.com/user2/api/naverProfile?m=checkIdType
+                      - text: 님
+                    - link "로그아웃" [ref=f59e45] [cursor=pointer]:
+                      - /url: https://nid.naver.com/nidlogin.logout?returl=https://cafe.naver.com/Logout.nhn?alreadyNaverLogout=true
+                  - link "thwant@naver.com" [ref=f59e49] [cursor=pointer]:
+                    - /url: https://mail.naver.com
+                  - list [ref=f59e50]:
+                    - listitem [ref=f59e51]:
+                      - link "네이버ID" [ref=f59e52] [cursor=pointer]:
+                        - /url: https://nid.naver.com/user2/help/myInfo?menu=home
+                    - listitem [ref=f59e53]:
+                      - link "보안설정" [ref=f59e54] [cursor=pointer]:
+                        - /url: https://nid.naver.com/user2/help/myInfo?m=viewSecurity&menu=security
+                    - listitem [ref=f59e55]:
+                      - link "내인증서" [ref=f59e56] [cursor=pointer]:
+                        - /url: https://nid.naver.com/user2/eSign/v1/home/land
+                  - generic [ref=f59e57]:
+                    - emphasis [ref=f59e58]: N Pay
+                    - link [ref=f59e59] [cursor=pointer]:
+                      - /url: https://point.pay.naver.com
+                      - strong [ref=f59e60]: 1,408원
+              - generic [ref=f59e61]:
+                - link "내 블로그" [ref=f59e62] [cursor=pointer]:
+                  - /url: https://blog.naver.com/MyBlog.naver
+                - link "가입한 카페" [ref=f59e63] [cursor=pointer]:
+                  - /url: https://section.cafe.naver.com
+                - link "네이버 멤버십 최대 5% 적립" [ref=f59e64] [cursor=pointer]:
+                  - /url: https://nid.naver.com/membership/join
+            - iframe [ref=f59e66]
+          - listitem [ref=f59e67]:
+            - link "네이버톡 새 창 알림" [ref=f59e68] [cursor=pointer]:
+              - /url: https://talks.naver.com/?frm=pcgnb&anchor=&category=
+          - listitem [ref=f59e71]:
+            - link "알림 새 창 알림 99 +" [ref=f59e72] [cursor=pointer]:
+              - /url: https://m.notify.naver.com/?from=pcmain
+              - generic [ref=f59e73]: 알림 새 창 알림
+              - emphasis [ref=f59e75]:
+                - generic [ref=f59e77]:
+                  - text: "99"
+                  - generic [ref=f59e78]: +
+          - listitem [ref=f59e79]:
+            - link "메일 11" [ref=f59e80] [cursor=pointer]:
+              - /url: https://mail.naver.com
+              - generic [ref=f59e81]: 메일
+              - emphasis [ref=f59e83]:
+                - generic [ref=f59e84]: "11"
+          - listitem [ref=f59e86]:
+            - link "서비스 더보기" [ref=f59e87] [cursor=pointer]:
+              - /url: javascript:;
+    - generic [ref=f59e90]:
+      - generic [ref=f59e91]: 믿고 쓰는 중고거래, 지금 시작하세요
+      - link "플리마켓" [ref=f59e92] [cursor=pointer]:
+        - /url: https://fleamarket.naver.com
+  - main [ref=f59e94]:
+    - menu [ref=f59e95]:
+      - generic [ref=f59e96]:
+        - generic [ref=f59e97]:
+          - link "카페홈" [ref=f59e98] [cursor=pointer]:
+            - /url: /ca-fe/home
+          - link "이웃 Beta (새 창에서 열림)" [ref=f59e100] [cursor=pointer]:
+            - /url: /ca-fe/home/town
+            - generic [ref=f59e101]: 이웃
+            - img "Beta"
+            - generic [ref=f59e102]: (새 창에서 열림)
+          - link "구독" [ref=f59e103] [cursor=pointer]:
+            - /url: /ca-fe/home/feed
+          - link "인기글 New" [ref=f59e105] [cursor=pointer]:
+            - /url: /ca-fe/home/cafe-hots
+            - generic [ref=f59e106]: 인기글
+            - img "New"
+          - link "내소식" [ref=f59e107] [cursor=pointer]:
+            - /url: /ca-fe/home/my-news
+          - link "채팅 (새 창에서 열림)" [ref=f59e110] [cursor=pointer]:
+            - /url: ""
+            - generic [ref=f59e111]: 채팅
+            - generic [ref=f59e112]: (새 창에서 열림)
+        - generic [ref=f59e113]:
+          - link "주제별 카페" [ref=f59e114] [cursor=pointer]:
+            - /url: /ca-fe/home/themes
+          - link "지역별 카페" [ref=f59e115] [cursor=pointer]:
+            - /url: /ca-fe/home/areas
+          - link "인기 팬카페" [ref=f59e116] [cursor=pointer]:
+            - /url: /ca-fe/home/fans
+          - link "대표 카페" [ref=f59e117] [cursor=pointer]:
+            - /url: /ca-fe/home/powers/popular
+          - link "카페 랭킹" [ref=f59e118] [cursor=pointer]:
+            - /url: /ca-fe/home/rankings
+      - generic [ref=f59e120]:
+        - button [ref=f59e121] [cursor=pointer]:
+          - img "950원으로 한 아이의 첫 등굣길을 열어주세요" [ref=f59e122]
+        - button "배너 닫기" [ref=f59e123] [cursor=pointer]
+    - generic [ref=f59e124]:
+      - heading "카페홈" [level=3] [ref=f59e125]
+      - link [ref=f59e127] [cursor=pointer]:
+        - /url: https://naver.me/5QsJFnNo
+        - img "AI탭 홍보 (3)" [ref=f59e129]
+      - generic [ref=f59e130]:
+        - generic [ref=f59e131]:
+          - tablist [ref=f59e132]:
+            - tab "내 카페" [selected] [ref=f59e133] [cursor=pointer]
+            - tab "즐겨찾는 게시판" [ref=f59e135] [cursor=pointer]
+          - link "내 카페 관리" [ref=f59e137] [cursor=pointer]:
+            - /url: /ca-fe/home/manage-my-cafe/join
+        - tabpanel [ref=f59e138]:
+          - generic [ref=f59e139]:
+            - generic [ref=f59e140]:
+              - link "□ 건축 설비 Shop-DWG □ (새 창에서 열림)" [ref=f59e142] [cursor=pointer]:
+                - /url: https://cafe.naver.com/shop07
+                - img "□ 건축 설비 Shop-DWG □" [ref=f59e143]
+                - generic [ref=f59e144]: (새 창에서 열림)
+              - generic [ref=f59e145]:
+                - link "□ 건축 설비 Shop-DWG □ (새 창에서 열림)" [ref=f59e147] [cursor=pointer]:
+                  - /url: https://cafe.naver.com/shop07
+                  - strong [ref=f59e148]: □ 건축 설비 Shop-DWG □
+                  - generic [ref=f59e149]: (새 창에서 열림)
+                - link "새 글 8 (새 창에서 열림)" [ref=f59e150] [cursor=pointer]:
+                  - /url: https://cafe.naver.com/ArticleList.nhn?search.clubid=10393532&search.boardtype=L
+                  - text: 새 글 8
+                  - generic [ref=f59e151]: (새 창에서 열림)
+              - button "즐겨찾기" [pressed] [ref=f59e153] [cursor=pointer]:
+                - img "선택"
+            - list [ref=f59e155]:
+              - listitem [ref=f59e156]:
+                - link "글제목 일산 동구 장항동 소방 기술자 (현장대리인) 특급 구인합니다. 1 장항동 22시간 전 (새 창에서 열림)" [ref=f59e157] [cursor=pointer]:
+                  - /url: https://cafe.naver.com/shop07/72740
+                  - generic [ref=f59e158]:
+                    - generic [ref=f59e160]:
+                      - emphasis [ref=f59e161]: 글제목
+                      - text: 일산 동구 장항동 소방 기술자 (현장대리인) 특급 구인합니다.
+                    - generic [ref=f59e162]: "1"
+                  - generic [ref=f59e163]: 장항동
+                  - generic [ref=f59e164]: 22시간 전
+                  - generic [ref=f59e165]: (새 창에서 열림)
+              - listitem [ref=f59e166]:
+                - link "글제목 남양주 오남 공무구인(재업) 불조심 22시간 전 (새 창에서 열림)" [ref=f59e167] [cursor=pointer]:
+                  - /url: https://cafe.naver.com/shop07/72739
+                  - generic [ref=f59e170]:
+                    - emphasis [ref=f59e171]: 글제목
+                    - text: 남양주 오남 공무구인(재업)
+                  - generic [ref=f59e172]: 불조심
+                  - generic [ref=f59e173]: 22시간 전
+                  - generic [ref=f59e174]: (새 창에서 열림)
+              - listitem [ref=f59e175]:
+                - link "글제목 목포 자동화 공장 설비(소방/기계) 구인 합니다. 2 y58421 23시간 전 (새 창에서 열림)" [ref=f59e176] [cursor=pointer]:
+                  - /url: https://cafe.naver.com/shop07/72737
+                  - generic [ref=f59e177]:
+                    - generic [ref=f59e179]:
+                      - emphasis [ref=f59e180]: 글제목
+                      - text: 목포 자동화 공장 설비(소방/기계) 구인 합니다.
+                    - generic [ref=f59e181]: "2"
+                  - generic [ref=f59e182]: y58421
+                  - generic [ref=f59e183]: 23시간 전
+                  - generic [ref=f59e184]: (새 창에서 열림)
+          - generic [ref=f59e185]:
+            - generic [ref=f59e186]:
+              - link "자동차도장( Painter ) (새 창에서 열림)" [ref=f59e188] [cursor=pointer]:
+                - /url: https://cafe.naver.com/licenceautopaint
+                - img "자동차도장( Painter )" [ref=f59e189]
+                - generic [ref=f59e190]: (새 창에서 열림)
+              - generic [ref=f59e191]:
+                - link "자동차도장( Painter ) (새 창에서 열림)" [ref=f59e193] [cursor=pointer]:
+                  - /url: https://cafe.naver.com/licenceautopaint
+                  - strong [ref=f59e194]: 자동차도장( Painter )
+                  - generic [ref=f59e195]: (새 창에서 열림)
+                - link "새 글 11 (새 창에서 열림)" [ref=f59e196] [cursor=pointer]:
+                  - /url: https://cafe.naver.com/ArticleList.nhn?search.clubid=12095271&search.boardtype=L
+                  - text: 새 글 11
+                  - generic [ref=f59e197]: (새 창에서 열림)
+              - button "즐겨찾기" [pressed] [ref=f59e199] [cursor=pointer]:
+                - img "선택"
+            - list [ref=f59e201]:
+              - listitem [ref=f59e202]:
+                - link "글제목 3m더스트트랩 사용 1 비안코 17분 전 (새 창에서 열림)" [ref=f59e203] [cursor=pointer]:
+                  - /url: https://cafe.naver.com/licenceautopaint/122214
+                  - generic [ref=f59e204]:
+                    - generic [ref=f59e206]:
+                      - emphasis [ref=f59e207]: 글제목
+                      - text: 3m더스트트랩 사용
+                    - generic [ref=f59e208]: "1"
+                  - generic [ref=f59e209]: 비안코
+                  - generic [ref=f59e210]: 17분 전
+                  - generic [ref=f59e211]: (새 창에서 열림)
+              - listitem [ref=f59e212]:
+                - link "글제목 스파크 온전히 끝냈습니다. 7 후끼잡이 1시간 전 (새 창에서 열림)" [ref=f59e213] [cursor=pointer]:
+                  - /url: https://cafe.naver.com/licenceautopaint/122213
+                  - generic [ref=f59e214]:
+                    - generic [ref=f59e216]:
+                      - emphasis [ref=f59e217]: 글제목
+                      - text: 스파크 온전히 끝냈습니다.
+                    - generic [ref=f59e218]: "7"
+                  - generic [ref=f59e219]: 후끼잡이
+                  - generic [ref=f59e220]: 1시간 전
+                  - generic [ref=f59e221]: (새 창에서 열림)
+              - listitem [ref=f59e222]:
+                - link "글제목 초보 질문입니다. 26 마스터kim 2시간 전 (새 창에서 열림)" [ref=f59e223] [cursor=pointer]:
+                  - /url: https://cafe.naver.com/licenceautopaint/122212
+                  - generic [ref=f59e224]:
+                    - generic [ref=f59e226]:
+                      - emphasis [ref=f59e227]: 글제목
+                      - text: 초보 질문입니다.
+                    - generic [ref=f59e228]: "26"
+                  - generic [ref=f59e229]: 마스터kim
+                  - generic [ref=f59e230]: 2시간 전
+                  - generic [ref=f59e231]: (새 창에서 열림)
+          - generic [ref=f59e232]:
+            - generic [ref=f59e233]:
+              - link "수원 챌린저 야구팀 (새 창에서 열림)" [ref=f59e235] [cursor=pointer]:
+                - /url: https://cafe.naver.com/suwonchallenger
+                - img "수원 챌린저 야구팀" [ref=f59e236]
+                - generic [ref=f59e237]: (새 창에서 열림)
+              - generic [ref=f59e238]:
+                - link "수원 챌린저 야구팀 (새 창에서 열림)" [ref=f59e240] [cursor=pointer]:
+                  - /url: https://cafe.naver.com/suwonchallenger
+                  - strong [ref=f59e241]: 수원 챌린저 야구팀
+                  - generic [ref=f59e242]: (새 창에서 열림)
+                - link "새 글 0 (새 창에서 열림)" [ref=f59e243] [cursor=pointer]:
+                  - /url: https://cafe.naver.com/ArticleList.nhn?search.clubid=23927327&search.boardtype=L
+                  - text: 새 글 0
+                  - generic [ref=f59e244]: (새 창에서 열림)
+              - button "즐겨찾기" [pressed] [ref=f59e246] [cursor=pointer]:
+                - img "선택"
+            - list [ref=f59e248]:
+              - listitem [ref=f59e249]:
+                - link "글제목 * 마지막 공지 * 1 NO 41 최인찬 2014.06.24. (새 창에서 열림)" [ref=f59e250] [cursor=pointer]:
+                  - /url: https://cafe.naver.com/suwonchallenger/346
+                  - generic [ref=f59e251]:
+                    - generic [ref=f59e253]:
+                      - emphasis [ref=f59e254]: 글제목
+                      - text: "* 마지막 공지 *"
+                    - generic [ref=f59e255]: "1"
+                  - generic [ref=f59e256]: NO 41 최인찬
+                  - generic [ref=f59e257]: 2014.06.24.
+                  - generic [ref=f59e258]: (새 창에서 열림)
+              - listitem [ref=f59e259]:
+                - link "글제목 팀원 여러분들께... 4 NO 41 최인찬 2014.06.14. (새 창에서 열림)" [ref=f59e260] [cursor=pointer]:
+                  - /url: https://cafe.naver.com/suwonchallenger/345
+                  - generic [ref=f59e261]:
+                    - generic [ref=f59e263]:
+                      - emphasis [ref=f59e264]: 글제목
+                      - text: 팀원 여러분들께...
+                    - generic [ref=f59e265]: "4"
+                  - generic [ref=f59e266]: NO 41 최인찬
+                  - generic [ref=f59e267]: 2014.06.14.
+                  - generic [ref=f59e268]: (새 창에서 열림)
+              - listitem [ref=f59e269]:
+                - link "글제목 팀 원 모 두 에 게 전 하 는 말. 10 NO 41 최인찬 2014.02.19. (새 창에서 열림)" [ref=f59e270] [cursor=pointer]:
+                  - /url: https://cafe.naver.com/suwonchallenger/344
+                  - generic [ref=f59e271]:
+                    - generic [ref=f59e273]:
+                      - emphasis [ref=f59e274]: 글제목
+                      - text: 팀 원 모 두 에 게 전 하 는 말.
+                    - generic [ref=f59e275]: "10"
+                  - generic [ref=f59e276]: NO 41 최인찬
+                  - generic [ref=f59e277]: 2014.02.19.
+                  - generic [ref=f59e278]: (새 창에서 열림)
+          - generic [ref=f59e279]:
+            - generic [ref=f59e280]:
+              - link "스키를 사랑하는 사람들의 모임. Ski114 (새 창에서 열림)" [ref=f59e282] [cursor=pointer]:
+                - /url: https://cafe.naver.com/ski114kr
+                - img "스키를 사랑하는 사람들의 모임. Ski114" [ref=f59e283]
+                - generic [ref=f59e284]: (새 창에서 열림)
+              - generic [ref=f59e285]:
+                - link "스키를 사랑하는 사람들의 모임. Ski114 (새 창에서 열림)" [ref=f59e287] [cursor=pointer]:
+                  - /url: https://cafe.naver.com/ski114kr
+                  - strong [ref=f59e288]: 스키를 사랑하는 사람들의 모임. Ski114
+                  - generic [ref=f59e289]: (새 창에서 열림)
+                - link "새 글 1 (새 창에서 열림)" [ref=f59e290] [cursor=pointer]:
+                  - /url: https://cafe.naver.com/ArticleList.nhn?search.clubid=23769914&search.boardtype=L
+                  - text: 새 글 1
+                  - generic [ref=f59e291]: (새 창에서 열림)
+              - button "즐겨찾기" [pressed] [ref=f59e293] [cursor=pointer]:
+                - img "선택"
+            - list [ref=f59e295]:
+              - listitem [ref=f59e296]:
+                - link "글제목 시즌권 구입 벌써 시작이네요~~ 무주 최선민 15시간 전 (새 창에서 열림)" [ref=f59e297] [cursor=pointer]:
+                  - /url: https://cafe.naver.com/ski114kr/45672
+                  - generic [ref=f59e300]:
+                    - emphasis [ref=f59e301]: 글제목
+                    - text: 시즌권 구입 벌써 시작이네요~~
+                  - generic [ref=f59e302]: 무주 최선민
+                  - generic [ref=f59e303]: 15시간 전
+                  - generic [ref=f59e304]: (새 창에서 열림)
+              - listitem [ref=f59e305]:
+                - link "글제목 가입인사 드립니다 Kriss 2026.09.03. (새 창에서 열림)" [ref=f59e306] [cursor=pointer]:
+                  - /url: https://cafe.naver.com/ski114kr/45671
+                  - generic [ref=f59e309]:
+                    - emphasis [ref=f59e310]: 글제목
+                    - text: 가입인사 드립니다
+                  - generic [ref=f59e311]: Kriss
+                  - generic [ref=f59e312]: 2026.09.03.
+                  - generic [ref=f59e313]: (새 창에서 열림)
+              - listitem [ref=f59e314]:
+                - link "글제목 [새로운 제도 안내] 스키정보 홍보 상생협력게시판 2 휘닉스 이강은 2026.09.02. (새 창에서 열림)" [ref=f59e315] [cursor=pointer]:
+                  - /url: https://cafe.naver.com/ski114kr/45670
+                  - generic [ref=f59e316]:
+                    - generic [ref=f59e318]:
+                      - emphasis [ref=f59e319]: 글제목
+                      - text: "[새로운 제도 안내] 스키정보 홍보 상생협력게시판"
+                    - generic [ref=f59e320]: "2"
+                  - generic [ref=f59e321]: 휘닉스 이강은
+                  - generic [ref=f59e322]: 2026.09.02.
+                  - generic [ref=f59e323]: (새 창에서 열림)
+          - generic [ref=f59e324]:
+            - generic [ref=f59e325]:
+              - link "수원 칸 야구단 (새 창에서 열림)" [ref=f59e327] [cursor=pointer]:
+                - /url: https://cafe.naver.com/ghost9
+                - img "수원 칸 야구단" [ref=f59e328]
+                - generic [ref=f59e329]: (새 창에서 열림)
+              - generic [ref=f59e330]:
+                - link "수원 칸 야구단 (새 창에서 열림)" [ref=f59e332] [cursor=pointer]:
+                  - /url: https://cafe.naver.com/ghost9
+                  - strong [ref=f59e333]: 수원 칸 야구단
+                  - generic [ref=f59e334]: (새 창에서 열림)
+                - link "새 글 0 (새 창에서 열림)" [ref=f59e335] [cursor=pointer]:
+                  - /url: https://cafe.naver.com/ArticleList.nhn?search.clubid=14040907&search.boardtype=L
+                  - text: 새 글 0
+                  - generic [ref=f59e336]: (새 창에서 열림)
+              - button "즐겨찾기" [pressed] [ref=f59e338] [cursor=pointer]:
+                - img "선택"
+            - list [ref=f59e340]:
+              - listitem [ref=f59e341]:
+                - link "글제목 가입인사 드립니다 10 반상호83 2017.02.14. (새 창에서 열림)" [ref=f59e342] [cursor=pointer]:
+                  - /url: https://cafe.naver.com/ghost9/2982
+                  - generic [ref=f59e343]:
+                    - generic [ref=f59e345]:
+                      - emphasis [ref=f59e346]: 글제목
+                      - text: 가입인사 드립니다
+                    - generic [ref=f59e347]: "10"
+                  - generic [ref=f59e348]: 반상호83
+                  - generic [ref=f59e349]: 2017.02.14.
+                  - generic [ref=f59e350]: (새 창에서 열림)
+              - listitem [ref=f59e351]:
+                - link "글제목 칸야구단 회원현황 및 회비납부현황 3 영웅인석 2017.01.06. (새 창에서 열림)" [ref=f59e352] [cursor=pointer]:
+                  - /url: https://cafe.naver.com/ghost9/2980
+                  - generic [ref=f59e353]:
+                    - generic [ref=f59e355]:
+                      - emphasis [ref=f59e356]: 글제목
+                      - text: 칸야구단 회원현황 및 회비납부현황
+                    - generic [ref=f59e357]: "3"
+                  - generic [ref=f59e358]: 영웅인석
+                  - generic [ref=f59e359]: 2017.01.06.
+                  - generic [ref=f59e360]: (새 창에서 열림)
+              - listitem [ref=f59e361]:
+                - link "글제목 ■ 11월 27일 연합회장기 준결승,결승 참석여부 22 해피경석 2016.11.20. (새 창에서 열림)" [ref=f59e362] [cursor=pointer]:
+                  - /url: https://cafe.naver.com/ghost9/2974
+                  - generic [ref=f59e363]:
+                    - generic [ref=f59e365]:
+                      - emphasis [ref=f59e366]: 글제목
+                      - text: ■ 11월 27일 연합회장기 준결승,결승 참석여부
+                    - generic [ref=f59e367]: "22"
+                  - generic [ref=f59e368]: 해피경석
+                  - generic [ref=f59e369]: 2016.11.20.
+                  - generic [ref=f59e370]: (새 창에서 열림)
+          - button "더보기" [ref=f59e371] [cursor=pointer]
+      - generic [ref=f59e372]:
+        - generic [ref=f59e373]:
+          - heading "🔥 인기글" [level=3] [ref=f59e374]
+          - generic [ref=f59e375]: 오전 7시 기준
+          - link "더보기" [ref=f59e376] [cursor=pointer]:
+            - /url: /ca-fe/home/cafe-hots
+        - generic [ref=f59e377]:
+          - link "송혜교 중국화보 찍은 몸매 최근 근황.jpg PC초보 컴퓨터 문제해결 카페-이젠 부르지말고 직접고치자! (새 창에서 열림)" [ref=f59e378] [cursor=pointer]:
+            - /url: https://cafe.naver.com/ArticleRead.nhn?fromPopular=true&clubid=10004880&articleid=1601180&art=aW50ZXJuYWwtY2FmZS1hcnRpY2xlLXJlYWQtcG9wdWxhcg.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjYWZlVHlwZSI6IkNBRkVfSUQiLCJhcnRpY2xlSWQiOjE2MDExODAsImlzc3VlZEF0IjoxNzg4NTg4NDYxMDIxLCJjYWZlSWQiOjEwMDA0ODgwfQ.gJ_Iqi9xyubrYfHrYfhJ33X5snW4s-C-Iuyv_exfEYc
+            - generic [ref=f59e379]:
+              - strong [ref=f59e382]: 송혜교 중국화보 찍은 몸매 최근 근황.jpg
+              - strong [ref=f59e383]: PC초보 컴퓨터 문제해결 카페-이젠 부르지말고 직접고치자!
+            - generic [ref=f59e384]: (새 창에서 열림)
+          - link "향수 자랑할께요 (니샤네) 향수사랑 (새 창에서 열림)" [ref=f59e385] [cursor=pointer]:
+            - /url: https://cafe.naver.com/ArticleRead.nhn?fromPopular=true&clubid=10001688&articleid=1703486&art=aW50ZXJuYWwtY2FmZS1hcnRpY2xlLXJlYWQtcG9wdWxhcg.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjYWZlVHlwZSI6IkNBRkVfSUQiLCJhcnRpY2xlSWQiOjE3MDM0ODYsImlzc3VlZEF0IjoxNzg4NTg4NDYxMDIxLCJjYWZlSWQiOjEwMDAxNjg4fQ.kvDoMtKqVFCom9AUsBwTCGsqTM2TgCUrIIgTsgcxAQY
+            - generic [ref=f59e386]:
+              - strong [ref=f59e389]: 향수 자랑할께요 (니샤네)
+              - strong [ref=f59e390]: 향수사랑
+            - generic [ref=f59e391]: (새 창에서 열림)
+          - link "RG 후쿠오카 뉴건담 도색작 완성입니다 모두의 건프라! (Gunpla For Everyone) (새 창에서 열림)" [ref=f59e392] [cursor=pointer]:
+            - /url: https://cafe.naver.com/ArticleRead.nhn?fromPopular=true&clubid=11569626&articleid=1876652&art=aW50ZXJuYWwtY2FmZS1hcnRpY2xlLXJlYWQtcG9wdWxhcg.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjYWZlVHlwZSI6IkNBRkVfSUQiLCJhcnRpY2xlSWQiOjE4NzY2NTIsImlzc3VlZEF0IjoxNzg4NTg4NDYxMDIxLCJjYWZlSWQiOjExNTY5NjI2fQ.K2AxhRziuteC-YDQdczniJBcQRCGIjwvjkMtB2NHHlM
+            - generic [ref=f59e393]:
+              - strong [ref=f59e396]: RG 후쿠오카 뉴건담 도색작 완성입니다
+              - strong [ref=f59e397]: 모두의 건프라! (Gunpla For Everyone)
+            - generic [ref=f59e398]: (새 창에서 열림)
+        - generic [ref=f59e399]:
+          - link "📘🎒📘다낭•호이안 여행 엑기스정보 👉🏿 여행일정표 / 맛집 Best60 / 쇼핑리스트 / 체크리스트 좋아요 41 댓글 21 다낭 도깨비 - 베트남 다낭자유여행 ,다낭여행,맛집,호텔리조트 (새 창에서 열림)" [ref=f59e402] [cursor=pointer]:
+            - /url: https://cafe.naver.com/ArticleRead.nhn?fromPopular=true&clubid=11547302&articleid=6272402&art=aW50ZXJuYWwtY2FmZS1hcnRpY2xlLXJlYWQtcG9wdWxhcg.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjYWZlVHlwZSI6IkNBRkVfSUQiLCJhcnRpY2xlSWQiOjYyNzI0MDIsImlzc3VlZEF0IjoxNzg4NTg4NDYxMDIxLCJjYWZlSWQiOjExNTQ3MzAyfQ.F59NJk_APOmn4i9GGZ2ZwsrCvINBZg4QU_YyC8-skfQ
+            - generic [ref=f59e403]:
+              - strong [ref=f59e404]: 📘🎒📘다낭•호이안 여행 엑기스정보 👉🏿 여행일정표 / 맛집 Best60 / 쇼핑리스트 / 체크리스트
+              - generic [ref=f59e405]:
+                - generic [ref=f59e406]:
+                  - generic [ref=f59e407]:
+                    - generic [ref=f59e408]: 좋아요
+                    - text: "41"
+                  - generic [ref=f59e409]:
+                    - generic [ref=f59e410]: 댓글
+                    - text: "21"
+                - generic [ref=f59e411]: 다낭 도깨비 - 베트남 다낭자유여행 ,다낭여행,맛집,호텔리조트
+            - generic [ref=f59e415]: (새 창에서 열림)
+          - link "9조원을 포기한 과학자 ㄷㄷㄷㄷㄷㄷ 좋아요 60 댓글 16 ●디젤매니아● 대한민국 일등 패션 커뮤니티 디매인 DMAIN (새 창에서 열림)" [ref=f59e418] [cursor=pointer]:
+            - /url: https://cafe.naver.com/ArticleRead.nhn?fromPopular=true&clubid=11262350&articleid=47424197&art=aW50ZXJuYWwtY2FmZS1hcnRpY2xlLXJlYWQtcG9wdWxhcg.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjYWZlVHlwZSI6IkNBRkVfSUQiLCJhcnRpY2xlSWQiOjQ3NDI0MTk3LCJpc3N1ZWRBdCI6MTc4ODU4ODQ2MTAyMSwiY2FmZUlkIjoxMTI2MjM1MH0.9zwTBsv557tkkyY959PS33DL4I57regXWT-yQ2OU-M8
+            - generic [ref=f59e419]:
+              - strong [ref=f59e420]: 9조원을 포기한 과학자 ㄷㄷㄷㄷㄷㄷ
+              - generic [ref=f59e421]:
+                - generic [ref=f59e422]:
+                  - generic [ref=f59e423]:
+                    - generic [ref=f59e424]: 좋아요
+                    - text: "60"
+                  - generic [ref=f59e425]:
+                    - generic [ref=f59e426]: 댓글
+                    - text: "16"
+                - generic [ref=f59e427]: ●디젤매니아● 대한민국 일등 패션 커뮤니티 디매인 DMAIN
+            - generic [ref=f59e431]: (새 창에서 열림)
+          - link "블랙야크 - 스톤마스터 라이트 다운자켓_클라우드 댄서 후기 좋아요 10 댓글 17 ●디젤매니아● 대한민국 일등 패션 커뮤니티 디매인 DMAIN 9+ 개의 이미지 더보기 (새 창에서 열림)" [ref=f59e434] [cursor=pointer]:
+            - /url: https://cafe.naver.com/ArticleRead.nhn?fromPopular=true&clubid=11262350&articleid=47427625&art=aW50ZXJuYWwtY2FmZS1hcnRpY2xlLXJlYWQtcG9wdWxhcg.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjYWZlVHlwZSI6IkNBRkVfSUQiLCJhcnRpY2xlSWQiOjQ3NDI3NjI1LCJpc3N1ZWRBdCI6MTc4ODU4ODQ2MTAyMSwiY2FmZUlkIjoxMTI2MjM1MH0.gWeicwkGk8AVIUeY73vXvLm-orlt6Yd5z_OhkLj-Y0I
+            - generic [ref=f59e435]:
+              - strong [ref=f59e436]: 블랙야크 - 스톤마스터 라이트 다운자켓_클라우드 댄서 후기
+              - generic [ref=f59e437]:
+                - generic [ref=f59e438]:
+                  - generic [ref=f59e439]:
+                    - generic [ref=f59e440]: 좋아요
+                    - text: "10"
+                  - generic [ref=f59e441]:
+                    - generic [ref=f59e442]: 댓글
+                    - text: "17"
+                - generic [ref=f59e443]: ●디젤매니아● 대한민국 일등 패션 커뮤니티 디매인 DMAIN
+            - generic [ref=f59e447]:
+              - text: 9+
+              - generic [ref=f59e448]: 개의 이미지 더보기
+            - generic [ref=f59e449]: (새 창에서 열림)
+          - link "청송 주왕산 폭포 2개 찍고 영덕 대게까지 클리어~~ 좋아요 22 댓글 29 대전 노은맘들의 수다방 34+ 개의 이미지 더보기 (새 창에서 열림)" [ref=f59e452] [cursor=pointer]:
+            - /url: https://cafe.naver.com/ArticleRead.nhn?fromPopular=true&clubid=13331623&articleid=1345020&art=aW50ZXJuYWwtY2FmZS1hcnRpY2xlLXJlYWQtcG9wdWxhcg.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjYWZlVHlwZSI6IkNBRkVfSUQiLCJhcnRpY2xlSWQiOjEzNDUwMjAsImlzc3VlZEF0IjoxNzg4NTg4NDYxMDIxLCJjYWZlSWQiOjEzMzMxNjIzfQ.D-1SUjn6UlvCKbb5BHjgI-yLRCbBj6gB_xujVJuAxKU
+            - generic [ref=f59e453]:
+              - strong [ref=f59e454]: 청송 주왕산 폭포 2개 찍고 영덕 대게까지 클리어~~
+              - generic [ref=f59e455]:
+                - generic [ref=f59e456]:
+                  - generic [ref=f59e457]:
+                    - generic [ref=f59e458]: 좋아요
+                    - text: "22"
+                  - generic [ref=f59e459]:
+                    - generic [ref=f59e460]: 댓글
+                    - text: "29"
+                - generic [ref=f59e461]: 대전 노은맘들의 수다방
+            - generic [ref=f59e465]:
+              - text: 34+
+              - generic [ref=f59e466]: 개의 이미지 더보기
+            - generic [ref=f59e467]: (새 창에서 열림)
+          - link "대천 하이피싱호 실시간 좋아요 12 댓글 21 바다좌대 바다낚시 [BDJ Fishing Club] 5+ 개의 이미지 더보기 (새 창에서 열림)" [ref=f59e470] [cursor=pointer]:
+            - /url: https://cafe.naver.com/ArticleRead.nhn?fromPopular=true&clubid=13328836&articleid=866975&art=aW50ZXJuYWwtY2FmZS1hcnRpY2xlLXJlYWQtcG9wdWxhcg.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjYWZlVHlwZSI6IkNBRkVfSUQiLCJhcnRpY2xlSWQiOjg2Njk3NSwiaXNzdWVkQXQiOjE3ODg1ODg0NjEwMjEsImNhZmVJZCI6MTMzMjg4MzZ9.vowKE9FKdIny30kCbLfXE_brbAocMt_nXZkghHreScE
+            - generic [ref=f59e471]:
+              - strong [ref=f59e472]: 대천 하이피싱호 실시간
+              - generic [ref=f59e473]:
+                - generic [ref=f59e474]:
+                  - generic [ref=f59e475]:
+                    - generic [ref=f59e476]: 좋아요
+                    - text: "12"
+                  - generic [ref=f59e477]:
+                    - generic [ref=f59e478]: 댓글
+                    - text: "21"
+                - generic [ref=f59e479]: 바다좌대 바다낚시 [BDJ Fishing Club]
+            - generic [ref=f59e483]:
+              - text: 5+
+              - generic [ref=f59e484]: 개의 이미지 더보기
+            - generic [ref=f59e485]: (새 창에서 열림)
+      - generic [ref=f59e486]:
+        - generic [ref=f59e487]:
+          - heading [level=3] [ref=f59e488]:
+            - button "서초구 이웃 소식" [ref=f59e489] [cursor=pointer]
+          - link "더보기" [ref=f59e490] [cursor=pointer]:
+            - /url: https://cafe.naver.com/ca-fe/home/town?rcode=09650
+        - generic [ref=f59e491]:
+          - link "이웃 🌟 청소년 지능검사 연구 🌟 안녕하세요, 서울여자대학교 송현주 교수님 연구팀입니다. 저희는 청소년 대상 연구를 진행 중입니다. 검사는 2026년 1월부터 진행되고 있으며, 아래 링크 통해서 신청해주시면 작성해주신 연락처를 통해 순차적으로 연락드릴 예정입니다. 검사 일정은 주말, 공휴일 포함 조율 가능합니다. 필요시 주차권 제공해드립니다. 상세 내용은 아래 이미지 파일과 참여 신청 링크 확인해주세요. 감사합니다. ※ 현재 만 12세, 14세 청소년의 경우 모집이 종료되었습니다. 연구에 보내주신 관심에 감사드립니... 잠원동 (새 창에서 열림)" [ref=f59e494] [cursor=pointer]:
+            - /url: https://cafe.naver.com/ca-fe/town-talks/q3MIb2DVTUao1m_QVByx5A?rcode=09650106
+            - generic [ref=f59e495]:
+              - strong [ref=f59e496]: 이웃 🌟 청소년 지능검사 연구 🌟 안녕하세요, 서울여자대학교 송현주 교수님 연구팀입니다. 저희는 청소년 대상 연구를 진행 중입니다. 검사는 2026년 1월부터 진행되고 있으며, 아래 링크 통해서 신청해주시면 작성해주신 연락처를 통해 순차적으로 연락드릴 예정입니다. 검사 일정은 주말, 공휴일 포함 조율 가능합니다. 필요시 주차권 제공해드립니다. 상세 내용은 아래 이미지 파일과 참여 신청 링크 확인해주세요. 감사합니다. ※ 현재 만 12세, 14세 청소년의 경우 모집이 종료되었습니다. 연구에 보내주신 관심에 감사드립니...
+              - generic [ref=f59e497]: 잠원동
+            - generic [ref=f59e499]: (새 창에서 열림)
+          - link "이웃 '얘들아' 네이버를 해킹? 털어? ㅇㅁㅇ당 사조직 운영하는가? 정부 부처장 하면 무슨 짓을 할까? 좋아요 1 서초동 (새 창에서 열림)" [ref=f59e502] [cursor=pointer]:
+            - /url: https://cafe.naver.com/ca-fe/town-talks/zfpDh1XXQT2EdcSNfbsPEg?rcode=09650108
+            - generic [ref=f59e503]:
+              - strong [ref=f59e504]: 이웃 '얘들아' 네이버를 해킹? 털어? ㅇㅁㅇ당 사조직 운영하는가? 정부 부처장 하면 무슨 짓을 할까?
+              - generic [ref=f59e505]:
+                - generic [ref=f59e507]:
+                  - generic [ref=f59e508]: 좋아요
+                  - text: "1"
+                - generic [ref=f59e509]: 서초동
+            - generic [ref=f59e510]: (새 창에서 열림)
+          - link "카페 스타필드 ~ 펫블리타운 행사 공유드려요 :) 댓글 16 송강모 (새 창에서 열림)" [ref=f59e513] [cursor=pointer]:
+            - /url: https://cafe.naver.com/zzandol?iframe_url=%2FArticleRead.nhn%3Fclubid%3D10769579%26articleid%3D842088%26tc%3Dsection_home_town_articles%26art%3DaW50ZXJuYWwtY2FmZS13ZWItc2VjdGlvbi1zZWFyY2gtbGlzdA.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjYWZlVHlwZSI6IkNBRkVfSUQiLCJhcnRpY2xlSWQiOjg0MjA4OCwiaXNzdWVkQXQiOjE3ODg1ODg0NjEyMTYsImNhZmVJZCI6MTA3Njk1Nzl9.rju8syf8bqRtB9t_r2EWSXtK4SeYpNX7MK-yzNw4Mjc
+            - generic [ref=f59e514]:
+              - strong [ref=f59e515]: 카페 스타필드 ~ 펫블리타운 행사 공유드려요 :)
+              - generic [ref=f59e516]:
+                - generic [ref=f59e518]:
+                  - generic [ref=f59e519]: 댓글
+                  - text: "16"
+                - generic [ref=f59e520]: 송강모
+            - generic [ref=f59e521]: (새 창에서 열림)
+      - generic [ref=f59e522]:
+        - heading "최근 방문한 카페" [level=3] [ref=f59e523]
+        - list [ref=f59e524]:
+          - listitem [ref=f59e525]:
+            - link "정아힘 정아힘,근로장려금,정부지원금,기초생활수급자,한부모가족,차상위계층,임대주택,노인복지,정부대출 멤버수 1,954 (새 창에서 열림)" [ref=f59e526] [cursor=pointer]:
+              - /url: https://cafe.naver.com/financialtechnology0
+              - generic [ref=f59e530]:
+                - strong [ref=f59e531]: 정아힘
+                - paragraph [ref=f59e532]: 정아힘,근로장려금,정부지원금,기초생활수급자,한부모가족,차상위계층,임대주택,노인복지,정부대출
+                - generic [ref=f59e533]:
+                  - generic [ref=f59e534]: 멤버수
+                  - text: 1,954
+              - generic [ref=f59e536]: (새 창에서 열림)
+            - link "가입하기 (새 창에서 열림)" [ref=f59e538] [cursor=pointer]:
+              - /url: https://cafe.naver.com/financialtechnology0/joinform?clubid=31608454
+              - text: 가입하기
+              - generic [ref=f59e539]: (새 창에서 열림)
+            - button "최근 방문한 카페에서 삭제하기" [ref=f59e540] [cursor=pointer]
+          - listitem [ref=f59e542]:
+            - link "경리쉼터 세무회계, 경리, 인사총무 실무, 네이버 업무 카페 랭킹 1위, 회원 수보다 콘덴츠에 대한 자부심 경리쉼터 멤버수 186,743 (새 창에서 열림)" [ref=f59e543] [cursor=pointer]:
+              - /url: https://cafe.naver.com/aclove
+              - generic [ref=f59e547]:
+                - strong [ref=f59e548]: 경리쉼터
+                - paragraph [ref=f59e549]: 세무회계, 경리, 인사총무 실무, 네이버 업무 카페 랭킹 1위, 회원 수보다 콘덴츠에 대한 자부심 경리쉼터
+                - generic [ref=f59e550]:
+                  - generic [ref=f59e551]: 멤버수
+                  - text: 186,743
+              - generic [ref=f59e553]: (새 창에서 열림)
+            - link "가입하기 (새 창에서 열림)" [ref=f59e555] [cursor=pointer]:
+              - /url: https://cafe.naver.com/aclove/joinform?clubid=10107412
+              - text: 가입하기
+              - generic [ref=f59e556]: (새 창에서 열림)
+            - button "최근 방문한 카페에서 삭제하기" [ref=f59e557] [cursor=pointer]
+      - generic [ref=f59e559]:
+        - heading "주제별 인기 카페" [level=3] [ref=f59e560]
+        - generic [ref=f59e561]:
+          - generic [ref=f59e562]:
+            - strong [ref=f59e563]: 카페 카테고리
+            - list [ref=f59e564]:
+              - listitem [ref=f59e565]:
+                - button "종교/봉사 선택됨" [ref=f59e566] [cursor=pointer]:
+                  - text: 종교/봉사
+                  - generic [ref=f59e567]: 선택됨
+              - listitem [ref=f59e568]:
+                - button "패션/미용" [ref=f59e569] [cursor=pointer]
+              - listitem [ref=f59e570]:
+                - button "친목/모임" [ref=f59e571] [cursor=pointer]
+              - listitem [ref=f59e572]:
+                - button "문화/예술" [ref=f59e573] [cursor=pointer]
+              - listitem [ref=f59e574]:
+                - button "건강/다이어트" [ref=f59e575] [cursor=pointer]
+              - listitem [ref=f59e576]:
+                - button "팬카페" [ref=f59e577] [cursor=pointer]
+              - listitem [ref=f59e578]:
+                - button "방송/연예" [ref=f59e579] [cursor=pointer]
+              - listitem [ref=f59e580]:
+                - button "여행" [ref=f59e581] [cursor=pointer]
+              - listitem [ref=f59e582]:
+                - button "문학/창작" [ref=f59e583] [cursor=pointer]
+              - listitem [ref=f59e584]:
+                - button "음악" [ref=f59e585] [cursor=pointer]
+              - listitem [ref=f59e586]:
+                - button "경제/금융" [ref=f59e587] [cursor=pointer]
+              - listitem [ref=f59e588]:
+                - button "동창/동문" [ref=f59e589] [cursor=pointer]
+              - listitem [ref=f59e590]:
+                - button "컴퓨터/통신" [ref=f59e591] [cursor=pointer]
+              - listitem [ref=f59e592]:
+                - button "취미" [ref=f59e593] [cursor=pointer]
+              - listitem [ref=f59e594]:
+                - button "게임" [ref=f59e595] [cursor=pointer]
+              - listitem [ref=f59e596]:
+                - button "교육" [ref=f59e597] [cursor=pointer]
+              - listitem [ref=f59e598]:
+                - button "가족/육아" [ref=f59e599] [cursor=pointer]
+              - listitem [ref=f59e600]:
+                - button "스포츠/레저" [ref=f59e601] [cursor=pointer]
+              - listitem [ref=f59e602]:
+                - button "영화" [ref=f59e603] [cursor=pointer]
+              - listitem [ref=f59e604]:
+                - button "생활" [ref=f59e605] [cursor=pointer]
+              - listitem [ref=f59e606]:
+                - button "외국어" [ref=f59e607] [cursor=pointer]
+              - listitem [ref=f59e608]:
+                - button "만화/애니" [ref=f59e609] [cursor=pointer]
+              - listitem [ref=f59e610]:
+                - button "인문/과학" [ref=f59e611] [cursor=pointer]
+              - listitem [ref=f59e612]:
+                - button "반려동물/동물" [ref=f59e613] [cursor=pointer]
+          - button "이전" [disabled] [ref=f59e614] [cursor=pointer]
+          - button "다음" [ref=f59e616] [cursor=pointer]
+        - generic [ref=f59e618]:
+          - link "발룬타스 대학생 연합 봉사동아리 발룬타스입니다. 다양한 장르의 봉사활동 및 다양한 활동들을 하고 있습니다. 멤버수 498 랭킹 잎새2단계 점수 상승 4,034 (새 창에서 열림)" [ref=f59e620] [cursor=pointer]:
+            - /url: https://cafe.naver.com/volun16
+            - generic [ref=f59e623]:
+              - strong [ref=f59e624]: 발룬타스
+              - paragraph [ref=f59e625]: 대학생 연합 봉사동아리 발룬타스입니다. 다양한 장르의 봉사활동 및 다양한 활동들을 하고 있습니다.
+              - generic [ref=f59e626]:
+                - generic [ref=f59e627]:
+                  - generic [ref=f59e628]: 멤버수
+                  - generic [ref=f59e629]: "498"
+                - generic [ref=f59e630]:
+                  - generic [ref=f59e631]: 랭킹
+                  - text: 잎새2단계
+                - generic [ref=f59e632]:
+                  - generic [ref=f59e633]: 점수 상승
+                  - generic [ref=f59e634]: 4,034
+            - generic [ref=f59e635]: (새 창에서 열림)
+          - link "나눔과 실천 나눔과 실천 since2004 함께 가는 사람은 아름답습니다. 멤버수 1,309 랭킹 새싹1단계 점수 상승 3,792 (새 창에서 열림)" [ref=f59e637] [cursor=pointer]:
+            - /url: https://cafe.naver.com/nasil2004
+            - generic [ref=f59e640]:
+              - strong [ref=f59e641]: 나눔과 실천
+              - paragraph [ref=f59e642]: 나눔과 실천 since2004 함께 가는 사람은 아름답습니다.
+              - generic [ref=f59e643]:
+                - generic [ref=f59e644]:
+                  - generic [ref=f59e645]: 멤버수
+                  - generic [ref=f59e646]: 1,309
+                - generic [ref=f59e647]:
+                  - generic [ref=f59e648]: 랭킹
+                  - text: 새싹1단계
+                - generic [ref=f59e649]:
+                  - generic [ref=f59e650]: 점수 상승
+                  - generic [ref=f59e651]: 3,792
+            - generic [ref=f59e652]: (새 창에서 열림)
+          - link "불교카페 혜안 불경해석전수도량 도각사에서 공부하는 모든 수행자를 위한 카페입니다. 멤버수 5,028 랭킹 가지4단계 점수 상승 2,728 (새 창에서 열림)" [ref=f59e654] [cursor=pointer]:
+            - /url: https://cafe.naver.com/rafulra
+            - generic [ref=f59e657]:
+              - strong [ref=f59e658]: 불교카페 혜안
+              - paragraph [ref=f59e659]: 불경해석전수도량 도각사에서 공부하는 모든 수행자를 위한 카페입니다.
+              - generic [ref=f59e660]:
+                - generic [ref=f59e661]:
+                  - generic [ref=f59e662]: 멤버수
+                  - generic [ref=f59e663]: 5,028
+                - generic [ref=f59e664]:
+                  - generic [ref=f59e665]: 랭킹
+                  - text: 가지4단계
+                - generic [ref=f59e666]:
+                  - generic [ref=f59e667]: 점수 상승
+                  - generic [ref=f59e668]: 2,728
+            - generic [ref=f59e669]: (새 창에서 열림)
+          - link "분당한마음개혁교회 분당한마음개혁교회는 역사적 개혁파 장로교회입니다 멤버수 3,597 랭킹 가지3단계 점수 상승 2,636 (새 창에서 열림)" [ref=f59e671] [cursor=pointer]:
+            - /url: https://cafe.naver.com/hmchurch
+            - generic [ref=f59e674]:
+              - strong [ref=f59e675]: 분당한마음개혁교회
+              - paragraph [ref=f59e676]: 분당한마음개혁교회는 역사적 개혁파 장로교회입니다
+              - generic [ref=f59e677]:
+                - generic [ref=f59e678]:
+                  - generic [ref=f59e679]: 멤버수
+                  - generic [ref=f59e680]: 3,597
+                - generic [ref=f59e681]:
+                  - generic [ref=f59e682]: 랭킹
+                  - text: 가지3단계
+                - generic [ref=f59e683]:
+                  - generic [ref=f59e684]: 점수 상승
+                  - generic [ref=f59e685]: 2,636
+            - generic [ref=f59e686]: (새 창에서 열림)
+          - link "백마산법화사 복된도량에 인연따라 발길따라~ 멤버수 648 랭킹 잎새4단계 점수 상승 2,565 (새 창에서 열림)" [ref=f59e688] [cursor=pointer]:
+            - /url: https://cafe.naver.com/qjqghkdnjs
+            - generic [ref=f59e691]:
+              - strong [ref=f59e692]: 백마산법화사
+              - paragraph [ref=f59e693]: 복된도량에 인연따라 발길따라~
+              - generic [ref=f59e694]:
+                - generic [ref=f59e695]:
+                  - generic [ref=f59e696]: 멤버수
+                  - generic [ref=f59e697]: "648"
+                - generic [ref=f59e698]:
+                  - generic [ref=f59e699]: 랭킹
+                  - text: 잎새4단계
+                - generic [ref=f59e700]:
+                  - generic [ref=f59e701]: 점수 상승
+                  - generic [ref=f59e702]: 2,565
+            - generic [ref=f59e703]: (새 창에서 열림)
+          - link "[ K.I.D.S. United ] 병원학교 봉사동아리 키즈유나이티드 대학생 연합 어린이병원학교 봉사 동아리 키즈유나이티드입니다 :) 멤버수 5,063 랭킹 잎새1단계 점수 상승 2,346 (새 창에서 열림)" [ref=f59e705] [cursor=pointer]:
+            - /url: https://cafe.naver.com/kidsunited
+            - generic [ref=f59e708]:
+              - strong [ref=f59e709]: "[ K.I.D.S. United ] 병원학교 봉사동아리 키즈유나이티드"
+              - paragraph [ref=f59e710]: 대학생 연합 어린이병원학교 봉사 동아리 키즈유나이티드입니다 :)
+              - generic [ref=f59e711]:
+                - generic [ref=f59e712]:
+                  - generic [ref=f59e713]: 멤버수
+                  - generic [ref=f59e714]: 5,063
+                - generic [ref=f59e715]:
+                  - generic [ref=f59e716]: 랭킹
+                  - text: 잎새1단계
+                - generic [ref=f59e717]:
+                  - generic [ref=f59e718]: 점수 상승
+                  - generic [ref=f59e719]: 2,346
+            - generic [ref=f59e720]: (새 창에서 열림)
+          - link "이룸파워 소년부 이룸교회 이룸파워 소년부 커뮤니티 공간입니다. 멤버수 486 랭킹 새싹4단계 점수 상승 2,297 (새 창에서 열림)" [ref=f59e722] [cursor=pointer]:
+            - /url: https://cafe.naver.com/erumppower
+            - generic [ref=f59e725]:
+              - strong [ref=f59e726]: 이룸파워 소년부
+              - paragraph [ref=f59e727]: 이룸교회 이룸파워 소년부 커뮤니티 공간입니다.
+              - generic [ref=f59e728]:
+                - generic [ref=f59e729]:
+                  - generic [ref=f59e730]: 멤버수
+                  - generic [ref=f59e731]: "486"
+                - generic [ref=f59e732]:
+                  - generic [ref=f59e733]: 랭킹
+                  - text: 새싹4단계
+                - generic [ref=f59e734]:
+                  - generic [ref=f59e735]: 점수 상승
+                  - generic [ref=f59e736]: 2,297
+            - generic [ref=f59e737]: (새 창에서 열림)
+          - link "부천 성만교회 부천 여월동 위치, 이찬용 목사, 주일설교, 우리들의 여름이야기, 교회학교 세미나, 꿈을먹고살지요 멤버수 1,822 랭킹 가지2단계 점수 상승 2,215 (새 창에서 열림)" [ref=f59e739] [cursor=pointer]:
+            - /url: https://cafe.naver.com/sungmanfam
+            - generic [ref=f59e742]:
+              - strong [ref=f59e743]: 부천 성만교회
+              - paragraph [ref=f59e744]: 부천 여월동 위치, 이찬용 목사, 주일설교, 우리들의 여름이야기, 교회학교 세미나, 꿈을먹고살지요
+              - generic [ref=f59e745]:
+                - generic [ref=f59e746]:
+                  - generic [ref=f59e747]: 멤버수
+                  - generic [ref=f59e748]: 1,822
+                - generic [ref=f59e749]:
+                  - generic [ref=f59e750]: 랭킹
+                  - text: 가지2단계
+                - generic [ref=f59e751]:
+                  - generic [ref=f59e752]: 점수 상승
+                  - generic [ref=f59e753]: 2,215
+            - generic [ref=f59e754]: (새 창에서 열림)
+          - link "부흥과 개혁 (기쁜소식선교회 사랑으로 바로 세우기 모임) 참된 부흥과 개혁을 추구합니다 멤버수 2,459 랭킹 가지4단계 점수 상승 2,209 (새 창에서 열림)" [ref=f59e756] [cursor=pointer]:
+            - /url: https://cafe.naver.com/orangkr
+            - generic [ref=f59e759]:
+              - strong [ref=f59e760]: 부흥과 개혁 (기쁜소식선교회 사랑으로 바로 세우기 모임)
+              - paragraph [ref=f59e761]: 참된 부흥과 개혁을 추구합니다
+              - generic [ref=f59e762]:
+                - generic [ref=f59e763]:
+                  - generic [ref=f59e764]: 멤버수
+                  - generic [ref=f59e765]: 2,459
+                - generic [ref=f59e766]:
+                  - generic [ref=f59e767]: 랭킹
+                  - text: 가지4단계
+                - generic [ref=f59e768]:
+                  - generic [ref=f59e769]: 점수 상승
+                  - generic [ref=f59e770]: 2,209
+            - generic [ref=f59e771]: (새 창에서 열림)
+          - link "인천교구 성 김대건 성당 천주교 인천교구 성김대건성당 카페입니다. 멤버수 853 랭킹 가지1단계 점수 상승 1,781 (새 창에서 열림)" [ref=f59e773] [cursor=pointer]:
+            - /url: https://cafe.naver.com/standrewkim
+            - generic [ref=f59e776]:
+              - strong [ref=f59e777]: 인천교구 성 김대건 성당
+              - paragraph [ref=f59e778]: 천주교 인천교구 성김대건성당 카페입니다.
+              - generic [ref=f59e779]:
+                - generic [ref=f59e780]:
+                  - generic [ref=f59e781]: 멤버수
+                  - generic [ref=f59e782]: "853"
+                - generic [ref=f59e783]:
+                  - generic [ref=f59e784]: 랭킹
+                  - text: 가지1단계
+                - generic [ref=f59e785]:
+                  - generic [ref=f59e786]: 점수 상승
+                  - generic [ref=f59e787]: 1,781
+            - generic [ref=f59e788]: (새 창에서 열림)
+          - link "그리스도 의식을 추구하며 상승 마스터들의 가르침을 공부하고 개인의 내면 치유와 세계 변화를 위한 기원문 낭송을 하는 카페입니다. 멤버수 2,735 랭킹 가지4단계 점수 상승 1,662 (새 창에서 열림)" [ref=f59e790] [cursor=pointer]:
+            - /url: https://cafe.naver.com/christhood
+            - generic [ref=f59e793]:
+              - strong [ref=f59e794]: 그리스도 의식을 추구하며
+              - paragraph [ref=f59e795]: 상승 마스터들의 가르침을 공부하고 개인의 내면 치유와 세계 변화를 위한 기원문 낭송을 하는 카페입니다.
+              - generic [ref=f59e796]:
+                - generic [ref=f59e797]:
+                  - generic [ref=f59e798]: 멤버수
+                  - generic [ref=f59e799]: 2,735
+                - generic [ref=f59e800]:
+                  - generic [ref=f59e801]: 랭킹
+                  - text: 가지4단계
+                - generic [ref=f59e802]:
+                  - generic [ref=f59e803]: 점수 상승
+                  - generic [ref=f59e804]: 1,662
+            - generic [ref=f59e805]: (새 창에서 열림)
+          - link "옥련동성당 중고등부 옥련동성당 중고등부 교사회 멤버수 250 랭킹 새싹2단계 점수 상승 1,646 (새 창에서 열림)" [ref=f59e807] [cursor=pointer]:
+            - /url: https://cafe.naver.com/orcatholic
+            - generic [ref=f59e810]:
+              - strong [ref=f59e811]: 옥련동성당 중고등부
+              - paragraph [ref=f59e812]: 옥련동성당 중고등부 교사회
+              - generic [ref=f59e813]:
+                - generic [ref=f59e814]:
+                  - generic [ref=f59e815]: 멤버수
+                  - generic [ref=f59e816]: "250"
+                - generic [ref=f59e817]:
+                  - generic [ref=f59e818]: 랭킹
+                  - text: 새싹2단계
+                - generic [ref=f59e819]:
+                  - generic [ref=f59e820]: 점수 상승
+                  - generic [ref=f59e821]: 1,646
+            - generic [ref=f59e822]: (새 창에서 열림)
+          - link "[무속사랑] 신점·사주·기도터 이야기 신점, 사주, 무속기도터 이야기 신명공부,무속정보(공부), 무당, 애동, 예비제자, 영월태백 기도도량, 명리 멤버수 101 랭킹 잎새1단계 점수 상승 1,544 (새 창에서 열림)" [ref=f59e824] [cursor=pointer]:
+            - /url: https://cafe.naver.com/brownrwppq
+            - generic [ref=f59e827]:
+              - strong [ref=f59e828]: "[무속사랑] 신점·사주·기도터 이야기"
+              - paragraph [ref=f59e829]: 신점, 사주, 무속기도터 이야기 신명공부,무속정보(공부), 무당, 애동, 예비제자, 영월태백 기도도량, 명리
+              - generic [ref=f59e830]:
+                - generic [ref=f59e831]:
+                  - generic [ref=f59e832]: 멤버수
+                  - generic [ref=f59e833]: "101"
+                - generic [ref=f59e834]:
+                  - generic [ref=f59e835]: 랭킹
+                  - text: 잎새1단계
+                - generic [ref=f59e836]:
+                  - generic [ref=f59e837]: 점수 상승
+                  - generic [ref=f59e838]: 1,544
+            - generic [ref=f59e839]: (새 창에서 열림)
+          - link "안티와 예수의 대화 안티기독교도들과 기독교의 대화를 도모함^^ 멤버수 8,049 랭킹 가지3단계 점수 상승 1,445 (새 창에서 열림)" [ref=f59e841] [cursor=pointer]:
+            - /url: https://cafe.naver.com/jncwk
+            - generic [ref=f59e844]:
+              - strong [ref=f59e845]: 안티와 예수의 대화
+              - paragraph [ref=f59e846]: 안티기독교도들과 기독교의 대화를 도모함^^
+              - generic [ref=f59e847]:
+                - generic [ref=f59e848]:
+                  - generic [ref=f59e849]: 멤버수
+                  - generic [ref=f59e850]: 8,049
+                - generic [ref=f59e851]:
+                  - generic [ref=f59e852]: 랭킹
+                  - text: 가지3단계
+                - generic [ref=f59e853]:
+                  - generic [ref=f59e854]: 점수 상승
+                  - generic [ref=f59e855]: 1,445
+            - generic [ref=f59e856]: (새 창에서 열림)
+          - link "백성욱박사 교육문화재단 백성욱 박사님의 뜻을 받들고 생활속에 금강경을 실천하는 모임 멤버수 8,320 랭킹 가지2단계 점수 상승 1,423 (새 창에서 열림)" [ref=f59e858] [cursor=pointer]:
+            - /url: https://cafe.naver.com/buddhaland
+            - generic [ref=f59e861]:
+              - strong [ref=f59e862]: 백성욱박사 교육문화재단
+              - paragraph [ref=f59e863]: 백성욱 박사님의 뜻을 받들고 생활속에 금강경을 실천하는 모임
+              - generic [ref=f59e864]:
+                - generic [ref=f59e865]:
+                  - generic [ref=f59e866]: 멤버수
+                  - generic [ref=f59e867]: 8,320
+                - generic [ref=f59e868]:
+                  - generic [ref=f59e869]: 랭킹
+                  - text: 가지2단계
+                - generic [ref=f59e870]:
+                  - generic [ref=f59e871]: 점수 상승
+                  - generic [ref=f59e872]: 1,423
+            - generic [ref=f59e873]: (새 창에서 열림)
+          - link "네비게이토를 사랑했던 사람들의 모임 (선교회개혁작은모임) 선교회를 통해 상처받은 사람들이 함께 이야기를 나누며, 더불어 선교회개혁을 원하는 작은 모임. 멤버수 5,132 랭킹 가지4단계 점수 상승 1,376 (새 창에서 열림)" [ref=f59e875] [cursor=pointer]:
+            - /url: https://cafe.naver.com/hurtnavigators
+            - generic [ref=f59e878]:
+              - strong [ref=f59e879]: 네비게이토를 사랑했던 사람들의 모임 (선교회개혁작은모임)
+              - paragraph [ref=f59e880]: 선교회를 통해 상처받은 사람들이 함께 이야기를 나누며, 더불어 선교회개혁을 원하는 작은 모임.
+              - generic [ref=f59e881]:
+                - generic [ref=f59e882]:
+                  - generic [ref=f59e883]: 멤버수
+                  - generic [ref=f59e884]: 5,132
+                - generic [ref=f59e885]:
+                  - generic [ref=f59e886]: 랭킹
+                  - text: 가지4단계
+                - generic [ref=f59e887]:
+                  - generic [ref=f59e888]: 점수 상승
+                  - generic [ref=f59e889]: 1,376
+            - generic [ref=f59e890]: (새 창에서 열림)
+          - link "가나안(정명석을 떠나 예수 품으로) 탈jms(정명석 피해자)들로 하여금 안식과 평강을 주고, 주 예수 품(가나안)에 연착륙하게 한다. 멤버수 7,722 랭킹 가지3단계 점수 상승 1,309 (새 창에서 열림)" [ref=f59e892] [cursor=pointer]:
+            - /url: https://cafe.naver.com/outofjms
+            - generic [ref=f59e895]:
+              - strong [ref=f59e896]: 가나안(정명석을 떠나 예수 품으로)
+              - paragraph [ref=f59e897]: 탈jms(정명석 피해자)들로 하여금 안식과 평강을 주고, 주 예수 품(가나안)에 연착륙하게 한다.
+              - generic [ref=f59e898]:
+                - generic [ref=f59e899]:
+                  - generic [ref=f59e900]: 멤버수
+                  - generic [ref=f59e901]: 7,722
+                - generic [ref=f59e902]:
+                  - generic [ref=f59e903]: 랭킹
+                  - text: 가지3단계
+                - generic [ref=f59e904]:
+                  - generic [ref=f59e905]: 점수 상승
+                  - generic [ref=f59e906]: 1,309
+            - generic [ref=f59e907]: (새 창에서 열림)
+          - link "천주교 인천교구 성소국 천주교인천교구성소국카페입니다 멤버수 1,105 랭킹 새싹3단계 점수 상승 1,274 (새 창에서 열림)" [ref=f59e909] [cursor=pointer]:
+            - /url: https://cafe.naver.com/icnsungso
+            - generic [ref=f59e912]:
+              - strong [ref=f59e913]: 천주교 인천교구 성소국
+              - paragraph [ref=f59e914]: 천주교인천교구성소국카페입니다
+              - generic [ref=f59e915]:
+                - generic [ref=f59e916]:
+                  - generic [ref=f59e917]: 멤버수
+                  - generic [ref=f59e918]: 1,105
+                - generic [ref=f59e919]:
+                  - generic [ref=f59e920]: 랭킹
+                  - text: 새싹3단계
+                - generic [ref=f59e921]:
+                  - generic [ref=f59e922]: 점수 상승
+                  - generic [ref=f59e923]: 1,274
+            - generic [ref=f59e924]: (새 창에서 열림)
+          - link "광명성당 천주교 수원교구 광명성당입니다. 멤버수 449 랭킹 새싹4단계 점수 상승 1,204 (새 창에서 열림)" [ref=f59e926] [cursor=pointer]:
+            - /url: https://cafe.naver.com/ccgmor
+            - generic [ref=f59e929]:
+              - strong [ref=f59e930]: 광명성당
+              - paragraph [ref=f59e931]: 천주교 수원교구 광명성당입니다.
+              - generic [ref=f59e932]:
+                - generic [ref=f59e933]:
+                  - generic [ref=f59e934]: 멤버수
+                  - generic [ref=f59e935]: "449"
+                - generic [ref=f59e936]:
+                  - generic [ref=f59e937]: 랭킹
+                  - text: 새싹4단계
+                - generic [ref=f59e938]:
+                  - generic [ref=f59e939]: 점수 상승
+                  - generic [ref=f59e940]: 1,204
+            - generic [ref=f59e941]: (새 창에서 열림)
+          - link "다락방 밖으로(다락방 탈퇴자의 모임) 세계복음화전도협회(다락방교회)에서 탈퇴한 사람들의 모임입니다. 멤버수 6,939 랭킹 가지4단계 점수 상승 1,133 (새 창에서 열림)" [ref=f59e943] [cursor=pointer]:
+            - /url: https://cafe.naver.com/outofdarak
+            - generic [ref=f59e946]:
+              - strong [ref=f59e947]: 다락방 밖으로(다락방 탈퇴자의 모임)
+              - paragraph [ref=f59e948]: 세계복음화전도협회(다락방교회)에서 탈퇴한 사람들의 모임입니다.
+              - generic [ref=f59e949]:
+                - generic [ref=f59e950]:
+                  - generic [ref=f59e951]: 멤버수
+                  - generic [ref=f59e952]: 6,939
+                - generic [ref=f59e953]:
+                  - generic [ref=f59e954]: 랭킹
+                  - text: 가지4단계
+                - generic [ref=f59e955]:
+                  - generic [ref=f59e956]: 점수 상승
+                  - generic [ref=f59e957]: 1,133
+            - generic [ref=f59e958]: (새 창에서 열림)
+          - button "더보기" [ref=f59e959] [cursor=pointer]
+    - banner [ref=f59e960]:
+      - generic [ref=f59e961]:
+        - generic [ref=f59e963]:
+          - generic [ref=f59e964]:
+            - generic [ref=f59e965]:
+              - img "프로필사진" [ref=f59e968]
+              - generic [ref=f59e969]:
+                - strong [ref=f59e971]:
+                  - generic [ref=f59e972]: 맛집투어
+                  - text: 님
+                - generic [ref=f59e973]:
+                  - link "보관함" [ref=f59e974] [cursor=pointer]:
+                    - /url: "#"
+                  - link "쪽지 0" [ref=f59e975] [cursor=pointer]:
+                    - /url: https://note.naver.com
+            - button "로그아웃" [ref=f59e976] [cursor=pointer]
+          - link "카페 만들기" [ref=f59e978] [cursor=pointer]:
+            - /url: "#"
+        - generic [ref=f59e979]:
+          - link "공지사항 (새 창에서 열림)" [ref=f59e980] [cursor=pointer]:
+            - /url: https://notice.naver.com/notices/cafe
+            - heading "공지사항" [level=3] [ref=f59e981]
+            - generic [ref=f59e982]: (새 창에서 열림)
+          - list [ref=f59e983]:
+            - listitem [ref=f59e984]:
+              - link "공정거래위원회 협조 요청에 따른 사업자정보 표시 안내 등 (2011.11.24) (새 창에서 열림)" [ref=f59e985] [cursor=pointer]:
+                - /url: https://notice.naver.com/notices/cafe/11558
+                - text: 공정거래위원회 협조 요청에 따른 사업자정보 표시 안내 등 (2011.11.24)
+                - generic [ref=f59e986]: (새 창에서 열림)
+            - listitem [ref=f59e987]:
+              - link "[안내] 상품등록 화면이 간편하게 개선되었습니다. (새 창에서 열림)" [ref=f59e988] [cursor=pointer]:
+                - /url: https://notice.naver.com/notices/cafe/33778
+                - text: "[안내] 상품등록 화면이 간편하게 개선되었습니다."
+                - generic [ref=f59e989]: (새 창에서 열림)
+            - listitem [ref=f59e990]:
+              - link "[안내] 개별카페 활동내역 > 조회멤버수가 0으로 보이는 현상 관련 (새 창에서 열림)" [ref=f59e991] [cursor=pointer]:
+                - /url: https://notice.naver.com/notices/cafe/33973
+                - text: "[안내] 개별카페 활동내역 > 조회멤버수가 0으로 보이는 현상 관련"
+                - generic [ref=f59e992]: (새 창에서 열림)
+            - listitem [ref=f59e993]:
+              - link "[사전안내] 카페 앱 검색 이용을 위한 업데이트 안내 (새 창에서 열림)" [ref=f59e994] [cursor=pointer]:
+                - /url: https://notice.naver.com/notices/cafe/33923
+                - text: "[사전안내] 카페 앱 검색 이용을 위한 업데이트 안내"
+                - generic [ref=f59e995]: (새 창에서 열림)
+        - link "카페팀 공식카페 바로가기 (새 창에서 열림)" [ref=f59e997] [cursor=pointer]:
+          - /url: https://cafe.naver.com/cafesupport
+          - generic [ref=f59e998]:
+            - strong [ref=f59e999]: 카페팀 공식카페 바로가기
+            - generic [ref=f59e1000]: (새 창에서 열림)
+        - iframe [ref=f59e1004]:
+          - heading [level=5] [ref=f64e2]:
+            - link "[광고]SNS 대란 쿠키 한라산도 & 말들렌 새 창" [ref=f64e3] [cursor=pointer]:
+              - /url: https://siape.veta.naver.com/fxclick?eu=EU10041115&calp=-&oj=xc0H4Zkpi60HK9Ev%2Fs3EMFHixUgI8NwJlsiKUgzqtpM5ae0mskCYByDKJ1jJdP5Zn9ApGWjIHkJqTxTVCrxJILyCojVLEomvAvGuAHh%2BaJdXDoprfqaSO0iVVhszzZgLLnd84QWhIljzvw7iHpBR5JiGWTUV%2Fe8L&ac=9317759&src=8225552&br=4981484&evtcd=P901&x_ti=1108&tb=&oid=&sid1=&sid2=&rk=9l7gFVZBNgAXFbqoxGCOug&eltts=sIj9SBR18jd%2BFRf2uH0UZQ%3D%3D&brs=Y&
+              - img "[광고]SNS 대란 쿠키 한라산도 & 말들렌" [ref=f64e4]
+              - generic [ref=f64e5]: 새 창
+        - link "카페 서비스에 궁금한 점이 있을 때 카페 스마트봇 (새 창에서 열림)" [ref=f59e1006] [cursor=pointer]:
+          - /url: https://talk.naver.com/ct/w4nd8o
+          - generic [ref=f59e1007]:
+            - paragraph [ref=f59e1008]: 카페 서비스에 궁금한 점이 있을 때
+            - strong [ref=f59e1009]: 카페 스마트봇
+            - generic [ref=f59e1010]: (새 창에서 열림)
+        - link "신고센터 (새 창에서 열림)" [ref=f59e1012] [cursor=pointer]:
+          - /url: https://help.naver.com/support/reportCenter/home.nhn
+          - strong [ref=f59e1013]: 신고센터
+          - generic [ref=f59e1014]: (새 창에서 열림)
+        - contentinfo [ref=f59e1015]:
+          - list [ref=f59e1016]:
+            - listitem [ref=f59e1017]:
+              - link "카페 이용약관 (새 창에서 열림)" [ref=f59e1018] [cursor=pointer]:
+                - /url: /ca-fe/home/terms/latest
+                - text: 카페 이용약관
+                - generic [ref=f59e1019]: (새 창에서 열림)
+            - listitem [ref=f59e1020]:
+              - link "카페 운영원칙 (새 창에서 열림)" [ref=f59e1021] [cursor=pointer]:
+                - /url: /ca-fe/home/operating-rules/1
+                - text: 카페 운영원칙
+                - generic [ref=f59e1022]: (새 창에서 열림)
+            - listitem [ref=f59e1023]:
+              - link "개인정보처리방침 (새 창에서 열림)" [ref=f59e1024] [cursor=pointer]:
+                - /url: https://policy.naver.com/rules/privacy.html
+                - strong [ref=f59e1025]: 개인정보처리방침
+                - generic [ref=f59e1026]: (새 창에서 열림)
+            - listitem [ref=f59e1027]:
+              - link "책임의 한계와 법적고지 (새 창에서 열림)" [ref=f59e1028] [cursor=pointer]:
+                - /url: https://policy.naver.com/rules/disclaimer.html
+                - text: 책임의 한계와 법적고지
+                - generic [ref=f59e1029]: (새 창에서 열림)
+            - listitem [ref=f59e1030]:
+              - link "권리보호센터 (새 창에서 열림)" [ref=f59e1031] [cursor=pointer]:
+                - /url: https://right.naver.com
+                - text: 권리보호센터
+                - generic [ref=f59e1032]: (새 창에서 열림)
+            - listitem [ref=f59e1033]:
+              - link "카페 고객센터 (새 창에서 열림)" [ref=f59e1034] [cursor=pointer]:
+                - /url: https://help.naver.com/alias/cafe/cafe_code_01.naver
+                - text: 카페 고객센터
+                - generic [ref=f59e1035]: (새 창에서 열림)
+            - listitem [ref=f59e1036]:
+              - link "ⓒ NAVER Corp. (새 창에서 열림)" [ref=f59e1037] [cursor=pointer]:
+                - /url: http://www.navercorp.com
+                - strong [ref=f59e1038]: ⓒ NAVER Corp.
+                - generic [ref=f59e1039]: (새 창에서 열림)

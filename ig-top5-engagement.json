@@ -1,0 +1,25 @@
+{
+  "collectedAt": "2026-09-08T06:37:37.866Z",
+  "accounts": [
+    {
+      "username": "bnviit",
+      "error": "HTTP 429"
+    },
+    {
+      "username": "iloveeye_",
+      "error": "HTTP 429"
+    },
+    {
+      "username": "bgn.eyeclinic.jamsil",
+      "error": "HTTP 429"
+    },
+    {
+      "username": "gs_eyecenter",
+      "error": "HTTP 429"
+    },
+    {
+      "username": "highmyopia",
+      "error": "HTTP 429"
+    }
+  ]
+}

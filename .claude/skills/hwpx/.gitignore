@@ -1,0 +1,13 @@
+
+# convert_hwp.py가 자동 클론하는 변환기 (런타임 생성물)
+scripts/.hwp2hwpx-repo/
+.hwp2hwpx-repo/
+__pycache__/
+*.pyc
+
+# OMC 오케스트레이션 런타임 상태 (커밋 금지)
+.omc/
+
+# 에이전트 런타임 상태 / 조판 산출물 (커밋 금지)
+.gjc/
+artifacts/
