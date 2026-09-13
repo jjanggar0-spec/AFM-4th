@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>할 일 관리</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>✅</text></svg>">
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <!-- ⚠️ 모든 CDN 버전 고정. Babel 은 반드시 7.x (8.x 는 인라인 text/babel 미지원) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.25.9/babel.min.js"></script>
+  <style>
+    @keyframes pop-in {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .anim-pop { animation: pop-in .2s ease-out both; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-900 antialiased">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useCallback, useRef } = React;
+
+    // ========================================
+    // 🔧 Config & API helper
+    // ========================================
+    const API_BASE_URL = '/api';
+
+    async function api(endpoint, options = {}) {
+      const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+        headers: options.body ? { 'Content-Type': 'application/json' } : undefined,
+        ...options,
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok || !body.success) {
+        throw new Error(body.message || `요청에 실패했습니다. (HTTP ${res.status})`);
+      }
+      return body.data;
+    }
+
+    // ========================================
+    // 🎨 Design System Components
+    // ========================================
+    function Button({ variant = 'primary', size = 'md', type = 'button', disabled = false, onClick, className = '', children, ...rest }) {
+      const base = 'inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed';
+      const variants = {
+        primary: 'bg-indigo-600 text-white shadow-sm hover:bg-indigo-500 active:bg-indigo-700',
+        secondary: 'bg-slate-900 text-white hover:bg-slate-700',
+        danger: 'bg-rose-50 text-rose-600 hover:bg-rose-100',
+        ghost: 'bg-transparent text-slate-600 hover:bg-slate-100',
+      };
+      const sizes = { sm: 'px-3 py-1.5 text-xs', md: 'px-5 py-2.5 text-sm', lg: 'px-6 py-3 text-base' };
+      return (
+        <button
+          type={type}
+          disabled={disabled}
+          onClick={onClick}
+          className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
+          {...rest}
+        >
+          {children}
+        </button>
+      );
+    }
+
+    function Input({ id, label, value, onChange, onKeyDown, placeholder, error, disabled = false, maxLength, autoFocus = false, className = '' }) {
+      return (
+        <div className={className}>
+          {label && <label htmlFor={id} className="block mb-1.5 text-sm font-semibold text-slate-700">{label}</label>}
+          <input
+            id={id}
+            type="text"
+            value={value}
+            onChange={onChange}
+            onKeyDown={onKeyDown}
+            placeholder={placeholder}
+            disabled={disabled}
+            maxLength={maxLength}
+            autoFocus={autoFocus}
+            aria-invalid={!!error}
+            className={`w-full rounded-xl border bg-white px-4 py-3 text-sm outline-none transition
+              ${error ? 'border-rose-400 focus:ring-4 focus:ring-rose-100' : 'border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100'}
+              disabled:bg-slate-100 disabled:text-slate-400`}
+          />
+          {error && <p className="mt-1.5 text-xs font-medium text-rose-500">{error}</p>}
+        </div>
+      );
+    }
+
+    function Card({ className = '', children }) {
+      return <div className={`rounded-2xl bg-white shadow-sm ring-1 ring-slate-900/5 ${className}`}>{children}</div>;
+    }
+
+    function Badge({ tone = 'slate', className = '', children }) {
+      const tones = {
+        slate: 'bg-slate-100 text-slate-700',
+        indigo: 'bg-indigo-100 text-indigo-700',
+        emerald: 'bg-emerald-100 text-emerald-700',
+      };
+      return <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold ${tones[tone]} ${className}`}>{children}</span>;
+    }
+
+    function Spinner({ className = 'h-5 w-5' }) {
+      return (
+        <svg className={`animate-spin ${className}`} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
+          <path d="M4 12a8 8 0 0 1 8-8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+        </svg>
+      );
+    }
+
+    function Checkbox({ checked, onChange, disabled = false, label }) {
+      return (
+        <button
+          type="button"
+          role="checkbox"
+          aria-checked={checked}
+          aria-label={label}
+          disabled={disabled}
+          onClick={onChange}
+          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition
+            ${checked ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 bg-white hover:border-indigo-400'}
+            disabled:opacity-40`}
+        >
+          {checked && (
+            <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="3">
+              <path d="M4 10.5l4 4 8-9" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+        </button>
+      );
+    }
+
+    function Modal({ isOpen, onClose, title, size = 'md', children }) {
+      useEffect(() => {
+        if (!isOpen) return;
+        const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+      }, [isOpen, onClose]);
+
+      if (!isOpen) return null;
+      const sizes = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg' };
+
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-5" role="dialog" aria-modal="true" aria-label={title}>
+          <div className="absolute inset-0 bg-slate-900/40" onClick={onClose} />
+          <Card className={`relative w-full ${sizes[size]} p-6 anim-pop`}>
+            <h2 className="text-lg font-bold text-slate-900">{title}</h2>
+            <div className="mt-4">{children}</div>
+          </Card>
+        </div>
+      );
+    }
+
+    // ========================================
+    // 🧩 Common Components
+    // ========================================
+    const FILTERS = [
+      { key: 'all', label: '전체' },
+      { key: 'active', label: '진행 중' },
+      { key: 'done', label: '완료' },
+    ];
+
+    function FilterTabs({ value, onChange, counts }) {
+      return (
+        <div className="flex gap-1 rounded-xl bg-slate-100 p-1" role="tablist" aria-label="할 일 필터">
+          {FILTERS.map((f) => (
+            <button
+              key={f.key}
+              role="tab"
+              aria-selected={value === f.key}
+              onClick={() => onChange(f.key)}
+              className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold transition
+                ${value === f.key ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              {f.label}
+              <span className="ml-1.5 text-xs font-bold opacity-60">{counts[f.key]}</span>
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    function TodoItem({ todo, onToggle, onRename, onDelete, busy }) {
+      const [editing, setEditing] = useState(false);
+      const [draft, setDraft] = useState(todo.title);
+      const inputRef = useRef(null);
+
+      useEffect(() => { setDraft(todo.title); }, [todo.title]);
+      useEffect(() => { if (editing && inputRef.current) inputRef.current.select(); }, [editing]);
+
+      const commit = () => {
+        const title = draft.trim();
+        setEditing(false);
+        if (!title || title === todo.title) { setDraft(todo.title); return; }
+        onRename(todo.id, title);
+      };
+
+      const cancel = () => { setDraft(todo.title); setEditing(false); };
+
+      return (
+        <li className="group flex items-center gap-3 px-5 py-4 anim-pop">
+          <Checkbox
+            checked={todo.done}
+            disabled={busy}
+            onChange={() => onToggle(todo)}
+            label={`${todo.title} ${todo.done ? '완료 취소' : '완료 처리'}`}
+          />
+
+          {editing ? (
+            <input
+              ref={inputRef}
+              value={draft}
+              maxLength={200}
+              onChange={(e) => setDraft(e.target.value)}
+              onBlur={commit}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') commit();
+                if (e.key === 'Escape') cancel();
+              }}
+              className="flex-1 rounded-lg border border-indigo-400 px-3 py-1.5 text-sm outline-none ring-4 ring-indigo-100"
+            />
+          ) : (
+            <button
+              type="button"
+              onDoubleClick={() => setEditing(true)}
+              title="더블클릭하면 수정할 수 있습니다"
+              className={`flex-1 text-left text-sm transition ${todo.done ? 'text-slate-400 line-through' : 'text-slate-800'}`}
+            >
+              {todo.title}
+            </button>
+          )}
+
+          <span className="hidden shrink-0 text-xs text-slate-400 sm:inline">{todo.createdAt}</span>
+
+          <div className="flex shrink-0 gap-1 opacity-0 transition group-hover:opacity-100 focus-within:opacity-100">
+            {!editing && (
+              <Button size="sm" variant="ghost" disabled={busy} onClick={() => setEditing(true)} aria-label={`${todo.title} 수정`}>
+                수정
+              </Button>
+            )}
+            <Button size="sm" variant="danger" disabled={busy} onClick={() => onDelete(todo)} aria-label={`${todo.title} 삭제`}>
+              삭제
+            </Button>
+          </div>
+        </li>
+      );
+    }
+
+    function EmptyState({ filter }) {
+      const messages = {
+        all: { emoji: '📝', title: '아직 할 일이 없습니다', desc: '위 입력창에 첫 번째 할 일을 적어 보세요.' },
+        active: { emoji: '🎉', title: '진행 중인 할 일이 없습니다', desc: '모두 끝냈습니다. 잠시 쉬어도 좋겠네요.' },
+        done: { emoji: '🫥', title: '완료한 할 일이 없습니다', desc: '체크 버튼을 눌러 완료 처리해 보세요.' },
+      };
+      const m = messages[filter];
+      return (
+        <div className="px-6 py-16 text-center">
+          <div className="text-4xl" aria-hidden="true">{m.emoji}</div>
+          <p className="mt-4 font-bold text-slate-700">{m.title}</p>
+          <p className="mt-1.5 text-sm text-slate-500">{m.desc}</p>
+        </div>
+      );
+    }
+
+    // ========================================
+    // 📄 TodoPage — 목록 상태와 비즈니스 로직
+    // ========================================
+    function TodoPage() {
+      const [todos, setTodos] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState(null);
+      const [filter, setFilter] = useState('all');
+      const [draft, setDraft] = useState('');
+      const [draftError, setDraftError] = useState('');
+      const [busyId, setBusyId] = useState(null);
+      const [adding, setAdding] = useState(false);
+      const [clearOpen, setClearOpen] = useState(false);
+      const [clearing, setClearing] = useState(false);
+      const mounted = useRef(true);
+
+      useEffect(() => () => { mounted.current = false; }, []);
+
+      const load = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+          const data = await api('/todos');
+          if (mounted.current) setTodos(data.todos);
+        } catch (err) {
+          if (mounted.current) setError(err.message);
+        } finally {
+          if (mounted.current) setLoading(false);
+        }
+      }, []);
+
+      useEffect(() => { load(); }, [load]);
+
+      const counts = useMemo(() => ({
+        all: todos.length,
+        active: todos.filter((t) => !t.done).length,
+        done: todos.filter((t) => t.done).length,
+      }), [todos]);
+
+      const visible = useMemo(() => {
+        if (filter === 'active') return todos.filter((t) => !t.done);
+        if (filter === 'done') return todos.filter((t) => t.done);
+        return todos;
+      }, [todos, filter]);
+
+      const handleAdd = async (e) => {
+        e.preventDefault();
+        const title = draft.trim();
+        if (!title) { setDraftError('할 일을 입력해 주세요.'); return; }
+
+        setDraftError('');
+        setAdding(true);
+        setError(null);
+        try {
+          const todo = await api('/todos', { method: 'POST', body: JSON.stringify({ title }) });
+          if (!mounted.current) return;
+          setTodos((prev) => [todo, ...prev]);
+          setDraft('');
+        } catch (err) {
+          if (mounted.current) setError(err.message);
+        } finally {
+          if (mounted.current) setAdding(false);
+        }
+      };
+
+      const patchTodo = async (id, patch) => {
+        setBusyId(id);
+        setError(null);
+        try {
+          const updated = await api(`/todos/${id}`, { method: 'PATCH', body: JSON.stringify(patch) });
+          if (mounted.current) setTodos((prev) => prev.map((t) => (t.id === id ? updated : t)));
+        } catch (err) {
+          if (mounted.current) setError(err.message);
+        } finally {
+          if (mounted.current) setBusyId(null);
+        }
+      };
+
+      const handleToggle = (todo) => patchTodo(todo.id, { done: !todo.done });
+      const handleRename = (id, title) => patchTodo(id, { title });
+
+      const handleDelete = async (todo) => {
+        setBusyId(todo.id);
+        setError(null);
+        try {
+          await api(`/todos/${todo.id}`, { method: 'DELETE' });
+          if (mounted.current) setTodos((prev) => prev.filter((t) => t.id !== todo.id));
+        } catch (err) {
+          if (mounted.current) setError(err.message);
+        } finally {
+          if (mounted.current) setBusyId(null);
+        }
+      };
+
+      const handleClearDone = async () => {
+        setClearing(true);
+        setError(null);
+        try {
+          await api('/todos/completed', { method: 'DELETE' });
+          if (mounted.current) setTodos((prev) => prev.filter((t) => !t.done));
+        } catch (err) {
+          if (mounted.current) setError(err.message);
+        } finally {
+          if (mounted.current) { setClearing(false); setClearOpen(false); }
+        }
+      };
+
+      return (
+        <div className="mx-auto w-full max-w-2xl px-5 py-12 sm:py-16">
+          <header className="mb-8">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <h1 className="text-3xl font-black tracking-tight text-slate-900">할 일 관리</h1>
+                <p className="mt-2 text-sm text-slate-500">입력한 할 일은 PostgreSQL에 저장됩니다.</p>
+              </div>
+              <Badge tone={counts.active > 0 ? 'indigo' : 'emerald'}>
+                {counts.active > 0 ? `진행 중 ${counts.active}` : '모두 완료'}
+              </Badge>
+            </div>
+          </header>
+
+          <Card className="p-5 sm:p-6">
+            <form onSubmit={handleAdd} className="flex flex-col gap-3 sm:flex-row">
+              <Input
+                id="new-todo"
+                className="flex-1"
+                value={draft}
+                maxLength={200}
+                disabled={adding}
+                error={draftError}
+                placeholder="무엇을 해야 하나요?"
+                onChange={(e) => { setDraft(e.target.value); if (draftError) setDraftError(''); }}
+              />
+              <Button type="submit" size="lg" disabled={adding} className="sm:w-28">
+                {adding ? <Spinner className="h-4 w-4" /> : '추가'}
+              </Button>
+            </form>
+          </Card>
+
+          <div className="mt-5">
+            <FilterTabs value={filter} onChange={setFilter} counts={counts} />
+          </div>
+
+          {error && (
+            <div role="alert" className="mt-5 flex items-center justify-between gap-4 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+              <span>{error}</span>
+              <Button size="sm" variant="ghost" onClick={load}>다시 시도</Button>
+            </div>
+          )}
+
+          <Card className="mt-5 overflow-hidden">
+            {loading ? (
+              <div className="flex items-center justify-center gap-3 px-6 py-16 text-slate-400">
+                <Spinner /> 불러오는 중...
+              </div>
+            ) : visible.length === 0 ? (
+              <EmptyState filter={filter} />
+            ) : (
+              <ul className="divide-y divide-slate-100">
+                {visible.map((todo) => (
+                  <TodoItem
+                    key={todo.id}
+                    todo={todo}
+                    busy={busyId === todo.id}
+                    onToggle={handleToggle}
+                    onRename={handleRename}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </ul>
+            )}
+          </Card>
+
+          <div className="mt-5 flex items-center justify-between text-xs text-slate-500">
+            <span>전체 {counts.all}건 · 완료 {counts.done}건</span>
+            {counts.done > 0 && (
+              <Button size="sm" variant="ghost" onClick={() => setClearOpen(true)}>
+                완료한 할 일 비우기
+              </Button>
+            )}
+          </div>
+
+          <Modal isOpen={clearOpen} onClose={() => setClearOpen(false)} title="완료한 할 일을 비울까요?" size="sm">
+            <p className="text-sm leading-relaxed text-slate-600">
+              완료 처리한 {counts.done}건이 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+            </p>
+            <div className="mt-6 flex justify-end gap-2">
+              <Button variant="ghost" disabled={clearing} onClick={() => setClearOpen(false)}>취소</Button>
+              <Button variant="secondary" disabled={clearing} onClick={handleClearDone}>
+                {clearing ? <Spinner className="h-4 w-4" /> : '비우기'}
+              </Button>
+            </div>
+          </Modal>
+        </div>
+      );
+    }
+
+    // ========================================
+    // 🚀 App
+    // ========================================
+    function App() {
+      return (
+        <div className="min-h-screen">
+          <TodoPage />
+        </div>
+      );
+    }
+
+    // ========================================
+    // Rendering
+    // ========================================
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
