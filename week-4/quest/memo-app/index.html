@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>메모장</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>📝</text></svg>">
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <!-- ⚠️ 모든 CDN 버전 고정. Babel 은 반드시 7.x (8.x 는 인라인 text/babel 미지원) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.25.9/babel.min.js"></script>
+  <style>
+    @keyframes pop-in {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .anim-pop { animation: pop-in .18s ease-out both; }
+  </style>
+</head>
+<body class="bg-stone-100 text-stone-900 antialiased">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useCallback, useRef } = React;
+
+    // ========================================
+    // 🔧 Config & helpers
+    // ========================================
+    const API_BASE_URL = '/api';
+    const TITLE_MAX_LENGTH = 100;
+    const CONTENT_MAX_LENGTH = 5000;
+    const SEARCH_DEBOUNCE_MS = 250;
+
+    async function api(endpoint, options = {}) {
+      const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+        headers: options.body ? { 'Content-Type': 'application/json' } : undefined,
+        ...options,
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok || !body.success) {
+        throw new Error(body.message || `요청에 실패했어요. (HTTP ${res.status})`);
+      }
+      return body.data;
+    }
+
+    // 'YYYY-MM-DD' 를 브라우저 시간대 기준 날짜로 다룬다 (UTC 로 해석하면 하루가 밀린다)
+    function todayString() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    const dayFormatter = new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+    const shortDayFormatter = new Intl.DateTimeFormat('ko-KR', { month: 'short', day: 'numeric', weekday: 'short' });
+    const timeFormatter = new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+    function parseDay(value) {
+      const [y, m, d] = value.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+    const formatDay = (value) => dayFormatter.format(parseDay(value));
+    const formatShortDay = (value) => shortDayFormatter.format(parseDay(value));
+    const formatTime = (iso) => timeFormatter.format(new Date(iso));
+
+    const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    // 검색어가 내용 중간에 있으면 그 주변을 잘라 미리보기로 보여준다
+    function makePreview(content, query) {
+      const text = content.replace(/\s+/g, ' ').trim();
+      if (!text) return '';
+      const q = query.trim().toLowerCase();
+      const idx = q ? text.toLowerCase().indexOf(q) : -1;
+      if (idx <= 30) return text.slice(0, 120);
+      return `…${text.slice(idx - 20, idx + 100)}`;
+    }
+
+    // ========================================
+    // 🎨 Design System Components
+    // ========================================
+    function Button({ variant = 'primary', size = 'md', type = 'button', disabled = false, onClick, className = '', children, ...rest }) {
+      const base = 'inline-flex items-center justify-center gap-1.5 whitespace-nowrap font-semibold rounded-lg transition-colors duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-200 disabled:opacity-50 disabled:cursor-not-allowed';
+      const variants = {
+        primary: 'bg-amber-500 text-stone-950 hover:bg-amber-400 active:bg-amber-600',
+        secondary: 'bg-stone-900 text-white hover:bg-stone-700',
+        outline: 'border border-stone-300 bg-white text-stone-700 hover:bg-stone-50',
+        danger: 'bg-rose-600 text-white hover:bg-rose-500',
+        ghost: 'bg-transparent text-stone-600 hover:bg-stone-200/70',
+      };
+      const sizes = { sm: 'px-2.5 py-1.5 text-xs', md: 'px-4 py-2 text-sm', lg: 'px-5 py-2.5 text-base' };
+      return (
+        <button type={type} disabled={disabled} onClick={onClick} className={`${base} ${variants[variant]} ${sizes[size]} ${className}`} {...rest}>
+          {children}
+        </button>
+      );
+    }
+
+    function Spinner({ className = '' }) {
+      return <span className={`inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent ${className}`} aria-hidden="true" />;
+    }
+
+    function Badge({ tone = 'stone', children }) {
+      const tones = {
+        stone: 'bg-stone-100 text-stone-600',
+        green: 'bg-emerald-100 text-emerald-700',
+        amber: 'bg-amber-100 text-amber-800',
+      };
+      return <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${tones[tone]}`}>{children}</span>;
+    }
+
+    function DoneCheckbox({ checked, onChange, disabled, label }) {
+      return (
+        <input
+          type="checkbox"
+          checked={checked}
+          disabled={disabled}
+          onChange={(e) => onChange(e.target.checked)}
+          onClick={(e) => e.stopPropagation()}
+          aria-label={label}
+          className="h-4 w-4 shrink-0 cursor-pointer rounded border-stone-300 accent-emerald-600 disabled:cursor-wait"
+        />
+      );
+    }
+
+    // 검색어와 일치하는 부분에 형광펜 표시
+    function Highlight({ text, query }) {
+      const q = query.trim();
+      if (!q) return text;
+      const parts = text.split(new RegExp(`(${escapeRegExp(q)})`, 'gi'));
+      return parts.map((part, i) =>
+        part.toLowerCase() === q.toLowerCase()
+          ? <mark key={i} className="rounded bg-amber-200 px-0.5 text-inherit">{part}</mark>
+          : <React.Fragment key={i}>{part}</React.Fragment>
+      );
+    }
+
+    function Modal({ isOpen, onClose, title, children, footer }) {
+      useEffect(() => {
+        if (!isOpen) return;
+        const onKey = (e) => e.key === 'Escape' && onClose();
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+      }, [isOpen, onClose]);
+
+      if (!isOpen) return null;
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/40 p-4" onClick={onClose}>
+          <div role="dialog" aria-modal="true" aria-labelledby="modal-title" className="anim-pop w-full max-w-sm rounded-xl bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h2 id="modal-title" className="text-base font-bold">{title}</h2>
+            <div className="mt-2 text-sm text-stone-600">{children}</div>
+            <div className="mt-5 flex justify-end gap-2">{footer}</div>
+          </div>
+        </div>
+      );
+    }
+
+    function Toast({ toast }) {
+      if (!toast) return null;
+      const tone = toast.type === 'error' ? 'bg-rose-600 text-white' : 'bg-stone-900 text-white';
+      return (
+        <div role="status" aria-live="polite" className={`anim-pop fixed bottom-5 left-1/2 z-50 -translate-x-1/2 rounded-lg px-4 py-2.5 text-sm font-medium shadow-lg ${tone}`}>
+          {toast.message}
+        </div>
+      );
+    }
+
+    // ========================================
+    // 🧩 Common/Layout Components
+    // ========================================
+    const STATUS_TABS = [
+      { value: 'all', label: '전체' },
+      { value: 'todo', label: '할 일' },
+      { value: 'done', label: '완료' },
+    ];
+
+    function SearchPanel({ filters, onChange, onReset }) {
+      const active = filters.q || filters.status !== 'all' || filters.from || filters.to;
+      const badRange = filters.from && filters.to && filters.from > filters.to;
+      const dateInput = 'min-w-0 flex-1 rounded-md border border-stone-200 bg-white px-2 py-1.5 text-xs text-stone-700 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-100';
+
+      return (
+        <div role="search" className="space-y-2.5 px-4 pb-3">
+          <div className="relative">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-stone-400" aria-hidden="true">🔍</span>
+            <input
+              type="text"
+              value={filters.q}
+              onChange={(e) => onChange({ q: e.target.value })}
+              onKeyDown={(e) => e.key === 'Escape' && onChange({ q: '' })}
+              placeholder="제목·내용으로 검색"
+              aria-label="검색어"
+              maxLength={100}
+              className="w-full rounded-lg border border-stone-200 bg-white py-2 pl-9 pr-8 text-sm placeholder:text-stone-400 focus:border-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-100"
+            />
+            {filters.q && (
+              <button type="button" onClick={() => onChange({ q: '' })} aria-label="검색어 지우기" className="absolute right-2 top-1/2 -translate-y-1/2 rounded px-1.5 text-stone-400 hover:text-stone-700">✕</button>
+            )}
+          </div>
+
+          <div className="flex rounded-lg bg-stone-200/70 p-0.5" role="tablist" aria-label="완료 여부">
+            {STATUS_TABS.map((tab) => (
+              <button
+                key={tab.value}
+                type="button"
+                role="tab"
+                aria-selected={filters.status === tab.value}
+                onClick={() => onChange({ status: tab.value })}
+                className={`flex-1 rounded-md py-1.5 text-xs font-semibold transition-colors ${filters.status === tab.value ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-800'}`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <input type="date" value={filters.from} max={filters.to || undefined} onChange={(e) => onChange({ from: e.target.value })} aria-label="시작 일자" className={dateInput} />
+            <span className="text-xs text-stone-400">~</span>
+            <input type="date" value={filters.to} min={filters.from || undefined} onChange={(e) => onChange({ to: e.target.value })} aria-label="끝 일자" className={dateInput} />
+          </div>
+
+          {(badRange || active) && (
+            <div className="flex items-center justify-between text-xs">
+              <span className={badRange ? 'text-rose-600' : 'text-stone-500'}>{badRange ? '시작 일자가 끝 일자보다 늦어요.' : '검색 조건 적용 중'}</span>
+              {active && <button type="button" onClick={onReset} className="font-semibold text-amber-700 hover:underline">조건 초기화</button>}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function MemoListItem({ memo, active, query, toggling, onSelect, onToggleDone }) {
+      const preview = makePreview(memo.content, query);
+      return (
+        <li>
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => onSelect(memo)}
+            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onSelect(memo))}
+            aria-current={active ? 'true' : undefined}
+            className={`flex cursor-pointer gap-3 rounded-lg px-3 py-2.5 transition-colors focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-200 ${active ? 'bg-amber-100' : 'hover:bg-stone-200/60'}`}
+          >
+            <div className="pt-0.5">
+              <DoneCheckbox checked={memo.done} disabled={toggling} onChange={(done) => onToggleDone(memo, done)} label={`${memo.title} 완료 표시`} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className={`truncate text-sm font-semibold ${memo.done ? 'text-stone-400 line-through' : ''}`}>
+                <Highlight text={memo.title} query={query} />
+              </p>
+              <p className="mt-0.5 truncate text-xs text-stone-500">
+                {preview ? <Highlight text={preview} query={query} /> : <span className="text-stone-400">내용 없음</span>}
+              </p>
+              <p className="mt-1 text-[11px] text-stone-400">{formatShortDay(memo.date)}</p>
+            </div>
+          </div>
+        </li>
+      );
+    }
+
+    function MemoList({ memos, loading, error, filters, filtering, selectedId, togglingId, onSelect, onNew, onRetry, onToggleDone, children }) {
+      return (
+        <aside className="flex h-full flex-col border-stone-200 bg-stone-50 md:border-r">
+          <div className="flex items-center justify-between gap-2 px-4 pb-3 pt-4">
+            <div>
+              <h1 className="text-lg font-bold tracking-tight">📝 메모장</h1>
+              <p className="text-xs text-stone-500" aria-live="polite">
+                {loading ? '불러오는 중…' : filtering ? `검색 결과 ${memos.length}개` : `메모 ${memos.length}개`}
+              </p>
+            </div>
+            <Button onClick={onNew}>＋ 새 메모</Button>
+          </div>
+
+          {children}
+
+          <div className="min-h-0 flex-1 overflow-y-auto border-t border-stone-200 px-2 py-2">
+            {loading && memos.length === 0 && (
+              <div className="flex items-center justify-center gap-2 py-12 text-sm text-stone-500"><Spinner /> 불러오는 중</div>
+            )}
+
+            {!loading && error && (
+              <div className="mx-2 rounded-lg bg-rose-50 p-4 text-sm text-rose-700">
+                <p>{error}</p>
+                <Button variant="ghost" size="sm" className="mt-2 !text-rose-700" onClick={onRetry}>다시 시도</Button>
+              </div>
+            )}
+
+            {!loading && !error && memos.length === 0 && (
+              filtering ? (
+                <div className="py-12 text-center text-sm text-stone-500">
+                  <p className="text-3xl">🔎</p>
+                  <p className="mt-2">조건에 맞는 메모가 없어요.</p>
+                </div>
+              ) : (
+                <div className="py-14 text-center text-sm text-stone-500">
+                  <p className="text-3xl">🗒️</p>
+                  <p className="mt-2">아직 메모가 없어요.</p>
+                  <p><b>새 메모</b>로 시작해 보세요.</p>
+                </div>
+              )
+            )}
+
+            <ul className={`space-y-1 transition-opacity ${loading ? 'opacity-60' : ''}`}>
+              {memos.map((m) => (
+                <MemoListItem
+                  key={m.id}
+                  memo={m}
+                  active={m.id === selectedId}
+                  query={filters.q}
+                  toggling={togglingId === m.id}
+                  onSelect={onSelect}
+                  onToggleDone={onToggleDone}
+                />
+              ))}
+            </ul>
+          </div>
+        </aside>
+      );
+    }
+
+    function EmptyPane({ onNew }) {
+      return (
+        <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center text-stone-500">
+          <p className="text-4xl">✍️</p>
+          <p className="text-sm">왼쪽에서 메모를 고르거나 새로 작성하세요.</p>
+          <Button variant="secondary" onClick={onNew}>새 메모 작성</Button>
+        </div>
+      );
+    }
+
+    // ========================================
+    // 📄 Page Components
+    // ========================================
+    // 메모 보기 — 여기서 [수정] 을 눌러 편집 화면으로 간다
+    function MemoView({ memo, query, toggling, onEdit, onDelete, onToggleDone, onBack }) {
+      return (
+        <article className="flex h-full flex-col">
+          <div className="flex items-center gap-2 border-b border-stone-200 px-4 py-3">
+            <Button variant="ghost" size="sm" className="md:hidden" onClick={onBack}>← 목록</Button>
+            <div className="min-w-0 flex-1" />
+            <Button variant="outline" size="sm" onClick={() => onToggleDone(memo, !memo.done)} disabled={toggling}>
+              {toggling ? <Spinner /> : memo.done ? '↩︎' : '✓'} {memo.done ? '완료 취소' : '완료로 표시'}
+            </Button>
+            <Button variant="ghost" size="sm" className="!text-rose-600 hover:!bg-rose-50" onClick={onDelete}>삭제</Button>
+            <Button size="sm" onClick={onEdit}>✏️ 수정</Button>
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 md:px-10 md:py-8">
+            <div className="flex flex-wrap items-center gap-2 text-sm text-stone-500">
+              <span>📅 {formatDay(memo.date)}</span>
+              {memo.done ? <Badge tone="green">완료</Badge> : <Badge tone="amber">할 일</Badge>}
+            </div>
+            <h2 className={`mt-2 break-words text-2xl font-bold tracking-tight ${memo.done ? 'text-stone-400 line-through' : ''}`}>
+              <Highlight text={memo.title} query={query} />
+            </h2>
+            {memo.content.trim() ? (
+              <p className="mt-5 whitespace-pre-wrap break-words text-[15px] leading-7 text-stone-800">
+                <Highlight text={memo.content} query={query} />
+              </p>
+            ) : (
+              <p className="mt-5 text-sm text-stone-400">내용이 없어요. [수정] 을 눌러 내용을 적어 보세요.</p>
+            )}
+          </div>
+
+          <p className="border-t border-stone-100 px-5 py-2 text-right text-[11px] text-stone-400 md:px-10">작성 {formatTime(memo.createdAt)}</p>
+        </article>
+      );
+    }
+
+    // 새 메모 작성 / 기존 메모 수정 — 일자·제목·내용·완료
+    function MemoForm({ memo, saving, onSave, onCancel, onDirtyChange }) {
+      const isNew = !memo;
+      const initial = useMemo(() => ({
+        date: memo?.date ?? todayString(),
+        title: memo?.title ?? '',
+        content: memo?.content ?? '',
+        done: memo?.done ?? false,
+      }), [memo]);
+
+      const [form, setForm] = useState(initial);
+      const [error, setError] = useState('');
+      const titleRef = useRef(null);
+      const formRef = useRef(null);
+
+      const dirty =Object.keys(initial).some((k) => form[k] !== initial[k]);
+      const set = (patch) => { setForm((f) => ({ ...f, ...patch })); if (error) setError(''); };
+
+      useEffect(() => { titleRef.current?.focus(); }, []);
+      useEffect(() => { onDirtyChange(dirty); }, [dirty, onDirtyChange]);
+      useEffect(() => () => onDirtyChange(false), [onDirtyChange]);
+
+      const submit = useCallback(async () => {
+        if (!form.date) return setError('일자를 선택해 주세요.');
+        if (!form.title.trim()) {
+          setError('제목을 입력해 주세요.');
+          titleRef.current?.focus();
+          return;
+        }
+        await onSave({ ...form, title: form.title.trim() });
+      }, [form, onSave]);
+
+      // Ctrl/Cmd + S 저장, Esc 취소
+      useEffect(() => {
+        const onKey = (e) => {
+          if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+            e.preventDefault();
+            if (!saving) submit();
+          } else if (e.key === 'Escape' && !saving && formRef.current?.contains(document.activeElement)) {
+            onCancel();
+          }
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+      }, [submit, saving, onCancel]);
+
+      return (
+        <form ref={formRef} className="flex h-full flex-col" onSubmit={(e) => { e.preventDefault(); submit(); }}>
+          <div className="flex items-center gap-2 border-b border-stone-200 px-4 py-3">
+            <p className="min-w-0 flex-1 truncate text-sm font-semibold">
+              {isNew ? '새 메모 작성' : '메모 수정'}
+              {dirty && <span className="ml-2 text-xs font-medium text-amber-600">● 저장 안 됨</span>}
+            </p>
+            <Button variant="ghost" size="sm" onClick={onCancel} disabled={saving}>취소</Button>
+            <Button type="submit" size="sm" disabled={saving || (!isNew && !dirty)} title="Ctrl+S">
+              {saving && <Spinner />} 저장
+            </Button>
+          </div>
+
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-5 md:px-10 md:py-8">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+              <label className="flex items-center gap-2 text-sm text-stone-600">
+                <span className="font-medium">📅 일자</span>
+                <input
+                  type="date"
+                  required
+                  value={form.date}
+                  onChange={(e) => set({ date: e.target.value })}
+                  className="rounded-md border border-stone-200 bg-white px-2 py-1 text-sm focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-100"
+                />
+              </label>
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-stone-600">
+                <input type="checkbox" checked={form.done} onChange={(e) => set({ done: e.target.checked })} className="h-4 w-4 accent-emerald-600" />
+                <span className="font-medium">완료</span>
+              </label>
+            </div>
+
+            <label htmlFor="memo-title" className="sr-only">제목</label>
+            <input
+              id="memo-title"
+              ref={titleRef}
+              value={form.title}
+              maxLength={TITLE_MAX_LENGTH}
+              onChange={(e) => set({ title: e.target.value })}
+              placeholder="제목"
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? 'memo-form-error' : undefined}
+              className="mt-4 w-full border-b border-transparent bg-transparent pb-1 text-2xl font-bold tracking-tight placeholder:text-stone-300 focus:border-amber-300 focus:outline-none"
+            />
+            {error && <p id="memo-form-error" className="mt-1 text-xs text-rose-600">{error}</p>}
+
+            <label htmlFor="memo-content" className="sr-only">내용</label>
+            <textarea
+              id="memo-content"
+              value={form.content}
+              maxLength={CONTENT_MAX_LENGTH}
+              onChange={(e) => set({ content: e.target.value })}
+              placeholder="내용을 적어 보세요…"
+              className="mt-4 min-h-[240px] w-full flex-1 resize-none bg-transparent text-[15px] leading-7 text-stone-800 placeholder:text-stone-300 focus:outline-none"
+            />
+            <p className="mt-2 text-right text-[11px] tabular-nums text-stone-400">
+              제목 {form.title.length}/{TITLE_MAX_LENGTH} · 내용 {form.content.length}/{CONTENT_MAX_LENGTH} · Ctrl+S 저장 · Esc 취소
+            </p>
+          </div>
+        </form>
+      );
+    }
+
+    // ========================================
+    // 🚀 App Component
+    // ========================================
+    const EMPTY_FILTERS = { q: '', status: 'all', from: '', to: '' };
+
+    function App() {
+      const [filters, setFilters] = useState(EMPTY_FILTERS);
+      const [debouncedQ, setDebouncedQ] = useState('');
+      const [memos, setMemos] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [loadError, setLoadError] = useState('');
+
+      const [selected, setSelected] = useState(null); // 보고 있는 메모
+      const [mode, setMode] = useState('none');        // none | view | edit | new
+      const [saving, setSaving] = useState(false);
+      const [togglingId, setTogglingId] = useState(null);
+      const [confirmDelete, setConfirmDelete] = useState(false);
+      const [deleting, setDeleting] = useState(false);
+      const [toast, setToast] = useState(null);
+
+      const dirtyRef = useRef(false);
+      const requestSeq = useRef(0);
+
+      const showToast = useCallback((message, type = 'info') => setToast({ message, type, key: Date.now() }), []);
+      const handleDirtyChange = useCallback((dirty) => { dirtyRef.current = dirty; }, []);
+
+      useEffect(() => {
+        if (!toast) return;
+        const t = setTimeout(() => setToast(null), 2200);
+        return () => clearTimeout(t);
+      }, [toast]);
+
+      // 검색어는 타이핑이 멈춘 뒤에 서버로 보낸다
+      useEffect(() => {
+        const t = setTimeout(() => setDebouncedQ(filters.q.trim()), SEARCH_DEBOUNCE_MS);
+        return () => clearTimeout(t);
+      }, [filters.q]);
+
+      const queryString = useMemo(() => {
+        const params = new URLSearchParams();
+        if (debouncedQ) params.set('q', debouncedQ);
+        if (filters.status !== 'all') params.set('status', filters.status);
+        if (filters.from) params.set('from', filters.from);
+        if (filters.to) params.set('to', filters.to);
+        const s = params.toString();
+        return s ? `?${s}` : '';
+      }, [debouncedQ, filters.status, filters.from, filters.to]);
+
+      const loadMemos = useCallback(async () => {
+        const seq = ++requestSeq.current; // 늦게 도착한 이전 검색 응답은 버린다
+        setLoading(true);
+        setLoadError('');
+        try {
+          const data = await api(`/memos${queryString}`);
+          if (seq === requestSeq.current) setMemos(data);
+        } catch (err) {
+          if (seq === requestSeq.current) setLoadError(err.message);
+        } finally {
+          if (seq === requestSeq.current) setLoading(false);
+        }
+      }, [queryString]);
+
+      useEffect(() => { loadMemos(); }, [loadMemos]);
+
+      // 편집 중에 다른 곳으로 나가면 저장 안 한 내용이 사라지므로 한 번 묻는다
+      const confirmLeave = () => !dirtyRef.current || window.confirm('저장하지 않은 내용이 있어요. 나갈까요?');
+
+      const selectMemo = (memo) => {
+        if ((mode === 'edit' || mode === 'new') && memo.id !== selected?.id && !confirmLeave()) return;
+        if (mode === 'edit' && memo.id === selected?.id) return;
+        setSelected(memo);
+        setMode('view');
+      };
+
+      const openNew = () => {
+        if (mode === 'new' || !confirmLeave()) return;
+        setSelected(null);
+        setMode('new');
+      };
+
+      const cancelEdit = useCallback(() => {
+        if (!confirmLeave()) return;
+        setMode(selected ? 'view' : 'none');
+      }, [selected]);
+
+      const closePane = () => {
+        setSelected(null);
+        setMode('none');
+      };
+
+      const replaceMemo = (memo) => {
+        setMemos((prev) => prev.map((m) => (m.id === memo.id ? memo : m)));
+        setSelected((cur) => (cur?.id === memo.id ? memo : cur));
+      };
+
+      const handleSave = useCallback(async (input) => {
+        setSaving(true);
+        try {
+          const saved = mode === 'new'
+            ? await api('/memos', { method: 'POST', body: JSON.stringify(input) })
+            : await api(`/memos/${selected.id}`, { method: 'PUT', body: JSON.stringify(input) });
+          dirtyRef.current = false;
+          setSelected(saved);
+          setMode('view');
+          showToast(mode === 'new' ? '메모를 저장했어요.' : '수정 내용을 저장했어요.');
+          loadMemos(); // 일자·완료가 바뀌면 목록 순서와 검색 결과가 달라지므로 다시 불러온다
+        } catch (err) {
+          showToast(err.message, 'error');
+        } finally {
+          setSaving(false);
+        }
+      }, [mode, selected, showToast, loadMemos]);
+
+      const handleToggleDone = async (memo, done) => {
+        setTogglingId(memo.id);
+        try {
+          const updated = await api(`/memos/${memo.id}`, { method: 'PATCH', body: JSON.stringify({ done }) });
+          replaceMemo(updated);
+          if (filters.status !== 'all') loadMemos(); // 할 일/완료 탭에서는 목록에서 빠져야 한다
+        } catch (err) {
+          showToast(err.message, 'error');
+        } finally {
+          setTogglingId(null);
+        }
+      };
+
+      const handleDelete = async () => {
+        setDeleting(true);
+        try {
+          await api(`/memos/${selected.id}`, { method: 'DELETE' });
+          setMemos((prev) => prev.filter((m) => m.id !== selected.id));
+          closePane();
+          showToast('메모를 삭제했어요.');
+        } catch (err) {
+          showToast(err.message, 'error');
+        } finally {
+          setDeleting(false);
+          setConfirmDelete(false);
+        }
+      };
+
+      const filtering = Boolean(debouncedQ || filters.status !== 'all' || filters.from || filters.to);
+      const paneOpen = mode !== 'none';
+
+      return (
+        <div className="mx-auto flex h-screen max-w-6xl flex-col md:p-6">
+          <div className="grid min-h-0 flex-1 overflow-hidden bg-white md:grid-cols-[340px_1fr] md:rounded-2xl md:shadow-sm md:ring-1 md:ring-stone-200">
+            <div className={`min-h-0 ${paneOpen ? 'hidden md:block' : 'block'}`}>
+              <MemoList
+                memos={memos}
+                loading={loading}
+                error={loadError}
+                filters={filters}
+                filtering={filtering}
+                selectedId={selected?.id}
+                togglingId={togglingId}
+                onSelect={selectMemo}
+                onNew={openNew}
+                onRetry={loadMemos}
+                onToggleDone={handleToggleDone}
+              >
+                <SearchPanel
+                  filters={filters}
+                  onChange={(patch) => setFilters((f) => ({ ...f, ...patch }))}
+                  onReset={() => setFilters(EMPTY_FILTERS)}
+                />
+              </MemoList>
+            </div>
+
+            <main className={`min-h-0 ${paneOpen ? 'block' : 'hidden md:block'}`}>
+              {mode === 'none' && <EmptyPane onNew={openNew} />}
+              {mode === 'view' && selected && (
+                <MemoView
+                  memo={selected}
+                  query={debouncedQ}
+                  toggling={togglingId === selected.id}
+                  onEdit={() => setMode('edit')}
+                  onDelete={() => setConfirmDelete(true)}
+                  onToggleDone={handleToggleDone}
+                  onBack={closePane}
+                />
+              )}
+              {(mode === 'edit' || mode === 'new') && (
+                <MemoForm
+                  key={mode === 'new' ? 'new' : selected.id}
+                  memo={mode === 'new' ? null : selected}
+                  saving={saving}
+                  onSave={handleSave}
+                  onCancel={cancelEdit}
+                  onDirtyChange={handleDirtyChange}
+                />
+              )}
+            </main>
+          </div>
+
+          <Modal
+            isOpen={confirmDelete}
+            onClose={() => !deleting && setConfirmDelete(false)}
+            title="메모를 삭제할까요?"
+            footer={
+              <>
+                <Button variant="ghost" onClick={() => setConfirmDelete(false)} disabled={deleting}>취소</Button>
+                <Button variant="danger" onClick={handleDelete} disabled={deleting}>{deleting && <Spinner />} 삭제</Button>
+              </>
+            }
+          >
+            ‘{selected?.title}’ 메모가 영구히 삭제돼요. 되돌릴 수 없어요.
+          </Modal>
+
+          <Toast key={toast?.key} toast={toast} />
+        </div>
+      );
+    }
+
+    // ========================================
+    // 🖥️ Rendering
+    // ========================================
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

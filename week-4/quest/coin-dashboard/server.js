@@ -19,6 +19,8 @@ const INITIAL_CASH = 1000000;
 const MIN_ORDER_KRW = 5000;
 const QTY_EPSILON = 1e-8; // 부동소수점 오차로 남는 먼지 수량은 전량으로 취급
 const MEMO_MAX_LENGTH = 200;
+const MEMO_TITLE_MAX_LENGTH = 100;
+const MEMO_CONTENT_MAX_LENGTH = 5000;
 const ORDER_LOCK_KEY = 7240913; // 동시에 들어온 주문이 같은 잔고를 두 번 쓰지 않도록 거는 advisory lock
 
 // Supabase Transaction pooler(6543)는 연결을 짧게 쓰는 서버리스에 맞다
@@ -63,6 +65,21 @@ const SCHEMA_SQL = `
   COMMENT ON COLUMN orders.memo        IS '주문메모';
   COMMENT ON COLUMN orders.profit      IS '실현손익 (원, 매도만)';
   COMMENT ON COLUMN orders.profit_rate IS '수익률 (%, 매도만)';
+
+  CREATE TABLE IF NOT EXISTS memos (
+    id          BIGSERIAL   PRIMARY KEY,
+    title       TEXT        NOT NULL CHECK (char_length(title) BETWEEN 1 AND ${MEMO_TITLE_MAX_LENGTH}),
+    content     TEXT        NOT NULL DEFAULT '' CHECK (char_length(content) <= ${MEMO_CONTENT_MAX_LENGTH}),
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  CREATE INDEX IF NOT EXISTS memos_created_at_idx ON memos (created_at DESC);
+  ALTER TABLE memos ENABLE ROW LEVEL SECURITY;
+
+  COMMENT ON TABLE  memos            IS '메모';
+  COMMENT ON COLUMN memos.id         IS '메모 번호';
+  COMMENT ON COLUMN memos.title      IS '제목';
+  COMMENT ON COLUMN memos.content    IS '내용';
+  COMMENT ON COLUMN memos.created_at IS '작성일시';
 `;
 
 // 서버리스 cold start 마다 불릴 수 있어 한 번만 실행되게 promise 를 공유한다
@@ -164,6 +181,26 @@ function parseOrderInput(body) {
   return { ...base, quantity };
 }
 
+function toMemo(row) {
+  return { id: Number(row.id), title: row.title, content: row.content, createdAt: row.created_at.toISOString() };
+}
+
+function parseMemoInput(body) {
+  const { title, content = '' } = body || {};
+  if (typeof title !== 'string' || !title.trim()) return { error: 'title 은 비어 있지 않은 문자열이어야 해요.' };
+  if (typeof content !== 'string') return { error: 'content 는 문자열이어야 해요.' };
+  const cleanTitle = title.trim();
+  if (cleanTitle.length > MEMO_TITLE_MAX_LENGTH) return { error: `제목은 ${MEMO_TITLE_MAX_LENGTH}자까지 쓸 수 있어요.` };
+  if (content.length > MEMO_CONTENT_MAX_LENGTH) return { error: `내용은 ${MEMO_CONTENT_MAX_LENGTH}자까지 쓸 수 있어요.` };
+  return { title: cleanTitle, content };
+}
+
+// URL 의 :id 가 양의 정수가 아니면 null (BIGSERIAL 범위 밖 숫자는 DB 에서 오류가 나므로 안전 정수로 제한)
+function parseId(value) {
+  const id = Number(value);
+  return /^\d+$/.test(value) && Number.isSafeInteger(id) && id > 0 ? id : null;
+}
+
 // 현재 지갑 기준으로 체결 결과를 계산한다. 잔고가 모자라면 error 를 돌려준다.
 function executeOrder(wallet, input) {
   const { side, coin, price, memo } = input;
@@ -210,8 +247,10 @@ app.use('/api', async (_req, res, next) => {
 // ── API routes ───────────────────────────────
 app.get('/api/health', async (_req, res, next) => {
   try {
-    const { rows } = await pool.query('SELECT count(*)::int AS orders FROM orders');
-    res.json({ success: true, data: { database: 'ok', orders: rows[0].orders } });
+    const { rows } = await pool.query(
+      'SELECT (SELECT count(*)::int FROM orders) AS orders, (SELECT count(*)::int FROM memos) AS memos'
+    );
+    res.json({ success: true, data: { database: 'ok', ...rows[0] } });
   } catch (err) {
     next(err);
   }
@@ -267,6 +306,71 @@ app.delete('/api/orders', async (_req, res, next) => {
   try {
     await pool.query('DELETE FROM orders');
     res.json({ success: true, data: buildWallet([]) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── Memos ────────────────────────────────────
+app.get('/api/memos', async (_req, res, next) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM memos ORDER BY created_at DESC, id DESC');
+    res.json({ success: true, data: rows.map(toMemo) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get('/api/memos/:id', async (req, res, next) => {
+  const id = parseId(req.params.id);
+  if (!id) return res.status(400).json({ success: false, message: 'id 는 양의 정수여야 해요.' });
+  try {
+    const { rows } = await pool.query('SELECT * FROM memos WHERE id = $1', [id]);
+    if (!rows.length) return res.status(404).json({ success: false, message: 'Memo not found' });
+    res.json({ success: true, data: toMemo(rows[0]) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post('/api/memos', async (req, res, next) => {
+  const input = parseMemoInput(req.body);
+  if (input.error) return res.status(400).json({ success: false, message: input.error });
+  try {
+    const { rows } = await pool.query(
+      'INSERT INTO memos (title, content) VALUES ($1, $2) RETURNING *',
+      [input.title, input.content]
+    );
+    res.status(201).json({ success: true, data: toMemo(rows[0]) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.put('/api/memos/:id', async (req, res, next) => {
+  const id = parseId(req.params.id);
+  if (!id) return res.status(400).json({ success: false, message: 'id 는 양의 정수여야 해요.' });
+  const input = parseMemoInput(req.body);
+  if (input.error) return res.status(400).json({ success: false, message: input.error });
+  try {
+    const { rows } = await pool.query(
+      'UPDATE memos SET title = $1, content = $2 WHERE id = $3 RETURNING *',
+      [input.title, input.content, id]
+    );
+    if (!rows.length) return res.status(404).json({ success: false, message: 'Memo not found' });
+    res.json({ success: true, data: toMemo(rows[0]) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.delete('/api/memos/:id', async (req, res, next) => {
+  const id = parseId(req.params.id);
+  if (!id) return res.status(400).json({ success: false, message: 'id 는 양의 정수여야 해요.' });
+  try {
+    const { rows } = await pool.query('DELETE FROM memos WHERE id = $1 RETURNING *', [id]);
+    if (!rows.length) return res.status(404).json({ success: false, message: 'Memo not found' });
+    res.json({ success: true, data: toMemo(rows[0]) });
   } catch (err) {
     next(err);
   }
