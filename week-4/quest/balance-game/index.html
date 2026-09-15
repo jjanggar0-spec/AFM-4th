@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>밸런스 게임</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>⚖️</text></svg>">
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <!-- ⚠️ 모든 CDN 버전 고정. Babel 은 반드시 7.x (8.x 는 인라인 text/babel 미지원) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.25.9/babel.min.js"></script>
+  <style>
+    @keyframes pop-in {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .anim-pop { animation: pop-in .2s ease-out both; }
+
+    /* 다른 사람의 투표로 숫자가 바뀌었을 때 잠깐 반짝 */
+    @keyframes bump {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.12); }
+      100% { transform: scale(1); }
+    }
+    .anim-bump { animation: bump .35s ease-out; display: inline-block; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .anim-pop, .anim-bump { animation: none; }
+      .transition-all { transition: none !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    // ========================================
+    // React Hooks & Config
+    // ========================================
+    const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+    const API_BASE_URL = '/api';
+    const POLL_MS = 3000;       // 실시간 갱신 주기
+    const OPTION_MAX = 60;      // server.js 의 OPTION_MAX 와 같아야 한다
+    const VOTED_KEY = 'balance-game:voted'; // { [questionId]: 'A' | 'B' }
+
+    // 선택지별 색 — Tailwind 클래스는 문자열 그대로 둬야 CDN 이 인식한다
+    const TONE = {
+      A: {
+        label: 'A',
+        chip: 'bg-rose-500 text-white',
+        button: 'border-rose-200 bg-rose-50 hover:bg-rose-100 hover:border-rose-300 focus-visible:ring-rose-400 text-rose-900',
+        bar: 'bg-rose-500',
+        track: 'bg-rose-100',
+        text: 'text-rose-600',
+        ring: 'ring-rose-400',
+      },
+      B: {
+        label: 'B',
+        chip: 'bg-sky-500 text-white',
+        button: 'border-sky-200 bg-sky-50 hover:bg-sky-100 hover:border-sky-300 focus-visible:ring-sky-400 text-sky-900',
+        bar: 'bg-sky-500',
+        track: 'bg-sky-100',
+        text: 'text-sky-600',
+        ring: 'ring-sky-400',
+      },
+    };
+
+    // ========================================
+    // 🛠️ Utilities
+    // ========================================
+    async function api(endpoint, options = {}) {
+      const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+        headers: { 'Content-Type': 'application/json' },
+        ...options,
+      });
+      let body = null;
+      try { body = await res.json(); } catch {}
+      if (!res.ok || !body?.success) {
+        const err = new Error(body?.message || `요청에 실패했어요. (HTTP ${res.status})`);
+        err.status = res.status;
+        throw err;
+      }
+      return body.data;
+    }
+
+    // localStorage 는 사생활 보호 모드 등에서 막힐 수 있어 항상 try 로 감싼다
+    function loadVoted() {
+      try { return JSON.parse(localStorage.getItem(VOTED_KEY)) || {}; } catch { return {}; }
+    }
+    function saveVoted(voted) {
+      try { localStorage.setItem(VOTED_KEY, JSON.stringify(voted)); } catch {}
+    }
+
+    const nf = new Intl.NumberFormat('ko-KR');
+    const fmt = (n) => nf.format(n);
+    const charCount = (s) => [...s].length;
+
+    function timeAgo(iso) {
+      const sec = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+      if (sec < 60) return '방금 전';
+      if (sec < 3600) return `${Math.floor(sec / 60)}분 전`;
+      if (sec < 86400) return `${Math.floor(sec / 3600)}시간 전`;
+      if (sec < 86400 * 30) return `${Math.floor(sec / 86400)}일 전`;
+      return new Date(iso).toLocaleDateString('ko-KR');
+    }
+
+    // 값이 바뀌면 이전 값에서 새 값까지 부드럽게 올라가거나 내려가는 숫자
+    function useAnimatedNumber(target, duration = 600) {
+      const [value, setValue] = useState(target);
+      const fromRef = useRef(target);
+
+      useEffect(() => {
+        const from = fromRef.current;
+        if (from === target) return;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          fromRef.current = target;
+          setValue(target);
+          return;
+        }
+        let raf;
+        const start = performance.now();
+        const tick = (now) => {
+          const t = Math.min(1, (now - start) / duration);
+          const eased = 1 - Math.pow(1 - t, 3);
+          const next = from + (target - from) * eased;
+          fromRef.current = next;
+          setValue(next);
+          if (t < 1) raf = requestAnimationFrame(tick);
+        };
+        raf = requestAnimationFrame(tick);
+        return () => cancelAnimationFrame(raf);
+      }, [target, duration]);
+
+      return value;
+    }
+
+    // 값이 바뀔 때마다 증가하는 key — 같은 요소에 애니메이션을 다시 걸 때 쓴다
+    function useChangeKey(value) {
+      const ref = useRef({ value, key: 0 });
+      if (ref.current.value !== value) ref.current = { value, key: ref.current.key + 1 };
+      return ref.current.key;
+    }
+
+    // ========================================
+    // 🎨 Design System Components
+    // ========================================
+    function Button({ variant = 'primary', size = 'md', disabled = false, className = '', children, ...props }) {
+      const variants = {
+        primary: 'bg-slate-900 text-white hover:bg-slate-700 focus-visible:ring-slate-500',
+        secondary: 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-100 focus-visible:ring-slate-400',
+        danger: 'bg-red-600 text-white hover:bg-red-500 focus-visible:ring-red-400',
+        ghost: 'text-slate-600 hover:bg-slate-100 focus-visible:ring-slate-400',
+      };
+      const sizes = {
+        sm: 'px-3 py-1.5 text-sm',
+        md: 'px-4 py-2.5 text-sm',
+        lg: 'px-5 py-3 text-base',
+      };
+      return (
+        <button
+          type="button"
+          disabled={disabled}
+          className={`inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition
+            focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
+            disabled:opacity-50 disabled:cursor-not-allowed
+            ${variants[variant]} ${sizes[size]} ${className}`}
+          {...props}
+        >
+          {children}
+        </button>
+      );
+    }
+
+    function Input({ id, label, value, onChange, placeholder, error, disabled = false, maxChars, className = '', prefix, ...props }) {
+      const count = maxChars ? charCount(value) : 0;
+      return (
+        <div className={className}>
+          {label && (
+            <div className="mb-1.5 flex items-center justify-between">
+              <label htmlFor={id} className="text-sm font-medium text-slate-700">{label}</label>
+              {maxChars && (
+                <span className={`text-xs tabular-nums ${count > maxChars ? 'text-red-600' : 'text-slate-400'}`}>
+                  {count}/{maxChars}
+                </span>
+              )}
+            </div>
+          )}
+          <div className="relative">
+            {prefix && <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">{prefix}</div>}
+            <input
+              id={id}
+              value={value}
+              onChange={onChange}
+              placeholder={placeholder}
+              disabled={disabled}
+              aria-invalid={!!error}
+              className={`w-full rounded-xl border bg-white py-2.5 pr-3 text-sm placeholder:text-slate-400 transition
+                focus:outline-none focus:ring-2
+                disabled:bg-slate-100 disabled:text-slate-500
+                ${prefix ? 'pl-12' : 'pl-3'}
+                ${error ? 'border-red-400 focus:ring-red-300' : 'border-slate-300 focus:border-slate-400 focus:ring-slate-300'}`}
+              {...props}
+            />
+          </div>
+          {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+        </div>
+      );
+    }
+
+    function Card({ className = '', children, ...props }) {
+      return (
+        <div className={`rounded-2xl border border-slate-200 bg-white shadow-sm ${className}`} {...props}>
+          {children}
+        </div>
+      );
+    }
+
+    function Badge({ className = '', children }) {
+      return (
+        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${className}`}>
+          {children}
+        </span>
+      );
+    }
+
+    function ChoiceChip({ choice, className = '' }) {
+      return (
+        <span
+          aria-hidden="true"
+          className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sm font-black ${TONE[choice].chip} ${className}`}
+        >
+          {choice}
+        </span>
+      );
+    }
+
+    function Tabs({ tabs, value, onChange, label }) {
+      return (
+        <div role="tablist" aria-label={label} className="inline-flex rounded-xl bg-slate-200/70 p-1">
+          {tabs.map((tab) => (
+            <button
+              key={tab.value}
+              type="button"
+              role="tab"
+              aria-selected={value === tab.value}
+              onClick={() => onChange(tab.value)}
+              className={`rounded-lg px-3.5 py-1.5 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400
+                ${value === tab.value ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    function Spinner({ className = 'h-4 w-4' }) {
+      return (
+        <svg className={`animate-spin ${className}`} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
+          <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+      );
+    }
+
+    // ========================================
+    // 🧩 Common/Layout Components
+    // ========================================
+    function LiveIndicator({ status, lastUpdated }) {
+      const [, forceTick] = useState(0);
+      // "n초 전" 표시를 갱신하기 위한 1초 타이머
+      useEffect(() => {
+        const t = setInterval(() => forceTick((n) => n + 1), 1000);
+        return () => clearInterval(t);
+      }, []);
+
+      const secs = lastUpdated ? Math.round((Date.now() - lastUpdated) / 1000) : null;
+      const styles = {
+        live: { dot: 'bg-emerald-500', ping: true, text: '실시간', cls: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
+        paused: { dot: 'bg-slate-400', ping: false, text: '일시정지', cls: 'text-slate-600 bg-slate-100 border-slate-200' },
+        error: { dot: 'bg-amber-500', ping: false, text: '재연결 중', cls: 'text-amber-700 bg-amber-50 border-amber-200' },
+      }[status];
+
+      return (
+        <div
+          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${styles.cls}`}
+          role="status"
+          aria-live="polite"
+        >
+          <span className="relative flex h-2 w-2">
+            {styles.ping && <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-60 ${styles.dot}`} />}
+            <span className={`relative inline-flex h-2 w-2 rounded-full ${styles.dot}`} />
+          </span>
+          {styles.text}
+          {secs !== null && <span className="font-normal opacity-70">· {secs <= 1 ? '방금' : `${secs}초 전`} 갱신</span>}
+        </div>
+      );
+    }
+
+    function Header({ summary, liveStatus, lastUpdated }) {
+      return (
+        <header className="border-b border-slate-200 bg-white">
+          <div className="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+                <span className="rounded-lg bg-rose-500 px-2 text-white">A</span>
+                <span className="text-slate-400 text-lg sm:text-xl">vs</span>
+                <span className="rounded-lg bg-sky-500 px-2 text-white">B</span>
+                <span className="ml-1">밸런스 게임</span>
+              </h1>
+              <p className="mt-2 text-sm text-slate-500">
+                둘 중 하나만 고를 수 있다면? 질문을 올리고, 투표하고, 실시간으로 결과를 확인하세요.
+              </p>
+            </div>
+            <div className="flex flex-col items-start gap-2 sm:items-end">
+              <LiveIndicator status={liveStatus} lastUpdated={lastUpdated} />
+              {summary && (
+                <p className="text-sm text-slate-500">
+                  질문 <b className="text-slate-800 tabular-nums">{fmt(summary.questionCount)}</b>개 ·
+                  총 <b className="text-slate-800 tabular-nums">{fmt(summary.voteCount)}</b>표
+                </p>
+              )}
+            </div>
+          </div>
+        </header>
+      );
+    }
+
+    function Footer() {
+      return (
+        <footer className="mx-auto max-w-3xl px-4 pb-10 pt-4 text-center text-xs text-slate-400">
+          투표율은 {POLL_MS / 1000}초마다 자동으로 갱신돼요 · 한 브라우저에서 질문마다 한 번씩 투표할 수 있어요
+        </footer>
+      );
+    }
+
+    // ========================================
+    // 🗳️ Feature Components
+    // ========================================
+    function QuestionForm({ onCreated }) {
+      const [optionA, setOptionA] = useState('');
+      const [optionB, setOptionB] = useState('');
+      const [touched, setTouched] = useState(false);
+      const [submitting, setSubmitting] = useState(false);
+      const [serverError, setServerError] = useState('');
+
+      const a = optionA.trim();
+      const b = optionB.trim();
+      const errors = {
+        optionA: !a ? '선택지 A를 입력해 주세요.' : charCount(a) > OPTION_MAX ? `${OPTION_MAX}자까지 쓸 수 있어요.` : '',
+        optionB: !b ? '선택지 B를 입력해 주세요.' : charCount(b) > OPTION_MAX ? `${OPTION_MAX}자까지 쓸 수 있어요.` : '',
+      };
+      if (a && b && a.toLowerCase() === b.toLowerCase()) errors.optionB = '두 선택지가 같으면 고를 수가 없어요.';
+      const isValid = !errors.optionA && !errors.optionB;
+
+      async function handleSubmit(e) {
+        e.preventDefault();
+        setTouched(true);
+        setServerError('');
+        if (!isValid) return;
+        setSubmitting(true);
+        try {
+          const question = await api('/questions', {
+            method: 'POST',
+            body: JSON.stringify({ optionA: a, optionB: b }),
+          });
+          setOptionA('');
+          setOptionB('');
+          setTouched(false);
+          onCreated(question);
+        } catch (err) {
+          setServerError(err.message);
+        } finally {
+          setSubmitting(false);
+        }
+      }
+
+      return (
+        <Card className="p-5 sm:p-6">
+          <form onSubmit={handleSubmit} noValidate>
+            <h2 className="text-base font-bold text-slate-900">새 질문 등록</h2>
+            <p className="mt-0.5 text-sm text-slate-500">고르기 어려울수록 재밌어요.</p>
+
+            <div className="mt-4 grid items-start gap-3 sm:grid-cols-[1fr_auto_1fr]">
+              <Input
+                id="optionA"
+                label="선택지 A"
+                value={optionA}
+                onChange={(e) => setOptionA(e.target.value)}
+                placeholder="예) 평생 여름만 살기"
+                maxChars={OPTION_MAX}
+                error={touched ? errors.optionA : ''}
+                disabled={submitting}
+                prefix={<ChoiceChip choice="A" />}
+                autoComplete="off"
+              />
+              <div className="hidden select-none pt-9 text-sm font-black text-slate-300 sm:block" aria-hidden="true">VS</div>
+              <Input
+                id="optionB"
+                label="선택지 B"
+                value={optionB}
+                onChange={(e) => setOptionB(e.target.value)}
+                placeholder="예) 평생 겨울만 살기"
+                maxChars={OPTION_MAX}
+                error={touched ? errors.optionB : ''}
+                disabled={submitting}
+                prefix={<ChoiceChip choice="B" />}
+                autoComplete="off"
+              />
+            </div>
+
+            {serverError && (
+              <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{serverError}</p>
+            )}
+
+            <div className="mt-4 flex justify-end">
+              <Button type="submit" disabled={submitting} className="w-full sm:w-auto">
+                {submitting ? <><Spinner /> 등록 중…</> : '질문 등록하기'}
+              </Button>
+            </div>
+          </form>
+        </Card>
+      );
+    }
+
+    // 투표 전: 누르는 버튼
+    function VoteButton({ choice, text, onVote, disabled, pending }) {
+      const tone = TONE[choice];
+      return (
+        <button
+          type="button"
+          onClick={() => onVote(choice)}
+          disabled={disabled}
+          aria-label={`${choice}: ${text} 에 투표`}
+          className={`group flex min-h-[5.5rem] w-full items-center gap-3 rounded-xl border-2 p-4 text-left transition
+            focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
+            disabled:cursor-wait disabled:opacity-60 ${tone.button}`}
+        >
+          <ChoiceChip choice={choice} className="transition group-hover:scale-110" />
+          <span className="flex-1 break-words text-base font-bold leading-snug">{text}</span>
+          {pending && <Spinner className={`h-5 w-5 ${tone.text}`} />}
+        </button>
+      );
+    }
+
+    // 투표 후(또는 결과 보기): 투표율 막대
+    function ResultBar({ choice, text, count, percent, isMine, isWinner }) {
+      const tone = TONE[choice];
+      const animated = useAnimatedNumber(percent);
+      const bumpKey = useChangeKey(count);
+
+      return (
+        <div
+          className={`relative overflow-hidden rounded-xl border-2 p-4 transition
+            ${isMine ? `border-transparent ring-2 ${tone.ring}` : 'border-slate-200'}`}
+        >
+          {/* 배경 막대 — 투표율만큼 채워진다 */}
+          <div className={`absolute inset-0 ${tone.track} opacity-40`} aria-hidden="true" />
+          <div
+            className={`absolute inset-y-0 left-0 ${tone.bar} opacity-20 transition-all duration-700 ease-out`}
+            style={{ width: `${percent}%` }}
+            aria-hidden="true"
+          />
+
+          <div className="relative flex items-start gap-3">
+            <ChoiceChip choice={choice} />
+            <div className="min-w-0 flex-1">
+              <p className="break-words font-bold leading-snug text-slate-900">
+                {text}
+                {isMine && <Badge className={`ml-2 align-middle ${tone.chip}`}>내 선택</Badge>}
+                {isWinner && <Badge className="ml-2 align-middle bg-amber-100 text-amber-800">👑 우세</Badge>}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                <span key={bumpKey} className={bumpKey ? 'anim-bump' : ''}>
+                  <b className="tabular-nums text-slate-700">{fmt(count)}</b>표
+                </span>
+              </p>
+            </div>
+            <div className={`text-right text-2xl font-black tabular-nums sm:text-3xl ${tone.text}`}>
+              {animated.toFixed(1)}<span className="text-base">%</span>
+            </div>
+          </div>
+
+          <div
+            className={`relative mt-3 h-2.5 overflow-hidden rounded-full ${tone.track}`}
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={percent}
+            aria-label={`${choice} 투표율`}
+          >
+            <div
+              className={`h-full rounded-full ${tone.bar} transition-all duration-700 ease-out`}
+              style={{ width: `${percent}%` }}
+            />
+          </div>
+        </div>
+      );
+    }
+
+    function QuestionCard({ question, myChoice, onVote, pendingChoice, voteError }) {
+      const [peek, setPeek] = useState(false);
+      const hasVoted = !!myChoice;
+      const showResult = hasVoted || peek;
+      const totalKey = useChangeKey(question.total);
+      const isTie = question.countA === question.countB;
+
+      return (
+        <Card className="anim-pop p-4 sm:p-5">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm text-slate-500">
+              <span className="font-semibold text-slate-400">#{question.id}</span> · {timeAgo(question.createdAt)}
+            </p>
+            <p className="flex items-center gap-1.5 text-sm text-slate-600">
+              <span aria-hidden="true">👥</span>
+              <span key={totalKey} className={totalKey ? 'anim-bump' : ''}>
+                <b className="tabular-nums text-slate-900">{fmt(question.total)}</b>명 참여
+              </span>
+            </p>
+          </div>
+
+          {showResult ? (
+            <div className="space-y-2.5">
+              {['A', 'B'].map((c) => (
+                <ResultBar
+                  key={c}
+                  choice={c}
+                  text={c === 'A' ? question.optionA : question.optionB}
+                  count={c === 'A' ? question.countA : question.countB}
+                  percent={c === 'A' ? question.percentA : question.percentB}
+                  isMine={myChoice === c}
+                  isWinner={question.total > 0 && !isTie && (c === 'A' ? question.countA > question.countB : question.countB > question.countA)}
+                />
+              ))}
+              {question.total === 0 && (
+                <p className="pt-1 text-center text-xs text-slate-400">아직 투표가 없어요. 첫 표를 기다리는 중!</p>
+              )}
+              {question.total > 0 && isTie && (
+                <p className="pt-1 text-center text-xs font-semibold text-slate-500">⚖️ 팽팽한 동률!</p>
+              )}
+            </div>
+          ) : (
+            <div className="relative grid gap-2.5 sm:grid-cols-2 sm:gap-3">
+              <VoteButton choice="A" text={question.optionA} onVote={onVote} disabled={!!pendingChoice} pending={pendingChoice === 'A'} />
+              <div
+                className="pointer-events-none absolute left-1/2 top-1/2 z-10 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white bg-slate-900 text-[11px] font-black text-white shadow"
+                aria-hidden="true"
+              >
+                VS
+              </div>
+              <VoteButton choice="B" text={question.optionB} onVote={onVote} disabled={!!pendingChoice} pending={pendingChoice === 'B'} />
+            </div>
+          )}
+
+          {voteError && <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{voteError}</p>}
+
+          {!hasVoted && (
+            <div className="mt-3 flex justify-end">
+              <Button variant="ghost" size="sm" onClick={() => setPeek((p) => !p)} aria-pressed={peek}>
+                {peek ? '← 투표하러 가기' : '결과 먼저 보기'}
+              </Button>
+            </div>
+          )}
+        </Card>
+      );
+    }
+
+    function SkeletonCard() {
+      return (
+        <Card className="p-5" aria-hidden="true">
+          <div className="mb-4 flex justify-between">
+            <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
+            <div className="h-4 w-16 animate-pulse rounded bg-slate-200" />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="h-20 animate-pulse rounded-xl bg-slate-100" />
+            <div className="h-20 animate-pulse rounded-xl bg-slate-100" />
+          </div>
+        </Card>
+      );
+    }
+
+    function EmptyState() {
+      return (
+        <Card className="px-6 py-14 text-center">
+          <div className="text-5xl" aria-hidden="true">⚖️</div>
+          <p className="mt-3 font-bold text-slate-800">아직 등록된 질문이 없어요</p>
+          <p className="mt-1 text-sm text-slate-500">위에서 첫 번째 밸런스 게임 질문을 올려 보세요!</p>
+        </Card>
+      );
+    }
+
+    // ========================================
+    // 📄 Page Components
+    // ========================================
+    function BalanceGamePage() {
+      const [sort, setSort] = useState('latest');
+      const [byId, setById] = useState({});        // { [id]: question }
+      const [order, setOrder] = useState([]);      // 화면에 보이는 순서 (id 배열)
+      const [summary, setSummary] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const [loadError, setLoadError] = useState('');
+      const [liveStatus, setLiveStatus] = useState('live');
+      const [lastUpdated, setLastUpdated] = useState(null);
+      const [voted, setVoted] = useState(loadVoted);
+      const [pending, setPending] = useState({});  // { [id]: 'A' | 'B' }
+      const [voteErrors, setVoteErrors] = useState({});
+      const [notice, setNotice] = useState('');
+
+      const sortRef = useRef(sort);
+      const requestSeq = useRef(0);
+
+      // reorder = true: 서버 순서대로 다시 정렬 (첫 로딩·정렬 변경·새 질문 등록)
+      // reorder = false: 폴링 — 카드가 누르려는 순간 움직이지 않게 기존 순서를 유지하고
+      //                   새로 생긴 질문만 맨 위에 붙인다
+      const load = useCallback(async ({ reorder = false } = {}) => {
+        const seq = ++requestSeq.current;
+        try {
+          const data = await api(`/questions?sort=${sortRef.current}`);
+          if (seq !== requestSeq.current) return; // 더 늦게 보낸 요청이 이미 도착함
+          const serverIds = data.questions.map((q) => q.id);
+
+          setById(Object.fromEntries(data.questions.map((q) => [q.id, q])));
+          setOrder((prev) => {
+            if (reorder) return serverIds;
+            const known = new Set(prev);
+            const alive = new Set(serverIds);
+            const fresh = serverIds.filter((id) => !known.has(id));
+            return [...fresh, ...prev.filter((id) => alive.has(id))];
+          });
+          setSummary(data.summary);
+          setLoadError('');
+          setLiveStatus(document.hidden ? 'paused' : 'live');
+          setLastUpdated(Date.now());
+        } catch (err) {
+          if (seq !== requestSeq.current) return;
+          setLoadError(err.message);
+          setLiveStatus('error');
+        } finally {
+          if (seq === requestSeq.current) setLoading(false);
+        }
+      }, []);
+
+      // 정렬이 바뀌면 서버 순서로 새로 불러온다
+      useEffect(() => {
+        sortRef.current = sort;
+        load({ reorder: true });
+      }, [sort, load]);
+
+      // 실시간 폴링 — 탭이 안 보일 때는 멈추고, 돌아오면 즉시 갱신
+      useEffect(() => {
+        let timer = null;
+        const start = () => {
+          clearInterval(timer);
+          timer = setInterval(() => load(), POLL_MS);
+        };
+        const onVisibility = () => {
+          if (document.hidden) {
+            clearInterval(timer);
+            setLiveStatus((s) => (s === 'error' ? s : 'paused'));
+          } else {
+            load();
+            start();
+          }
+        };
+        if (!document.hidden) start();
+        document.addEventListener('visibilitychange', onVisibility);
+        return () => {
+          clearInterval(timer);
+          document.removeEventListener('visibilitychange', onVisibility);
+        };
+      }, [load]);
+
+      // 다른 탭에서 투표하면 이 탭의 "내 선택" 도 맞춰 준다
+      useEffect(() => {
+        const onStorage = (e) => { if (e.key === VOTED_KEY) setVoted(loadVoted()); };
+        window.addEventListener('storage', onStorage);
+        return () => window.removeEventListener('storage', onStorage);
+      }, []);
+
+      useEffect(() => {
+        if (!notice) return;
+        const t = setTimeout(() => setNotice(''), 2500);
+        return () => clearTimeout(t);
+      }, [notice]);
+
+      const handleCreated = useCallback((question) => {
+        setById((prev) => ({ ...prev, [question.id]: question }));
+        setOrder((prev) => [question.id, ...prev.filter((id) => id !== question.id)]);
+        setNotice('질문이 등록됐어요! 🎉');
+        if (sortRef.current !== 'latest') setSort('latest');
+        else load({ reorder: true });
+      }, [load]);
+
+      const handleVote = useCallback(async (id, choice) => {
+        if (voted[id] || pending[id]) return;
+        setPending((p) => ({ ...p, [id]: choice }));
+        setVoteErrors((e) => ({ ...e, [id]: '' }));
+        try {
+          const data = await api(`/questions/${id}/votes`, {
+            method: 'POST',
+            body: JSON.stringify({ choice }),
+          });
+          // 서버가 돌려준 최신 투표율로 즉시 반영
+          setById((prev) => ({ ...prev, [id]: data.question }));
+          setVoted((prev) => {
+            const next = { ...prev, [id]: choice };
+            saveVoted(next);
+            return next;
+          });
+          setSummary((s) => (s ? { ...s, voteCount: s.voteCount + 1 } : s));
+        } catch (err) {
+          setVoteErrors((e) => ({ ...e, [id]: err.message }));
+          if (err.status === 404) load();
+        } finally {
+          setPending((p) => {
+            const next = { ...p };
+            delete next[id];
+            return next;
+          });
+        }
+      }, [voted, pending, load]);
+
+      const questions = useMemo(() => order.map((id) => byId[id]).filter(Boolean), [order, byId]);
+      const myVoteCount = useMemo(() => questions.filter((q) => voted[q.id]).length, [questions, voted]);
+
+      return (
+        <>
+          <Header summary={summary} liveStatus={liveStatus} lastUpdated={lastUpdated} />
+
+          <main className="mx-auto max-w-3xl space-y-6 px-4 py-6">
+            <QuestionForm onCreated={handleCreated} />
+
+            <section aria-labelledby="list-title" className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 id="list-title" className="text-lg font-bold text-slate-900">질문 목록</h2>
+                  {questions.length > 0 && (
+                    <p className="text-xs text-slate-500">
+                      {questions.length}개 중 <b className="text-slate-700">{myVoteCount}</b>개 투표 완료
+                    </p>
+                  )}
+                </div>
+                <Tabs
+                  label="정렬"
+                  value={sort}
+                  onChange={setSort}
+                  tabs={[
+                    { value: 'latest', label: '🆕 최신순' },
+                    { value: 'popular', label: '🔥 인기순' },
+                  ]}
+                />
+              </div>
+
+              {loadError && (
+                <div role="alert" className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                  <span>⚠️ {loadError} {questions.length > 0 && '(마지막으로 받은 결과를 보여주고 있어요)'}</span>
+                  <Button variant="secondary" size="sm" onClick={() => load({ reorder: true })}>다시 시도</Button>
+                </div>
+              )}
+
+              {loading ? (
+                <div className="space-y-4">
+                  <SkeletonCard />
+                  <SkeletonCard />
+                </div>
+              ) : questions.length === 0 ? (
+                !loadError && <EmptyState />
+              ) : (
+                <ul className="space-y-4">
+                  {questions.map((q) => (
+                    <li key={q.id}>
+                      <QuestionCard
+                        question={q}
+                        myChoice={voted[q.id]}
+                        pendingChoice={pending[q.id]}
+                        voteError={voteErrors[q.id]}
+                        onVote={(choice) => handleVote(q.id, choice)}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </main>
+
+          <Footer />
+
+          {notice && (
+            <div
+              role="status"
+              className="anim-pop fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-lg"
+            >
+              {notice}
+            </div>
+          )}
+        </>
+      );
+    }
+
+    // ========================================
+    // 🚀 App Component
+    // ========================================
+    function App() {
+      return <BalanceGamePage />;
+    }
+
+    // ========================================
+    // Rendering
+    // ========================================
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

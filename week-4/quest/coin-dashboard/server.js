@@ -234,6 +234,49 @@ app.get(['/', '/index.html'], (_req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// ── API: 전략용 업비트 일봉 (DB 불필요) ──────────
+// 브라우저에서 업비트를 직접 부르면 Origin 헤더 때문에 초당 1회 제한에 걸려 429 가 난다.
+// 서버에서 순서대로 받아 오고, 09:00 시가는 하루 동안 바뀌지 않으므로 날짜별로 캐시한다.
+const UPBIT_MARKETS = ['KRW-BTC', 'KRW-ETH', 'KRW-XRP'];
+const candleCache = new Map(); // `${market}:${date}` → { date, open }[]
+
+async function fetchUpbitDailyCandles(market) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const res = await fetch(`https://api.upbit.com/v1/candles/days?market=${market}&count=10`);
+    if (res.status === 429) {
+      await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
+      continue;
+    }
+    if (!res.ok) throw new Error(`Upbit HTTP ${res.status}`);
+    const rows = await res.json();
+    return rows.map((c) => ({ date: c.candle_date_time_kst.slice(0, 10), open: c.opening_price }));
+  }
+  throw new Error('Upbit 요청 한도 초과');
+}
+
+app.get('/api/strategy/candles', async (req, res) => {
+  const date = String(req.query.date || '');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return res.status(400).json({ success: false, message: 'date 는 YYYY-MM-DD 형식이어야 해요.' });
+  }
+  const data = {};
+  for (const market of UPBIT_MARKETS) {
+    const key = `${market}:${date}`;
+    try {
+      if (!candleCache.has(key)) {
+        const candles = await fetchUpbitDailyCandles(market);
+        // 그날 일봉이 아직 없으면(09:00 전) 캐시하지 않는다
+        if (candles.some((c) => c.date === date)) candleCache.set(key, candles);
+        else { data[market] = { candles }; continue; }
+      }
+      data[market] = { candles: candleCache.get(key) };
+    } catch (err) {
+      data[market] = { error: err.message };
+    }
+  }
+  res.json({ success: true, data });
+});
+
 app.use('/api', async (_req, res, next) => {
   try {
     await initDB();

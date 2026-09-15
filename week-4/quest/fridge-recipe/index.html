@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>냉장고 레시피북</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🧊</text></svg>">
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <!-- ⚠️ 모든 CDN 버전 고정. Babel 은 반드시 7.x (8.x 는 인라인 text/babel 미지원) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.25.9/babel.min.js"></script>
+  <style>
+    @keyframes pop-in {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .anim-pop { animation: pop-in .2s ease-out both; }
+
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    .anim-fade { animation: fade-in .15s ease-out both; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .anim-pop, .anim-fade { animation: none; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    // ========================================
+    // React Hooks & Config
+    // ========================================
+    const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+    const API_BASE_URL = '/api';
+
+    // 아래 값은 server.js 의 같은 이름 상수와 같아야 한다
+    const CATEGORIES = ['채소', '과일', '육류', '해산물', '유제품·달걀', '양념·소스', '곡물·면', '기타'];
+    const NAME_MAX = 30;
+    const TITLE_MAX = 60;
+    const STEP_MAX = 500;
+    const RECIPE_ITEMS_MAX = 30;
+
+    // 분류별 색 — Tailwind CDN 이 인식하도록 클래스는 문자열 그대로 둔다
+    const CATEGORY_STYLE = {
+      '채소':       { emoji: '🥬', tag: 'bg-emerald-50 text-emerald-800 ring-emerald-200', dot: 'bg-emerald-400' },
+      '과일':       { emoji: '🍎', tag: 'bg-rose-50 text-rose-800 ring-rose-200',          dot: 'bg-rose-400' },
+      '육류':       { emoji: '🥩', tag: 'bg-red-50 text-red-800 ring-red-200',             dot: 'bg-red-400' },
+      '해산물':     { emoji: '🦐', tag: 'bg-sky-50 text-sky-800 ring-sky-200',             dot: 'bg-sky-400' },
+      '유제품·달걀': { emoji: '🥚', tag: 'bg-amber-50 text-amber-800 ring-amber-200',       dot: 'bg-amber-400' },
+      '양념·소스':   { emoji: '🧂', tag: 'bg-orange-50 text-orange-800 ring-orange-200',    dot: 'bg-orange-400' },
+      '곡물·면':     { emoji: '🍚', tag: 'bg-yellow-50 text-yellow-800 ring-yellow-200',    dot: 'bg-yellow-400' },
+      '기타':       { emoji: '📦', tag: 'bg-slate-100 text-slate-700 ring-slate-200',      dot: 'bg-slate-400' },
+    };
+
+    // ========================================
+    // 🛠️ Utilities & API
+    // ========================================
+    const charLen = (s) => [...s].length;
+    // 레시피 재료와 냉장고 재료를 비교할 때 띄어쓰기·대소문자 차이는 무시한다
+    const normalize = (s) => s.replace(/\s+/g, '').toLowerCase();
+
+    function formatDate(iso) {
+      const d = new Date(iso);
+      const sameYear = d.getFullYear() === new Date().getFullYear();
+      return d.toLocaleDateString('ko-KR', sameYear
+        ? { month: 'long', day: 'numeric' }
+        : { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    async function api(path, { method = 'GET', body } = {}) {
+      let res;
+      try {
+        res = await fetch(`${API_BASE_URL}${path}`, {
+          method,
+          headers: body ? { 'Content-Type': 'application/json' } : undefined,
+          body: body ? JSON.stringify(body) : undefined,
+        });
+      } catch {
+        throw new Error('서버에 연결하지 못했어요. 서버가 켜져 있는지 확인해 주세요.');
+      }
+      let json = null;
+      try { json = await res.json(); } catch {}
+      if (!res.ok || !json?.success) {
+        const err = new Error(json?.message || `요청을 처리하지 못했어요. (${res.status})`);
+        err.status = res.status;
+        throw err;
+      }
+      return json.data;
+    }
+
+    // ========================================
+    // 🎨 Design System Components
+    // ========================================
+    function Button({ variant = 'primary', size = 'md', className = '', type = 'button', children, ...props }) {
+      const variants = {
+        primary:   'bg-teal-600 text-white hover:bg-teal-700 focus-visible:ring-teal-400',
+        secondary: 'bg-white text-slate-700 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus-visible:ring-slate-400',
+        danger:    'bg-rose-600 text-white hover:bg-rose-700 focus-visible:ring-rose-400',
+        ghost:     'text-slate-600 hover:bg-slate-100 focus-visible:ring-slate-300',
+      };
+      const sizes = {
+        sm: 'px-2.5 py-1.5 text-sm',
+        md: 'px-4 py-2 text-sm',
+        lg: 'px-5 py-2.5 text-base',
+      };
+      return (
+        <button
+          type={type}
+          className={`inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition
+            focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1
+            disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${sizes[size]} ${className}`}
+          {...props}
+        >
+          {children}
+        </button>
+      );
+    }
+
+    function Input({ label, id, error, hint, className = '', ...props }) {
+      return (
+        <div className={className}>
+          {label && <label htmlFor={id} className="mb-1 block text-sm font-medium text-slate-700">{label}</label>}
+          <input
+            id={id}
+            aria-invalid={!!error}
+            className={`w-full rounded-lg border bg-white px-3 py-2 text-sm placeholder:text-slate-400
+              focus:outline-none focus:ring-2 disabled:bg-slate-100
+              ${error ? 'border-rose-400 focus:ring-rose-200' : 'border-slate-300 focus:border-teal-500 focus:ring-teal-100'}`}
+            {...props}
+          />
+          {hint && !error && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
+          {error && <p className="mt-1 text-xs text-rose-600" role="alert">{error}</p>}
+        </div>
+      );
+    }
+
+    function Textarea({ className = '', ...props }) {
+      return (
+        <textarea
+          className={`w-full resize-y rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm
+            placeholder:text-slate-400 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-100 ${className}`}
+          {...props}
+        />
+      );
+    }
+
+    function Card({ className = '', children, ...props }) {
+      return (
+        <div className={`rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 ${className}`} {...props}>
+          {children}
+        </div>
+      );
+    }
+
+    function Chip({ active = false, className = '', children, ...props }) {
+      return (
+        <button
+          type="button"
+          aria-pressed={active}
+          className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1.5 text-sm transition
+            focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400
+            ${active ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 ring-1 ring-inset ring-slate-200 hover:bg-slate-100'} ${className}`}
+          {...props}
+        >
+          {children}
+        </button>
+      );
+    }
+
+    // 태그 하나. onRemove 가 있으면 × 버튼이 붙는다
+    function Tag({ className = '', onRemove, removeLabel, disabled, title, children }) {
+      return (
+        <span title={title} className={`anim-pop inline-flex items-center gap-1 rounded-full py-1 pl-3 text-sm ring-1 ring-inset
+          ${onRemove ? 'pr-1' : 'pr-3'} ${disabled ? 'opacity-50' : ''} ${className}`}>
+          {children}
+          {onRemove && (
+            <button
+              type="button"
+              onClick={onRemove}
+              disabled={disabled}
+              aria-label={removeLabel}
+              className="grid h-5 w-5 place-items-center rounded-full text-current opacity-60 hover:bg-black/10 hover:opacity-100
+                focus:outline-none focus-visible:ring-2 focus-visible:ring-current"
+            >
+              <span aria-hidden="true">×</span>
+            </button>
+          )}
+        </span>
+      );
+    }
+
+    function Spinner({ className = '' }) {
+      return (
+        <span
+          role="status"
+          aria-label="불러오는 중"
+          className={`inline-block h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-teal-600 ${className}`}
+        />
+      );
+    }
+
+    function EmptyState({ emoji, title, description, action }) {
+      return (
+        <div className="flex flex-col items-center px-6 py-14 text-center">
+          <div className="mb-3 text-5xl" aria-hidden="true">{emoji}</div>
+          <p className="font-semibold text-slate-700">{title}</p>
+          {description && <p className="mt-1 text-sm text-slate-500">{description}</p>}
+          {action && <div className="mt-5">{action}</div>}
+        </div>
+      );
+    }
+
+    function ErrorState({ message, onRetry }) {
+      return (
+        <div className="flex flex-col items-center px-6 py-14 text-center" role="alert">
+          <div className="mb-3 text-5xl" aria-hidden="true">⚠️</div>
+          <p className="font-semibold text-slate-700">데이터를 불러오지 못했어요</p>
+          <p className="mt-1 text-sm text-slate-500">{message}</p>
+          <Button variant="secondary" className="mt-5" onClick={onRetry}>다시 시도</Button>
+        </div>
+      );
+    }
+
+    // dismissible=false 면 바깥 클릭·Esc 로 닫히지 않는다 (작성 중인 폼 보호)
+    function Modal({ isOpen, onClose, title, size = 'md', dismissible = true, footer, children }) {
+      useEffect(() => {
+        if (!isOpen) return;
+        const onKey = (e) => { if (e.key === 'Escape' && dismissible) onClose(); };
+        const prevOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        window.addEventListener('keydown', onKey);
+        return () => {
+          window.removeEventListener('keydown', onKey);
+          document.body.style.overflow = prevOverflow;
+        };
+      }, [isOpen, dismissible, onClose]);
+
+      if (!isOpen) return null;
+      const sizes = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl' };
+      return (
+        <div
+          className="anim-fade fixed inset-0 z-40 flex items-end justify-center bg-slate-900/40 sm:items-center sm:p-4"
+          onMouseDown={(e) => { if (dismissible && e.target === e.currentTarget) onClose(); }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-title"
+            className={`anim-pop flex max-h-[92vh] w-full flex-col rounded-t-2xl bg-white shadow-xl sm:rounded-2xl ${sizes[size]}`}
+          >
+            <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+              <h2 id="modal-title" className="text-lg font-bold text-slate-900">{title}</h2>
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="닫기"
+                className="grid h-8 w-8 place-items-center rounded-full text-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+              >
+                <span aria-hidden="true">×</span>
+              </button>
+            </div>
+            <div className="overflow-y-auto px-5 py-4">{children}</div>
+            {footer && <div className="flex justify-end gap-2 border-t border-slate-100 px-5 py-3">{footer}</div>}
+          </div>
+        </div>
+      );
+    }
+
+    // 입력창에서 Enter·쉼표로 태그를 만들고, 빈 입력에서 Backspace 로 마지막 태그를 지운다
+    function TagInput({ id, label, tags, onChange, placeholder, maxLength, maxTags, error, tagClassName = () => '' }) {
+      const [text, setText] = useState('');
+      const inputRef = useRef(null);
+
+      const commit = (raw) => {
+        const names = raw.split(/[,，]/).map((s) => s.replace(/\s+/g, ' ').trim()).filter(Boolean);
+        if (!names.length) return;
+        const next = [...tags];
+        for (const name of names) {
+          if (maxTags && next.length >= maxTags) break;
+          if (!next.some((t) => normalize(t) === normalize(name))) next.push(name.slice(0, maxLength));
+        }
+        onChange(next);
+        setText('');
+      };
+
+      const onKeyDown = (e) => {
+        if (e.nativeEvent.isComposing) return; // 한글 조합 중 Enter 가 두 번 들어오는 것 방지
+        if (e.key === 'Enter' || e.key === ',') {
+          e.preventDefault();
+          commit(text);
+        } else if (e.key === 'Backspace' && !text && tags.length) {
+          onChange(tags.slice(0, -1));
+        }
+      };
+
+      return (
+        <div>
+          {label && <label htmlFor={id} className="mb-1 block text-sm font-medium text-slate-700">{label}</label>}
+          <div
+            onClick={() => inputRef.current?.focus()}
+            className={`flex min-h-[44px] flex-wrap items-center gap-1.5 rounded-lg border bg-white px-2 py-1.5
+              focus-within:ring-2 ${error ? 'border-rose-400 focus-within:ring-rose-200' : 'border-slate-300 focus-within:border-teal-500 focus-within:ring-teal-100'}`}
+          >
+            {tags.map((t) => (
+              <Tag
+                key={t}
+                className={tagClassName(t)}
+                onRemove={(e) => { e.stopPropagation(); onChange(tags.filter((x) => x !== t)); }}
+                removeLabel={`${t} 빼기`}
+              >
+                {t}
+              </Tag>
+            ))}
+            <input
+              ref={inputRef}
+              id={id}
+              value={text}
+              maxLength={maxLength}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (/[,，]/.test(v)) commit(v); else setText(v); // 붙여넣은 "양파, 마늘" 도 한 번에 태그로
+              }}
+              onKeyDown={onKeyDown}
+              onBlur={() => commit(text)}
+              placeholder={tags.length ? '' : placeholder}
+              aria-invalid={!!error}
+              className="min-w-[8rem] flex-1 border-0 bg-transparent px-1 py-1 text-sm placeholder:text-slate-400 focus:outline-none"
+            />
+          </div>
+          {error && <p className="mt-1 text-xs text-rose-600" role="alert">{error}</p>}
+        </div>
+      );
+    }
+
+    function Toast({ toast, onClose }) {
+      useEffect(() => {
+        if (!toast) return;
+        const t = setTimeout(onClose, toast.action ? 5000 : 3000);
+        return () => clearTimeout(t);
+      }, [toast, onClose]);
+
+      if (!toast) return null;
+      return (
+        <div className="fixed inset-x-0 bottom-4 z-50 flex justify-center px-4" aria-live="polite">
+          <div className={`anim-pop flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-white shadow-lg
+            ${toast.type === 'error' ? 'bg-rose-600' : 'bg-slate-800'}`}>
+            <span>{toast.message}</span>
+            {toast.action && (
+              <button
+                type="button"
+                onClick={() => { toast.action.run(); onClose(); }}
+                className="font-semibold text-teal-300 underline-offset-2 hover:underline"
+              >
+                {toast.action.label}
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ========================================
+    // 🧩 Layout Components
+    // ========================================
+    const TABS = [
+      { key: 'fridge', label: '냉장고', emoji: '🧊' },
+      { key: 'recipes', label: '레시피', emoji: '📖' },
+    ];
+
+    // 탭을 URL 해시(#/fridge, #/recipes)와 맞춰 새로고침·뒤로가기에도 유지한다
+    function useHashTab() {
+      const read = () => {
+        const key = window.location.hash.replace(/^#\/?/, '');
+        return TABS.some((t) => t.key === key) ? key : 'fridge';
+      };
+      const [tab, setTab] = useState(read);
+      useEffect(() => {
+        const onHash = () => setTab(read());
+        window.addEventListener('hashchange', onHash);
+        return () => window.removeEventListener('hashchange', onHash);
+      }, []);
+      const go = useCallback((key) => { window.location.hash = `/${key}`; }, []);
+      return [tab, go];
+    }
+
+    function Header({ tab, onTab, counts }) {
+      return (
+        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
+          <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+            <a href="#/fridge" className="flex items-center gap-2 text-lg font-extrabold text-slate-900">
+              <span aria-hidden="true">🧊</span> 냉장고 레시피북
+            </a>
+            <nav aria-label="메뉴" className="flex rounded-xl bg-slate-100 p-1">
+              {TABS.map((t) => (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => onTab(t.key)}
+                  aria-current={tab === t.key ? 'page' : undefined}
+                  className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition
+                    focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400
+                    ${tab === t.key ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                >
+                  <span aria-hidden="true">{t.emoji}</span>
+                  {t.label}
+                  <span className={`rounded-full px-1.5 text-xs ${tab === t.key ? 'bg-teal-100 text-teal-800' : 'bg-slate-200 text-slate-600'}`}>
+                    {counts[t.key]}
+                  </span>
+                </button>
+              ))}
+            </nav>
+          </div>
+        </header>
+      );
+    }
+
+    // ========================================
+    // 📄 Page: 냉장고 재료
+    // ========================================
+    function IngredientForm({ ingredients, onAdd }) {
+      const [name, setName] = useState('');
+      const [category, setCategory] = useState(CATEGORIES[0]);
+      const [adding, setAdding] = useState(false);
+      const [error, setError] = useState('');
+
+      const submit = async (e) => {
+        e.preventDefault();
+        const names = [...new Set(name.split(/[,，]/).map((s) => s.replace(/\s+/g, ' ').trim()).filter(Boolean))];
+        if (!names.length) return setError('재료 이름을 입력해 주세요.');
+        const tooLong = names.find((n) => charLen(n) > NAME_MAX);
+        if (tooLong) return setError(`재료 이름은 ${NAME_MAX}자까지 쓸 수 있어요.`);
+
+        setAdding(true);
+        setError('');
+        const failed = [];
+        const messages = [];
+        for (const n of names) {
+          if (ingredients.some((i) => i.name === n)) {
+            failed.push(n);
+            messages.push(`'${n}'은(는) 이미 있어요.`);
+            continue;
+          }
+          try {
+            await onAdd(n, category);
+          } catch (err) {
+            failed.push(n);
+            messages.push(err.message);
+          }
+        }
+        setAdding(false);
+        setName(failed.join(', ')); // 실패한 것만 입력창에 남겨 다시 시도할 수 있게
+        setError([...new Set(messages)].join(' '));
+      };
+
+      return (
+        <Card className="p-4 sm:p-5">
+          <form onSubmit={submit} className="space-y-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+              <Input
+                id="ingredient-name"
+                aria-label="재료 이름"
+                className="flex-1"
+                value={name}
+                onChange={(e) => { setName(e.target.value); setError(''); }}
+                placeholder="재료 이름 (쉼표로 여러 개: 양파, 대파, 마늘)"
+                error={error}
+                disabled={adding}
+                autoComplete="off"
+              />
+              <Button type="submit" disabled={adding || !name.trim()} className="sm:w-28">
+                {adding ? <Spinner className="h-4 w-4 border-white/40 border-t-white" /> : '+ 넣기'}
+              </Button>
+            </div>
+            <fieldset>
+              <legend className="mb-1.5 text-xs font-medium text-slate-500">분류</legend>
+              <div className="flex flex-wrap gap-1.5">
+                {CATEGORIES.map((c) => (
+                  <Chip key={c} active={category === c} onClick={() => setCategory(c)}>
+                    <span aria-hidden="true">{CATEGORY_STYLE[c].emoji}</span>{c}
+                  </Chip>
+                ))}
+              </div>
+            </fieldset>
+          </form>
+        </Card>
+      );
+    }
+
+    function FridgePage({ ingredients, loading, error, onRetry, onAdd, onDelete }) {
+      const [filter, setFilter] = useState('전체');
+      const [view, setView] = useState('tag'); // tag | list
+      const [query, setQuery] = useState('');
+      const [deletingIds, setDeletingIds] = useState(() => new Set());
+
+      const countByCategory = useMemo(() => {
+        const counts = Object.fromEntries(CATEGORIES.map((c) => [c, 0]));
+        ingredients.forEach((i) => { counts[i.category] = (counts[i.category] || 0) + 1; });
+        return counts;
+      }, [ingredients]);
+
+      // 고른 분류의 마지막 재료를 지우면 칩이 비활성화되므로 전체 보기로 돌아간다
+      useEffect(() => {
+        if (filter !== '전체' && !countByCategory[filter]) setFilter('전체');
+      }, [filter, countByCategory]);
+
+      const visible = useMemo(() => {
+        const q = normalize(query);
+        return ingredients.filter((i) =>
+          (filter === '전체' || i.category === filter) && (!q || normalize(i.name).includes(q)));
+      }, [ingredients, filter, query]);
+
+      const remove = async (item) => {
+        setDeletingIds((s) => new Set(s).add(item.id));
+        try {
+          await onDelete(item);
+        } finally {
+          setDeletingIds((s) => { const n = new Set(s); n.delete(item.id); return n; });
+        }
+      };
+
+      const groups = CATEGORIES
+        .map((c) => ({ category: c, items: visible.filter((i) => i.category === c) }))
+        .filter((g) => g.items.length);
+
+      return (
+        <div className="space-y-4">
+          <IngredientForm ingredients={ingredients} onAdd={onAdd} />
+
+          <Card>
+            <div className="space-y-3 border-b border-slate-100 p-4 sm:px-5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="font-bold text-slate-900">
+                  냉장고 속 재료 <span className="text-teal-700">{ingredients.length}</span>
+                </h2>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="search"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="재료 검색"
+                    aria-label="재료 검색"
+                    className="w-32 rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-100 sm:w-40"
+                  />
+                  <div className="flex rounded-lg bg-slate-100 p-0.5" role="group" aria-label="보기 방식">
+                    {[['tag', '태그'], ['list', '목록']].map(([key, label]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        aria-pressed={view === key}
+                        onClick={() => setView(key)}
+                        className={`rounded-md px-2.5 py-1 text-sm ${view === key ? 'bg-white font-medium shadow-sm' : 'text-slate-500'}`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+                <Chip active={filter === '전체'} onClick={() => setFilter('전체')}>전체 {ingredients.length}</Chip>
+                {CATEGORIES.map((c) => (
+                  <Chip key={c} active={filter === c} onClick={() => setFilter(c)} disabled={!countByCategory[c]}
+                    className="disabled:opacity-40">
+                    <span aria-hidden="true">{CATEGORY_STYLE[c].emoji}</span>{c} {countByCategory[c]}
+                  </Chip>
+                ))}
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="flex justify-center py-14"><Spinner /></div>
+            ) : error ? (
+              <ErrorState message={error} onRetry={onRetry} />
+            ) : !ingredients.length ? (
+              <EmptyState emoji="🫙" title="냉장고가 비어 있어요" description="위 입력창에 재료 이름을 적고 Enter 를 눌러 보세요." />
+            ) : !visible.length ? (
+              <EmptyState emoji="🔍" title="조건에 맞는 재료가 없어요" />
+            ) : view === 'tag' ? (
+              <div className="divide-y divide-slate-100">
+                {groups.map((g) => (
+                  <section key={g.category} className="px-4 py-3 sm:px-5">
+                    <h3 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-600">
+                      <span aria-hidden="true">{CATEGORY_STYLE[g.category].emoji}</span>
+                      {g.category}
+                      <span className="font-normal text-slate-400">{g.items.length}</span>
+                    </h3>
+                    <ul className="flex flex-wrap gap-1.5">
+                      {g.items.map((i) => (
+                        <li key={i.id}>
+                          <Tag
+                            className={CATEGORY_STYLE[i.category]?.tag}
+                            title={`${formatDate(i.createdAt)} 등록`}
+                            onRemove={() => remove(i)}
+                            removeLabel={`${i.name} 삭제`}
+                            disabled={deletingIds.has(i.id)}
+                          >
+                            {i.name}
+                          </Tag>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ))}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-slate-50 text-xs text-slate-500">
+                    <tr>
+                      <th scope="col" className="px-4 py-2 font-medium sm:px-5">재료</th>
+                      <th scope="col" className="px-4 py-2 font-medium">분류</th>
+                      <th scope="col" className="px-4 py-2 font-medium">등록일</th>
+                      <th scope="col" className="px-4 py-2"><span className="sr-only">삭제</span></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {visible.map((i) => (
+                      <tr key={i.id} className={deletingIds.has(i.id) ? 'opacity-50' : ''}>
+                        <td className="px-4 py-2.5 font-medium text-slate-800 sm:px-5">{i.name}</td>
+                        <td className="px-4 py-2.5">
+                          <span className="inline-flex items-center gap-1.5 text-slate-600">
+                            <span className={`h-2 w-2 rounded-full ${CATEGORY_STYLE[i.category]?.dot}`} aria-hidden="true" />
+                            {i.category}
+                          </span>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-2.5 text-slate-500">{formatDate(i.createdAt)}</td>
+                        <td className="px-4 py-2.5 text-right">
+                          <Button variant="ghost" size="sm" onClick={() => remove(i)} disabled={deletingIds.has(i.id)}
+                            aria-label={`${i.name} 삭제`} className="text-rose-600 hover:bg-rose-50">
+                            삭제
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+        </div>
+      );
+    }
+
+    // ========================================
+    // 📄 Page: 레시피
+    // ========================================
+    const emptyDraft = () => ({ title: '', ingredients: [], steps: [''] });
+
+    function RecipeFormModal({ isOpen, recipe, fridgeNames, onClose, onSubmit }) {
+      const [draft, setDraft] = useState(emptyDraft);
+      const [errors, setErrors] = useState({});
+      const [saving, setSaving] = useState(false);
+
+      // 열릴 때마다 새 작성이면 빈 폼, 수정이면 기존 값으로 채운다
+      useEffect(() => {
+        if (!isOpen) return;
+        setDraft(recipe
+          ? { title: recipe.title, ingredients: [...recipe.ingredients], steps: [...recipe.steps] }
+          : emptyDraft());
+        setErrors({});
+        setSaving(false);
+      }, [isOpen, recipe]);
+
+      const have = useMemo(() => new Set(fridgeNames.map(normalize)), [fridgeNames]);
+      const picked = new Set(draft.ingredients.map(normalize));
+      const suggestions = fridgeNames.filter((n) => !picked.has(normalize(n)));
+
+      const set = (patch) => setDraft((d) => ({ ...d, ...patch }));
+      const setStep = (idx, value) => set({ steps: draft.steps.map((s, i) => (i === idx ? value : s)) });
+
+      const validate = () => {
+        const e = {};
+        const title = draft.title.trim();
+        const steps = draft.steps.map((s) => s.trim()).filter(Boolean);
+        if (!title) e.title = '요리명을 입력해 주세요.';
+        else if (charLen(title) > TITLE_MAX) e.title = `요리명은 ${TITLE_MAX}자까지 쓸 수 있어요.`;
+        if (!draft.ingredients.length) e.ingredients = '재료를 한 개 이상 넣어 주세요.';
+        if (!steps.length) e.steps = '조리법을 한 단계 이상 적어 주세요.';
+        else if (steps.some((s) => charLen(s) > STEP_MAX)) e.steps = `조리 단계 하나는 ${STEP_MAX}자까지 쓸 수 있어요.`;
+        return e;
+      };
+
+      const submit = async (ev) => {
+        ev.preventDefault();
+        const e = validate();
+        setErrors(e);
+        if (Object.keys(e).length) return;
+        setSaving(true);
+        try {
+          await onSubmit({
+            title: draft.title.trim(),
+            ingredients: draft.ingredients,
+            steps: draft.steps.map((s) => s.trim()).filter(Boolean),
+          });
+          onClose();
+        } catch (err) {
+          setErrors({ form: err.message });
+          setSaving(false);
+        }
+      };
+
+      const dirty = draft.title.trim() || draft.ingredients.length || draft.steps.some((s) => s.trim());
+      const requestClose = () => {
+        if (saving) return;
+        if (dirty && !recipe && !window.confirm('작성 중인 레시피가 사라져요. 닫을까요?')) return;
+        onClose();
+      };
+
+      return (
+        <Modal
+          isOpen={isOpen}
+          onClose={requestClose}
+          dismissible={false}
+          size="lg"
+          title={recipe ? '레시피 수정' : '새 레시피 쓰기'}
+          footer={
+            <>
+              <Button variant="secondary" onClick={requestClose} disabled={saving}>취소</Button>
+              <Button type="submit" form="recipe-form" disabled={saving}>
+                {saving ? '저장 중…' : '저장하기'}
+              </Button>
+            </>
+          }
+        >
+          <form id="recipe-form" onSubmit={submit} className="space-y-5" noValidate>
+            <Input
+              id="recipe-title"
+              label="요리명"
+              value={draft.title}
+              maxLength={TITLE_MAX}
+              onChange={(e) => set({ title: e.target.value })}
+              placeholder="예) 김치볶음밥"
+              error={errors.title}
+              autoFocus
+            />
+
+            <div>
+              <TagInput
+                id="recipe-ingredients"
+                label={`재료 (${draft.ingredients.length}/${RECIPE_ITEMS_MAX})`}
+                tags={draft.ingredients}
+                onChange={(ingredients) => set({ ingredients })}
+                placeholder="재료 이름을 적고 Enter (예: 김치, 밥, 달걀)"
+                maxLength={NAME_MAX}
+                maxTags={RECIPE_ITEMS_MAX}
+                error={errors.ingredients}
+                tagClassName={(t) => (have.has(normalize(t))
+                  ? 'bg-teal-50 text-teal-800 ring-teal-200'
+                  : 'bg-slate-100 text-slate-700 ring-slate-200')}
+              />
+              {suggestions.length > 0 && (
+                <div className="mt-2">
+                  <p className="mb-1.5 text-xs text-slate-500">냉장고에서 고르기</p>
+                  <div className="flex max-h-24 flex-wrap gap-1.5 overflow-y-auto">
+                    {suggestions.map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        disabled={draft.ingredients.length >= RECIPE_ITEMS_MAX}
+                        onClick={() => set({ ingredients: [...draft.ingredients, n] })}
+                        className="rounded-full border border-dashed border-teal-300 px-2.5 py-0.5 text-sm text-teal-700
+                          hover:bg-teal-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 disabled:opacity-40"
+                      >
+                        + {n}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <fieldset>
+              <legend className="mb-1 text-sm font-medium text-slate-700">조리법</legend>
+              <ol className="space-y-2">
+                {draft.steps.map((step, idx) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span className="mt-2 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-teal-600 text-xs font-bold text-white">
+                      {idx + 1}
+                    </span>
+                    <Textarea
+                      rows={2}
+                      value={step}
+                      maxLength={STEP_MAX}
+                      onChange={(e) => setStep(idx, e.target.value)}
+                      placeholder={idx === 0 ? '예) 팬에 기름을 두르고 김치를 볶아요.' : '다음 단계'}
+                      aria-label={`${idx + 1}단계`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => set({ steps: draft.steps.filter((_, i) => i !== idx) })}
+                      disabled={draft.steps.length === 1}
+                      aria-label={`${idx + 1}단계 지우기`}
+                      className="mt-1.5 grid h-8 w-8 shrink-0 place-items-center rounded-full text-lg text-slate-400
+                        hover:bg-rose-50 hover:text-rose-600 disabled:invisible"
+                    >
+                      <span aria-hidden="true">×</span>
+                    </button>
+                  </li>
+                ))}
+              </ol>
+              {errors.steps && <p className="mt-1 text-xs text-rose-600" role="alert">{errors.steps}</p>}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-2 text-teal-700"
+                onClick={() => set({ steps: [...draft.steps, ''] })}
+                disabled={draft.steps.length >= RECIPE_ITEMS_MAX}
+              >
+                + 단계 추가
+              </Button>
+            </fieldset>
+
+            {errors.form && (
+              <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700" role="alert">{errors.form}</p>
+            )}
+          </form>
+        </Modal>
+      );
+    }
+
+    function IngredientChecklist({ names, have }) {
+      return (
+        <ul className="flex flex-wrap gap-1.5">
+          {names.map((n) => {
+            const ok = have.has(normalize(n));
+            return (
+              <li key={n}
+                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-sm ring-1 ring-inset
+                  ${ok ? 'bg-teal-50 text-teal-800 ring-teal-200' : 'bg-white text-slate-500 ring-slate-200'}`}>
+                <span aria-hidden="true">{ok ? '✓' : '·'}</span>
+                {n}
+                <span className="sr-only">{ok ? '(냉장고에 있음)' : '(냉장고에 없음)'}</span>
+              </li>
+            );
+          })}
+        </ul>
+      );
+    }
+
+    function RecipeDetailModal({ recipe, have, onClose, onEdit, onDelete }) {
+      if (!recipe) return null;
+      const owned = recipe.ingredients.filter((n) => have.has(normalize(n))).length;
+      return (
+        <Modal
+          isOpen
+          onClose={onClose}
+          size="lg"
+          title={recipe.title}
+          footer={
+            <>
+              <Button variant="ghost" className="mr-auto text-rose-600 hover:bg-rose-50" onClick={() => onDelete(recipe)}>삭제</Button>
+              <Button variant="secondary" onClick={() => onEdit(recipe)}>수정</Button>
+              <Button onClick={onClose}>닫기</Button>
+            </>
+          }
+        >
+          <p className="mb-4 text-xs text-slate-400">{formatDate(recipe.createdAt)} 작성</p>
+          <section className="mb-5">
+            <h3 className="mb-2 text-sm font-semibold text-slate-700">
+              재료 <span className="font-normal text-slate-500">— 냉장고에 {owned}/{recipe.ingredients.length}개 있음</span>
+            </h3>
+            <IngredientChecklist names={recipe.ingredients} have={have} />
+          </section>
+          <section>
+            <h3 className="mb-2 text-sm font-semibold text-slate-700">조리법</h3>
+            <ol className="space-y-3">
+              {recipe.steps.map((s, idx) => (
+                <li key={idx} className="flex gap-3">
+                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-teal-600 text-xs font-bold text-white">{idx + 1}</span>
+                  <p className="whitespace-pre-wrap pt-0.5 text-sm leading-relaxed text-slate-700">{s}</p>
+                </li>
+              ))}
+            </ol>
+          </section>
+        </Modal>
+      );
+    }
+
+    function RecipesPage({ recipes, ingredients, loading, error, onRetry, onSave, onDelete }) {
+      const [query, setQuery] = useState('');
+      const [sort, setSort] = useState('latest'); // latest | cookable
+      const [form, setForm] = useState({ open: false, recipe: null });
+      const [detailId, setDetailId] = useState(null);
+      const [confirm, setConfirm] = useState(null);
+      const [deleting, setDeleting] = useState(false);
+
+      const fridgeNames = useMemo(() => ingredients.map((i) => i.name), [ingredients]);
+      const have = useMemo(() => new Set(fridgeNames.map(normalize)), [fridgeNames]);
+
+      const visible = useMemo(() => {
+        const q = normalize(query);
+        const list = recipes
+          .map((r) => ({ ...r, owned: r.ingredients.filter((n) => have.has(normalize(n))).length }))
+          .filter((r) => !q || normalize(r.title).includes(q) || r.ingredients.some((n) => normalize(n).includes(q)));
+        if (sort === 'cookable') {
+          // 부족한 재료가 적은 순 → 보유 비율 높은 순
+          list.sort((a, b) => (a.ingredients.length - a.owned) - (b.ingredients.length - b.owned)
+            || b.owned / b.ingredients.length - a.owned / a.ingredients.length);
+        }
+        return list;
+      }, [recipes, have, query, sort]);
+
+      const cookableCount = visible.filter((r) => r.owned === r.ingredients.length).length;
+      const detail = recipes.find((r) => r.id === detailId) || null;
+
+      const openEdit = (recipe) => { setDetailId(null); setForm({ open: true, recipe }); };
+      const closeForm = useCallback(() => setForm((f) => ({ ...f, open: false })), []);
+      const closeDetail = useCallback(() => setDetailId(null), []);
+      const closeConfirm = useCallback(() => { if (!deleting) setConfirm(null); }, [deleting]);
+
+      const doDelete = async () => {
+        setDeleting(true);
+        try {
+          await onDelete(confirm);
+          setConfirm(null);
+          setDetailId(null);
+        } catch {
+          // 에러 토스트는 App 에서 띄운다
+        } finally {
+          setDeleting(false);
+        }
+      };
+
+      return (
+        <div className="space-y-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="요리명이나 재료로 검색"
+              aria-label="레시피 검색"
+              className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-100"
+            />
+            <div className="flex gap-2">
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value)}
+                aria-label="정렬"
+                className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-100"
+              >
+                <option value="latest">최신순</option>
+                <option value="cookable">만들기 쉬운 순</option>
+              </select>
+              <Button onClick={() => setForm({ open: true, recipe: null })} className="whitespace-nowrap">+ 새 레시피</Button>
+            </div>
+          </div>
+
+          {!loading && !error && recipes.length > 0 && (
+            <p className="text-sm text-slate-500">
+              레시피 <b className="text-slate-800">{visible.length}</b>개 중
+              지금 냉장고 재료로 바로 만들 수 있는 요리 <b className="text-teal-700">{cookableCount}</b>개
+            </p>
+          )}
+
+          {loading ? (
+            <Card className="flex justify-center py-14"><Spinner /></Card>
+          ) : error ? (
+            <Card><ErrorState message={error} onRetry={onRetry} /></Card>
+          ) : !recipes.length ? (
+            <Card>
+              <EmptyState
+                emoji="📖"
+                title="아직 저장한 레시피가 없어요"
+                description="자주 해 먹는 요리를 기록해 두세요."
+                action={<Button onClick={() => setForm({ open: true, recipe: null })}>첫 레시피 쓰기</Button>}
+              />
+            </Card>
+          ) : !visible.length ? (
+            <Card><EmptyState emoji="🔍" title={`'${query}'에 맞는 레시피가 없어요`} /></Card>
+          ) : (
+            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {visible.map((r) => {
+                const complete = r.owned === r.ingredients.length;
+                return (
+                  <li key={r.id}>
+                    <Card className="flex h-full flex-col p-4 transition hover:shadow-md hover:ring-teal-200">
+                      <button
+                        type="button"
+                        onClick={() => setDetailId(r.id)}
+                        className="flex-1 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-lg"
+                      >
+                        <div className="mb-2 flex items-start justify-between gap-2">
+                          <h3 className="font-bold text-slate-900">{r.title}</h3>
+                          <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium
+                            ${complete ? 'bg-teal-100 text-teal-800' : 'bg-amber-100 text-amber-800'}`}>
+                            {complete ? '바로 가능' : `재료 ${r.owned}/${r.ingredients.length}`}
+                          </span>
+                        </div>
+                        <IngredientChecklist names={r.ingredients.slice(0, 8)} have={have} />
+                        {r.ingredients.length > 8 && (
+                          <p className="mt-1 text-xs text-slate-400">외 {r.ingredients.length - 8}개</p>
+                        )}
+                        <p className="mt-3 line-clamp-2 text-sm text-slate-500">1. {r.steps[0]}</p>
+                      </button>
+                      <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-2 text-xs text-slate-400">
+                        <span>{formatDate(r.createdAt)} · {r.steps.length}단계</span>
+                        <span className="flex">
+                          <Button variant="ghost" size="sm" onClick={() => openEdit(r)} aria-label={`${r.title} 수정`}>수정</Button>
+                          <Button variant="ghost" size="sm" onClick={() => setConfirm(r)} aria-label={`${r.title} 삭제`}
+                            className="text-rose-600 hover:bg-rose-50">삭제</Button>
+                        </span>
+                      </div>
+                    </Card>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+
+          <RecipeFormModal
+            isOpen={form.open}
+            recipe={form.recipe}
+            fridgeNames={fridgeNames}
+            onClose={closeForm}
+            onSubmit={(data) => onSave(data, form.recipe?.id)}
+          />
+
+          {!confirm && (
+            <RecipeDetailModal recipe={detail} have={have} onClose={closeDetail} onEdit={openEdit} onDelete={setConfirm} />
+          )}
+
+          <Modal
+            isOpen={!!confirm}
+            onClose={closeConfirm}
+            size="sm"
+            title="레시피 삭제"
+            footer={
+              <>
+                <Button variant="secondary" onClick={closeConfirm} disabled={deleting}>취소</Button>
+                <Button variant="danger" onClick={doDelete} disabled={deleting}>{deleting ? '삭제 중…' : '삭제'}</Button>
+              </>
+            }
+          >
+            <p className="text-sm text-slate-600">
+              <b className="text-slate-900">{confirm?.title}</b> 레시피를 삭제할까요? 삭제하면 되돌릴 수 없어요.
+            </p>
+          </Modal>
+        </div>
+      );
+    }
+
+    // ========================================
+    // 🚀 App Component
+    // ========================================
+    function App() {
+      const [tab, goTab] = useHashTab();
+      const [ingredients, setIngredients] = useState([]);
+      const [recipes, setRecipes] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState('');
+      const [toast, setToast] = useState(null);
+
+      const notify = useCallback((message, extra = {}) => setToast({ message, ...extra, key: Date.now() }), []);
+      const closeToast = useCallback(() => setToast(null), []);
+
+      const load = useCallback(async () => {
+        setLoading(true);
+        setError('');
+        try {
+          const [ing, rec] = await Promise.all([api('/ingredients'), api('/recipes')]);
+          setIngredients(ing);
+          setRecipes(rec);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      }, []);
+
+      useEffect(() => { load(); }, [load]);
+
+      // 실패하면 throw 해서 폼이 에러를 보여주게 한다
+      const addIngredient = useCallback(async (name, category) => {
+        const created = await api('/ingredients', { method: 'POST', body: { name, category } });
+        setIngredients((list) => [created, ...list]);
+        return created;
+      }, []);
+
+      const deleteIngredient = useCallback(async (item) => {
+        try {
+          await api(`/ingredients/${item.id}`, { method: 'DELETE' });
+        } catch (err) {
+          if (err.status !== 404) return notify(err.message, { type: 'error' });
+        }
+        setIngredients((list) => list.filter((i) => i.id !== item.id));
+        notify(`'${item.name}'을(를) 뺐어요.`, {
+          action: {
+            label: '되돌리기',
+            run: () => addIngredient(item.name, item.category).catch((err) => notify(err.message, { type: 'error' })),
+          },
+        });
+      }, [addIngredient, notify]);
+
+      const saveRecipe = useCallback(async (data, id) => {
+        if (id) {
+          const updated = await api(`/recipes/${id}`, { method: 'PUT', body: data });
+          setRecipes((list) => list.map((r) => (r.id === id ? updated : r)));
+          notify('레시피를 수정했어요.');
+        } else {
+          const created = await api('/recipes', { method: 'POST', body: data });
+          setRecipes((list) => [created, ...list]);
+          notify('레시피를 저장했어요.');
+        }
+      }, [notify]);
+
+      const deleteRecipe = useCallback(async (recipe) => {
+        try {
+          await api(`/recipes/${recipe.id}`, { method: 'DELETE' });
+        } catch (err) {
+          if (err.status !== 404) {
+            notify(err.message, { type: 'error' });
+            throw err;
+          }
+        }
+        setRecipes((list) => list.filter((r) => r.id !== recipe.id));
+        notify(`'${recipe.title}' 레시피를 삭제했어요.`);
+      }, [notify]);
+
+      return (
+        <div className="min-h-screen pb-20">
+          <Header tab={tab} onTab={goTab} counts={{ fridge: ingredients.length, recipes: recipes.length }} />
+          <main className="mx-auto max-w-5xl px-4 py-5">
+            {tab === 'fridge' ? (
+              <FridgePage
+                ingredients={ingredients}
+                loading={loading}
+                error={error}
+                onRetry={load}
+                onAdd={addIngredient}
+                onDelete={deleteIngredient}
+              />
+            ) : (
+              <RecipesPage
+                recipes={recipes}
+                ingredients={ingredients}
+                loading={loading}
+                error={error}
+                onRetry={load}
+                onSave={saveRecipe}
+                onDelete={deleteRecipe}
+              />
+            )}
+          </main>
+          <Toast key={toast?.key} toast={toast} onClose={closeToast} />
+        </div>
+      );
+    }
+
+    // ========================================
+    // Rendering
+    // ========================================
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

@@ -533,153 +533,208 @@
     }
 
     // ========================================
-    // 🧠 Recommendation — 시세 지표 점수로 매수 3개 · 매도 1개 추천
+    // 🧠 Strategy — research/my-strategy.md 규칙으로 매수·매도 추천
     // ========================================
     //
-    // 점수 = 단기 추세(24시간 평균 vs 3일 평균) + 이번 주 상대 성과 + 30일 흐름(과열이면 감점)
-    //      + 최근 3일 방향 + 상승 중 조정 가산점 − 큰 변동성 감점
-    // 매도는 같은 점수를 뒤집고, 보유 손익(이익 실현·손실 관리)을 더해 가장 높은 코인을 고른다.
+    // 점수를 매기지 않고 규칙을 하나씩 대입한다. 규칙 하나라도 "아니오"면 매수하지 않고,
+    // "아니오"는 없는데 확인할 수 없는 값이 있으면 "판단 불가"로 둔다.
 
-    // 달러에 가격이 묶인 코인은 사도 수익이 나지 않아 매수 후보에서 뺀다 (목록 밖 코인은 등락폭으로 판별)
-    const PEGGED_COIN_IDS = new Set(['tether', 'usd-coin', 'dai', 'usds', 'ethena-usde', 'first-digital-usd']);
+    const STRATEGY = {
+      // 원칙 1 — CoinGecko id 와 업비트 마켓 코드
+      coins: [
+        { id: 'bitcoin', market: 'KRW-BTC', symbol: 'BTC', name: '비트코인' },
+        { id: 'ethereum', market: 'KRW-ETH', symbol: 'ETH', name: '이더리움' },
+        { id: 'ripple', market: 'KRW-XRP', symbol: 'XRP', name: '엑스알피' },
+      ],
+      weeklyDropPct: -3,      // 원칙 2 — 주간 등락률이 이 값 이하일 때만 매수
+      stopLossPct: -10,       // 원칙 3 ① 손절
+      takeProfitPct: 20,      // 원칙 3 ③ 익절
+      takeProfitRatio: 0.5,
+      breakEvenPct: 0,        // 원칙 3 ② 익절 후 본전 이탈
+      maxBuyKrw: 300000,      // 상한 — 1회 매수
+      maxCostPerCoinKrw: 400000, // 상한 — 코인당 매수 원가 합계
+    };
 
-    const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
-    const average = (list) => list.reduce((sum, v) => sum + v, 0) / list.length;
-    const fmtPct = (value) => `${value > 0 ? '+' : ''}${value.toFixed(1)}%`;
+    // 금지 조건 — 매주 공식 일정을 확인해 갱신한다.
+    //   kst: 발표·표결 시각(한국 시각) / 시각을 모르면 usDate 만 / 날짜를 모르면 unconfirmedUntil(그날까지 매수 금지)
+    const BLOCKING_EVENTS = [
+      { name: '美 상원 클래리티법 절차 표결', kst: '2026-09-16T03:15:00+09:00' },
+      { name: 'FOMC 금리 결정 발표', kst: '2026-09-17T03:00:00+09:00' },
+    ];
 
-    function median(list) {
-      if (!list.length) return 0;
-      const sorted = [...list].sort((a, b) => a - b);
-      const mid = Math.floor(sorted.length / 2);
-      return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    const DAY_MS = 24 * 60 * 60 * 1000;
+    // 규칙은 소수 둘째 자리(%)로 판단한다. 90/100−1 이 −9.9999…% 로 계산돼 −10% 손절을 놓치지 않도록 반올림 후 비교한다
+    const roundPct = (value) => Math.round(value * 100) / 100 + 0; // + 0: −0 을 0 으로
+    const fmtPct = (value) => { const v = roundPct(value); return `${v > 0 ? '+' : ''}${v.toFixed(2)}%`; };
+
+    // YYYY-MM-DD (한국 날짜)
+    const kstDateOf = (date) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(date);
+    const addDays = (ymd, n) => kstDateOf(new Date(new Date(`${ymd}T12:00:00+09:00`).getTime() + n * DAY_MS));
+    const kstHourOf = (date) => Number(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Seoul', hour: 'numeric', hourCycle: 'h23' }).format(date));
+    const shortDate = (ymd) => { const [, m, d] = ymd.split('-'); return `${Number(m)}/${Number(d)}`; };
+    const formatKstDateTime = (iso) =>
+      new Date(iso).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+
+    // 원칙 2 — 판단일 09:00 시가 vs 7일 전 09:00 시가 (업비트 일봉은 매일 09:00 KST 에 시작)
+    // 브라우저에서 업비트를 직접 부르면 초당 1회 제한(429)에 걸려 서버(server.js)가 대신 받아 온다
+    async function fetchWeeklyChanges(markets, todayKst) {
+      let data;
+      try {
+        data = await apiRequest(`/strategy/candles?date=${todayKst}`);
+      } catch (err) {
+        return markets.map((market) => ({ market, error: err.message }));
+      }
+      const weekAgoKst = addDays(todayKst, -7);
+      return markets.map((market) => {
+        const entry = data[market];
+        if (!entry || entry.error) return { market, error: `업비트 시세를 불러오지 못했어요. (${entry?.error ?? '응답 없음'})` };
+        const openOn = (ymd) => entry.candles.find((c) => c.date === ymd)?.open;
+        const todayOpen = openOn(todayKst);
+        const weekAgoOpen = openOn(weekAgoKst);
+        if (!todayOpen || !weekAgoOpen) return { market, error: '업비트 일봉에 필요한 날짜가 없어요.' };
+        return { market, todayKst, weekAgoKst, todayOpen, weekAgoOpen, changePct: roundPct((todayOpen / weekAgoOpen - 1) * 100) };
+      });
     }
 
-    function analyzeCoin(coin) {
-      const r7 = coin.price_change_percentage_7d_in_currency ?? 0;
-      const r30 = coin.price_change_percentage_30d_in_currency ?? 0;
-      const pegged = PEGGED_COIN_IDS.has(coin.id) || (Math.abs(r7) < 2 && Math.abs(r30) < 2);
-      const series = (coin.sparkline_in_7d?.price ?? []).filter(Number.isFinite);
-      if (series.length < 73) return { coin, r7, r30, pegged, enoughData: false };
+    // 금지 조건 — 이벤트마다 금지 날짜 목록을 만든다
+    function eventWindows(events) {
+      return events.map((ev) => {
+        if (ev.kst) {
+          const day = kstDateOf(new Date(ev.kst));
+          return { ...ev, when: formatKstDateTime(ev.kst), blockedDays: [addDays(day, -1), day] };
+        }
+        if (ev.usDate) {
+          // 시각을 모르면 미국 날짜와 다음 날을 모두 당일로 본다
+          return { ...ev, when: `미국 ${shortDate(ev.usDate)} (시각 미정)`, blockedDays: [addDays(ev.usDate, -1), ev.usDate, addDays(ev.usDate, 1)] };
+        }
+        return { ...ev, when: '날짜 미확인', unconfirmed: true, blockedDays: [] };
+      });
+    }
 
-      // 스파크라인은 현재가와 통화 단위가 다를 수 있어 서로 나눈 비율로만 쓴다
-      const last = series[series.length - 1];
-      const high = Math.max(...series);
-      const low = Math.min(...series);
-      const logReturns = series.slice(1).map((p, i) => Math.log(p / series[i]));
-      const meanReturn = average(logReturns);
+    function blockingToday(windows, todayKst) {
+      return windows
+        .filter((w) => (w.unconfirmed ? todayKst <= w.unconfirmedUntil : w.blockedDays.includes(todayKst)))
+        .map((w) => ({ ...w, reason: w.unconfirmed ? '날짜 미확인' : w.blockedDays[0] === todayKst ? '전날' : '당일' }));
+    }
 
+    // 원칙 3 — 지금 포지션(보유 0에서 산 뒤 전량 매도 전까지)에서 매도한 적이 있는지
+    function soldInCurrentPosition(ordersNewestFirst, coinId) {
+      let qty = 0;
+      let sold = false;
+      for (const o of [...ordersNewestFirst].reverse()) {
+        if (o.coinId !== coinId) continue;
+        if (o.side === 'buy') {
+          if (qty < QTY_EPSILON) sold = false;
+          qty += o.qty;
+        } else {
+          qty -= o.qty;
+          if (qty < QTY_EPSILON) { qty = 0; sold = false; } else sold = true;
+        }
+      }
+      return sold;
+    }
+
+    // check.ok: true(통과) · false(탈락) · null(확인 불가)
+    function verdictOf(checks) {
+      if (checks.some((c) => c.ok === false)) return 'skip';
+      if (checks.some((c) => c.ok == null)) return 'unknown';
+      return 'go';
+    }
+
+    function evaluateBuy({ rule, coin, weekly, blocks, wallet, now }) {
+      const todayKst = kstDateOf(now);
+      const checks = [];
+
+      checks.push({ label: '원칙 1 · 종목', ok: true, text: `${rule.symbol}는 매수 대상 3종목(BTC·ETH·XRP)이에요.` });
+
+      if (kstHourOf(now) < 9) {
+        checks.push({ label: '원칙 2 · 주간 -3% 이하', ok: false, text: '09:00 전이라 오늘 일봉이 없어요. 09:00 이후에 판단해요.' });
+      } else if (weekly?.error || weekly?.changePct == null) {
+        checks.push({ label: '원칙 2 · 주간 -3% 이하', ok: false, text: `${weekly?.error ?? '주간 등락률을 구하지 못했어요.'} 데이터가 없으면 매수하지 않아요.` });
+      } else {
+        const hit = weekly.changePct <= STRATEGY.weeklyDropPct;
+        checks.push({
+          label: '원칙 2 · 주간 -3% 이하',
+          ok: hit,
+          text: `${shortDate(weekly.weekAgoKst)} 09:00 ${formatPrice(weekly.weekAgoOpen)} → ${shortDate(weekly.todayKst)} 09:00 ${formatPrice(weekly.todayOpen)} = ${fmtPct(weekly.changePct)}`,
+        });
+      }
+
+      checks.push(blocks.length
+        ? { label: '금지 조건 · 이벤트', ok: false, text: blocks.map((b) => `${b.name} ${b.reason}`).join(', ') }
+        : { label: '금지 조건 · 이벤트', ok: true, text: '오늘은 금지 이벤트의 전날·당일이 아니에요.' });
+
+      let amount = 0;
+      if (!wallet) {
+        checks.push({ label: '상한 · 하루 1회', ok: null, text: '지갑을 불러오지 못해 확인할 수 없어요.' });
+        checks.push({ label: '상한 · 매수 금액', ok: null, text: '지갑을 불러오지 못해 계산할 수 없어요.' });
+      } else {
+        const boughtToday = wallet.orders.some((o) => o.side === 'buy' && o.coinId === rule.id && kstDateOf(new Date(o.at)) === todayKst);
+        checks.push({ label: '상한 · 하루 1회', ok: !boughtToday, text: boughtToday ? `오늘 이미 ${rule.symbol}를 샀어요.` : `오늘 ${rule.symbol} 매수 기록이 없어요.` });
+
+        const cost = wallet.holdings[rule.id]?.cost ?? 0;
+        const room = Math.max(0, STRATEGY.maxCostPerCoinKrw - cost);
+        amount = Math.floor(Math.min(STRATEGY.maxBuyKrw, room, wallet.cash));
+        checks.push({
+          label: '상한 · 매수 금액',
+          ok: amount >= MIN_ORDER_KRW,
+          text: `min(30만 원, 40만 원 − 보유 원가 ${formatWon(cost)}, 현금 ${formatWon(wallet.cash)}) = ${formatWon(amount)}`
+            + (amount < MIN_ORDER_KRW ? ` · 최소 주문 ${formatWon(MIN_ORDER_KRW)} 미만` : ''),
+        });
+      }
+
+      if (!coin) checks.push({ label: '주문 가능', ok: false, text: `${rule.symbol}가 지금 시세 목록(시가총액 상위 ${COIN_COUNT}개)에 없어 주문할 수 없어요.` });
+
+      const verdict = verdictOf(checks);
+      return { rule, coin, weekly, checks, verdict, amount: verdict === 'go' ? amount : 0 };
+    }
+
+    function evaluateSell({ holding, coin, orders }) {
+      const avgPrice = holding.cost / holding.qty;
+      if (!coin) {
+        return { holding, coin, avgPrice, verdict: 'unknown', action: '판단 불가', text: `시세 목록(상위 ${COIN_COUNT}개)에 없어 현재가를 알 수 없어요.` };
+      }
+      const price = coin.current_price;
+      const rate = roundPct((price / avgPrice - 1) * 100);
+      const sold = soldInCurrentPosition(orders, holding.coinId);
+      const base = { holding, coin, avgPrice, price, rate, sold, pnl: holding.qty * price - holding.cost };
+
+      if (rate <= STRATEGY.stopLossPct) {
+        return { ...base, verdict: 'go', action: '손절 · 전량 매도', rule: '원칙 3 ①', qty: holding.qty, text: `수익률 ${fmtPct(rate)} ≤ ${STRATEGY.stopLossPct}%` };
+      }
+      if (sold && rate <= STRATEGY.breakEvenPct) {
+        return { ...base, verdict: 'go', action: '본전 이탈 · 전량 매도', rule: '원칙 3 ②', qty: holding.qty, text: `이번 포지션에서 이미 익절했고 수익률 ${fmtPct(rate)} ≤ 0%` };
+      }
+      if (!sold && rate >= STRATEGY.takeProfitPct) {
+        const qty = Math.floor(holding.qty * STRATEGY.takeProfitRatio * 1e8) / 1e8;
+        return { ...base, verdict: 'go', action: '익절 · 50% 매도', rule: '원칙 3 ③', qty, text: `수익률 ${fmtPct(rate)} ≥ +${STRATEGY.takeProfitPct}%, 이번 포지션 첫 매도` };
+      }
       return {
-        coin, r7, r30, pegged, enoughData: true,
-        trend: (average(series.slice(-24)) / average(series.slice(-72)) - 1) * 100,
-        ret3d: (last / series[series.length - 72] - 1) * 100,
-        fromHigh: (last / high - 1) * 100,
-        rangePos: high > low ? ((last - low) / (high - low)) * 100 : 50,
-        // 시간봉 로그수익률 표준편차를 하루 단위로 환산
-        vol: Math.sqrt(average(logReturns.map((r) => (r - meanReturn) ** 2))) * Math.sqrt(24) * 100,
+        ...base, verdict: 'skip', action: '보유 유지', text: sold
+          ? `이미 익절한 포지션 · 수익률 ${fmtPct(rate)} (0% 이하면 전량 매도)`
+          : `수익률 ${fmtPct(rate)} · 손절 ${STRATEGY.stopLossPct}% / 익절 +${STRATEGY.takeProfitPct}% 사이`,
       };
     }
 
-    function scoreBuy(m, medianR7) {
-      const isPullback = m.r30 > 10 && m.fromHigh <= -3 && m.fromHigh >= -8 && m.trend > 0;
-      const score =
-        clamp(m.trend, -3, 3) * 10 +
-        clamp(m.r7 - medianR7, -10, 10) * 2 +
-        clamp(m.r30, -30, 40) * 0.3 - clamp(m.r30 - 60, 0, 70) * 0.3 +
-        clamp(m.ret3d, -10, 5) * 2 +
-        (isPullback ? 6 : 0) -
-        Math.max(0, m.vol - 3) * 3;
-      return { score, isPullback };
+    async function buildStrategyRecommendations(coins, wallet) {
+      const now = new Date();
+      const todayKst = kstDateOf(now);
+      const weekly = await fetchWeeklyChanges(STRATEGY.coins.map((rule) => rule.market), todayKst);
+      const windows = eventWindows(BLOCKING_EVENTS);
+      const blocks = blockingToday(windows, todayKst);
+      const coinById = Object.fromEntries(coins.map((c) => [c.id, c]));
+
+      const buys = STRATEGY.coins.map((rule, i) =>
+        evaluateBuy({ rule, coin: coinById[rule.id], weekly: weekly[i], blocks, wallet, now })
+      );
+      const sells = wallet
+        ? Object.values(wallet.holdings).map((h) => evaluateSell({ holding: h, coin: coinById[h.coinId], orders: wallet.orders }))
+        : null;
+
+      return { at: now, todayKst, windows, blocks, buys, sells };
     }
 
-    function buyReasons(m, medianR7, isPullback) {
-      const good = [];
-      if (m.trend > 0.3) good.push({ tag: '단기 상승전환', text: `최근 24시간 평균가가 3일 평균보다 ${fmtPct(m.trend)} 높아 단기 흐름이 위쪽이에요.` });
-      if (m.r7 - medianR7 > 2) good.push({ tag: '상대강도', text: `이번 주 ${fmtPct(m.r7)}로 다른 코인(중간값 ${fmtPct(medianR7)})보다 잘 버텼어요.` });
-      if (isPullback) good.push({ tag: '상승 중 조정', text: `한 달 ${fmtPct(m.r30)} 오른 뒤 이번 주 고점보다 ${fmtPct(m.fromHigh)} 내려와 쉬어가는 자리예요.` });
-      else if (m.r30 > 10 && m.r30 <= 60) good.push({ tag: '월간 상승', text: `한 달 동안 ${fmtPct(m.r30)} 올라 큰 흐름이 좋아요.` });
-      if (m.ret3d > 0.3) good.push({ tag: '반등', text: `최근 3일 ${fmtPct(m.ret3d)}로 오르고 있어요.` });
-      if (m.vol < 2.2) good.push({ tag: '낮은 변동성', text: `하루 변동폭이 ${m.vol.toFixed(1)}%로 작아 비교적 안정적이에요.` });
-      if (!good.length) good.push({ tag: '상대 점수', text: '뚜렷한 상승 신호는 없지만 남은 후보 중 지표 점수가 가장 높아요.' });
-
-      const warnings = [];
-      if (m.r30 > 60) warnings.push({ tag: '과열 주의', warn: true, text: `한 달 ${fmtPct(m.r30)} 급등해 과열 구간일 수 있어요.` });
-      if (m.vol > 4) warnings.push({ tag: '고변동성', warn: true, text: `하루 변동폭이 ${m.vol.toFixed(1)}%로 커서 손실도 클 수 있어요.` });
-      if (m.trend < -0.3) warnings.push({ tag: '단기 약세', warn: true, text: `24시간 평균가가 3일 평균보다 ${fmtPct(m.trend)} 낮아요.` });
-
-      return [...good.slice(0, 3), ...warnings.slice(0, 1)];
-    }
-
-    function sellReasons(m, pnlRate) {
-      const reasons = [];
-      const overheated = m.r30 > 60 && m.ret3d < 0;
-      if (overheated) reasons.push({ tag: '급등 후 꺾임', text: `한 달 ${fmtPct(m.r30)} 급등한 뒤 최근 3일 ${fmtPct(m.ret3d)}로 꺾이고 있어요.` });
-      if (m.trend < -0.3) reasons.push({ tag: '단기 하락', text: `최근 24시간 평균가가 3일 평균보다 ${fmtPct(m.trend)} 낮아 단기 흐름이 아래쪽이에요.` });
-      if (m.ret3d < -3 && !overheated) reasons.push({ tag: '연속 하락', text: `최근 3일 동안 ${fmtPct(m.ret3d)} 떨어졌어요.` });
-      if (m.rangePos < 15) reasons.push({ tag: '주간 저점권', text: `가격이 이번 주 가격대의 맨 아래(하위 ${Math.round(m.rangePos)}%)에 있어요.` });
-      if (m.vol > 4) reasons.push({ tag: '고변동성', text: `하루 변동폭이 ${m.vol.toFixed(1)}%로 커서 더 크게 떨어질 수 있어요.` });
-      if (pnlRate > 20 && m.trend < 0) reasons.push({ tag: '이익 실현', text: `평가수익 ${fmtPct(pnlRate)}인 상태에서 흐름이 약해져 이익을 챙길 때일 수 있어요.` });
-      if (pnlRate < -10 && m.trend < 0) reasons.push({ tag: '손실 관리', text: `평가손실 ${fmtPct(pnlRate)}에서 하락이 이어져 비중을 줄이는 걸 고려해 보세요.` });
-      if (!reasons.length) reasons.push({ tag: '상대 약세', text: '뚜렷한 매도 신호는 없지만 보유 코인 중 지표 점수가 가장 낮아요.' });
-      return reasons.slice(0, 4);
-    }
-
-    function buildRecommendations(coins, holdings) {
-      const analyses = coins.map(analyzeCoin);
-      const candidates = analyses.filter((m) => m.enoughData && !m.pegged);
-      const medianR7 = median(candidates.map((m) => m.r7));
-
-      const buys = candidates
-        .map((m) => {
-          const { score, isPullback } = scoreBuy(m, medianR7);
-          return { ...m, score, reasons: buyReasons(m, medianR7, isPullback) };
-        })
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 3);
-
-      const analysisById = Object.fromEntries(analyses.map((m) => [m.coin.id, m]));
-      const heldList = Object.values(holdings);
-      const sells = heldList
-        .map((h) => {
-          const m = analysisById[h.coinId];
-          if (!m) return null; // 상위 12개 시세 목록에서 빠진 코인은 분석할 수 없다
-          const value = h.qty * m.coin.current_price;
-          const base = { ...m, holding: h, avgPrice: h.cost / h.qty, pnl: value - h.cost, pnlRate: ((value - h.cost) / h.cost) * 100 };
-
-          if (m.pegged || !m.enoughData) {
-            return {
-              ...base,
-              score: m.pegged ? 0 : -100,
-              reasons: [m.pegged
-                ? { tag: '가격 고정 코인', text: '달러에 가격이 묶여 있어 들고 있어도 수익이 나지 않아요. 현금으로 바꿔 다른 코인에 쓰는 걸 고려해 보세요.' }
-                : { tag: '데이터 부족', text: '최근 가격 데이터가 부족해 판단 근거가 약해요.' }],
-            };
-          }
-
-          let score = -scoreBuy(m, medianR7).score;
-          if (base.pnlRate > 20 && m.trend < 0) score += 10;
-          if (base.pnlRate < -10 && m.trend < 0) score += 8;
-          return { ...base, score, reasons: sellReasons(m, base.pnlRate) };
-        })
-        .filter(Boolean)
-        .sort((a, b) => b.score - a.score);
-
-      return { at: new Date(), medianR7, buys, sell: sells[0] ?? null, heldCount: heldList.length };
-    }
-
-    function buySignal(score) {
-      if (score >= 25) return { label: '매수 신호 강함', className: 'bg-emerald-500/15 text-emerald-300' };
-      if (score >= 10) return { label: '매수 고려', className: 'bg-sky-500/15 text-sky-300' };
-      return { label: '신호 약함', className: 'bg-amber-500/15 text-amber-300' };
-    }
-
-    function sellSignal(score) {
-      if (score >= 15) return { label: '매도 신호 강함', className: 'bg-rose-500/15 text-rose-300' };
-      if (score >= 0) return { label: '매도 고려', className: 'bg-amber-500/15 text-amber-300' };
-      return { label: '급하지 않음', className: 'bg-slate-500/15 text-slate-300' };
-    }
-
-    const recommendationMemo = (side, reasons) =>
-      `[추천 ${SIDE_STYLES[side].label}] ${reasons.map((r) => r.tag).join(' · ')}`.slice(0, MEMO_MAX_LENGTH);
+    const strategyMemo = (text) => `[전략] ${text}`.slice(0, MEMO_MAX_LENGTH);
 
     // ========================================
     // 🧩 Dashboard Components
@@ -883,7 +938,7 @@
       );
     }
 
-    function OrderPanel({ coins, coin, side, onSelectCoin, onSideChange, walletReady, cash, holding, tick, tickVersion, memoPreset, onOrder }) {
+    function OrderPanel({ coins, coin, side, onSelectCoin, onSideChange, walletReady, cash, holding, tick, tickVersion, orderPreset, onOrder }) {
       const [input, setInput] = useState('');
       const [memo, setMemo] = useState('');
       const [submitting, setSubmitting] = useState(false);
@@ -897,10 +952,13 @@
         setSubmitError(null);
       }, [coin.id, side]);
 
-      // 추천 모달에서 매수·매도하기를 누르면 추천 이유를 메모에 채운다
+      // 전략 추천에서 매수·매도하기를 누르면 규칙이 계산한 금액·수량과 근거 메모를 채운다.
+      // 코인·주문 종류를 바꾸는 위 effect 보다 뒤에 선언해야 같은 렌더에서 입력이 지워지지 않는다.
       useEffect(() => {
-        if (memoPreset) setMemo(memoPreset.text);
-      }, [memoPreset]);
+        if (!orderPreset) return;
+        setMemo(orderPreset.memo);
+        if (orderPreset.input) setInput(orderPreset.input);
+      }, [orderPreset]);
 
       const price = coin.current_price;
       const symbol = upper(coin.symbol);
@@ -1242,173 +1300,225 @@
       );
     }
 
-    function PercentChips({ items }) {
-      return (
-        <dl className="grid grid-cols-3 gap-1.5 text-center text-[11px]">
-          {items.map(({ label, value }) => (
-            <div key={label} className="rounded-lg bg-slate-900 px-1 py-1.5">
-              <dt className="text-slate-500">{label}</dt>
-              <dd className={`mt-0.5 font-semibold tabular-nums ${TREND_STYLES[trendOf(value)].text}`}>{formatSignedPercent(value)}</dd>
-            </div>
-          ))}
-        </dl>
-      );
-    }
+    const VERDICT_STYLES = {
+      go:      { buy: 'bg-emerald-500/15 text-emerald-300', sell: 'bg-rose-500/15 text-rose-300', ring: 'ring-emerald-500/30' },
+      skip:    { buy: 'bg-slate-500/15 text-slate-300',     sell: 'bg-slate-500/15 text-slate-300', ring: 'ring-slate-800' },
+      unknown: { buy: 'bg-amber-500/15 text-amber-300',     sell: 'bg-amber-500/15 text-amber-300', ring: 'ring-amber-500/30' },
+    };
 
-    function ReasonList({ reasons }) {
+    const CHECK_ICONS = {
+      true:  { icon: '✓', className: 'text-emerald-400', label: '통과' },
+      false: { icon: '✕', className: 'text-rose-400', label: '탈락' },
+      null:  { icon: '?', className: 'text-amber-400', label: '확인 불가' },
+    };
+
+    function CheckList({ checks }) {
       return (
-        <ul className="space-y-1.5 text-xs leading-relaxed text-slate-300">
-          {reasons.map((r) => (
-            <li key={r.tag} className="flex gap-2">
-              <span aria-hidden="true" className={r.warn ? 'text-amber-400' : 'text-sky-400'}>{r.warn ? '⚠' : '✓'}</span>
-              <span><span className={`font-semibold ${r.warn ? 'text-amber-300' : 'text-slate-100'}`}>{r.tag}</span> · {r.text}</span>
-            </li>
-          ))}
+        <ul className="space-y-2 text-xs leading-relaxed">
+          {checks.map((c) => {
+            const s = CHECK_ICONS[String(c.ok)];
+            return (
+              <li key={c.label} className="flex gap-2">
+                <span aria-hidden="true" className={`w-3 shrink-0 text-center font-bold ${s.className}`}>{s.icon}</span>
+                <span className="min-w-0">
+                  <span className="font-semibold text-slate-200">{c.label}</span>
+                  <span className="sr-only"> {s.label}</span>
+                  <span className="block break-words text-slate-400">{c.text}</span>
+                </span>
+              </li>
+            );
+          })}
         </ul>
       );
     }
 
-    function RecommendationModal({ data, walletReady, onClose, onTrade }) {
+    function EventBanner({ data }) {
+      const blocked = data.blocks.length > 0;
+      return (
+        <div className={`rounded-xl p-4 ring-1 ${blocked ? 'bg-rose-500/10 ring-rose-500/30' : 'bg-emerald-500/10 ring-emerald-500/20'}`}>
+          <p className={`font-semibold ${blocked ? 'text-rose-300' : 'text-emerald-300'}`}>
+            {blocked
+              ? `⛔ 오늘(${shortDate(data.todayKst)})은 매수 금지 — ${data.blocks.map((b) => `${b.name} ${b.reason}`).join(', ')}`
+              : `✅ 오늘(${shortDate(data.todayKst)})은 금지 이벤트의 전날·당일이 아니에요`}
+          </p>
+          {data.windows.length > 0 && (
+            <ul className="mt-2 space-y-1 text-xs text-slate-400">
+              {data.windows.map((w) => (
+                <li key={w.name} className="flex flex-wrap gap-x-2">
+                  <span className="text-slate-300">{w.name}</span>
+                  <span className="tabular-nums">{w.when} (KST)</span>
+                  <span className="text-slate-500">
+                    → {w.unconfirmed ? `${shortDate(w.unconfirmedUntil)}까지 매수 금지` : `${w.blockedDays.map(shortDate).join(', ')} 매수 금지`}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      );
+    }
+
+    function BuyVerdictCard({ rec, onTrade }) {
+      const { rule, coin, weekly, verdict, amount } = rec;
+      const style = VERDICT_STYLES[verdict];
+      const label = verdict === 'go' ? `매수 ${formatWon(amount)}` : verdict === 'unknown' ? '판단 불가' : '매수 안 함';
+      const change = weekly?.changePct;
+
+      return (
+        <li className={`flex flex-col rounded-xl bg-slate-950/60 p-4 ring-1 ${style.ring}`}>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2.5">
+              {coin ? <CoinAvatar src={coin.image} size="h-8 w-8" /> : <span className="h-8 w-8 shrink-0 rounded-full bg-slate-800" aria-hidden="true" />}
+              <div className="min-w-0">
+                <p className="truncate font-semibold">{coin?.name ?? rule.name}</p>
+                <p className="text-xs text-slate-500 tabular-nums">{rule.symbol} · {coin ? formatPrice(coin.current_price) : '시세 없음'}</p>
+              </div>
+            </div>
+            <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${style.buy}`}>{label}</span>
+          </div>
+
+          <div className="mt-3 rounded-lg bg-slate-900 px-3 py-2">
+            <p className="text-[11px] text-slate-500">주간 등락률 (업비트 09:00 시가)</p>
+            <p className={`text-xl font-bold tabular-nums ${change == null ? 'text-slate-500' : change <= STRATEGY.weeklyDropPct ? 'text-rose-400' : 'text-slate-200'}`}>
+              {change == null ? '—' : fmtPct(change)}
+              <span className="ml-1.5 text-xs font-medium text-slate-500">기준 {STRATEGY.weeklyDropPct}% 이하</span>
+            </p>
+          </div>
+
+          <div className="mt-3 flex-1"><CheckList checks={rec.checks} /></div>
+
+          {verdict === 'go' && (
+            <Button
+              variant="buySoft"
+              size="sm"
+              className="mt-4 w-full"
+              onClick={() => onTrade(coin.id, 'buy', {
+                input: String(amount),
+                memo: strategyMemo(`매수 · 주간 ${fmtPct(change)} · 금지 이벤트 없음 · ${formatWon(amount)}`),
+              })}
+            >
+              {coin.name} {formatWon(amount)} 매수하기
+            </Button>
+          )}
+        </li>
+      );
+    }
+
+    function SellVerdictRow({ rec, onTrade }) {
+      const { holding, coin, verdict } = rec;
+      const style = VERDICT_STYLES[verdict];
+      return (
+        <li className={`rounded-xl bg-slate-950/60 p-4 ring-1 ${verdict === 'go' ? 'ring-rose-500/30' : style.ring}`}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <CoinAvatar src={holding.image} size="h-8 w-8" />
+              <div className="min-w-0">
+                <p className="truncate font-semibold">{holding.name}</p>
+                <p className="text-xs text-slate-500 tabular-nums">{upper(holding.symbol)} · 평균 {formatPrice(rec.avgPrice)}</p>
+              </div>
+            </div>
+            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${style.sell}`}>{rec.action}</span>
+          </div>
+
+          <dl className="mt-3 grid grid-cols-3 gap-3 border-y border-slate-800 py-2.5 text-xs">
+            <div>
+              <dt className="text-slate-500">보유 수량</dt>
+              <dd className="mt-0.5 truncate font-semibold tabular-nums">{formatQty(holding.qty)}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">현재가</dt>
+              <dd className="mt-0.5 truncate font-semibold tabular-nums">{rec.price != null ? formatPrice(rec.price) : '—'}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-500">수익률</dt>
+              <dd className={`mt-0.5 truncate font-semibold tabular-nums ${rec.rate != null ? TREND_STYLES[trendOf(rec.rate)].text : 'text-slate-500'}`}>
+                {rec.rate != null ? formatSignedPercent(rec.rate) : '—'}
+              </dd>
+            </div>
+          </dl>
+
+          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-slate-400">{rec.rule && <span className="font-semibold text-slate-200">{rec.rule} · </span>}{rec.text}</p>
+            {verdict === 'go' && (
+              <Button
+                variant="sellSoft"
+                size="sm"
+                className="shrink-0"
+                onClick={() => onTrade(coin.id, 'sell', {
+                  input: qtyToInput(rec.qty),
+                  memo: strategyMemo(`${rec.action} · ${rec.rule} · 수익률 ${fmtPct(rec.rate)}`),
+                })}
+              >
+                {formatQty(rec.qty)} {upper(holding.symbol)} 매도하기
+              </Button>
+            )}
+          </div>
+        </li>
+      );
+    }
+
+    function RecommendationModal({ data, onClose, onTrade }) {
       if (!data) return null;
-      const { buys, sell, heldCount } = data;
+
+      if (data.loading) {
+        return (
+          <Modal isOpen onClose={onClose} title="📋 내 전략 추천" description="업비트 일봉과 지갑을 확인하는 중이에요" size="md">
+            <div className="flex items-center justify-center gap-2 py-12 text-sm text-slate-400" aria-busy="true">
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-sky-400 border-r-transparent" aria-hidden="true" />
+              규칙 대입 중…
+            </div>
+          </Modal>
+        );
+      }
+
+      const goBuys = data.buys.filter((b) => b.verdict === 'go');
 
       return (
         <Modal
           isOpen
           onClose={onClose}
-          title="✨ 코인 추천"
-          description={`${formatTime(data.at)} 시세 기준 · 24시간·7일·30일 등락률과 7일 시간봉 추세로 계산한 점수예요`}
+          title="📋 내 전략 추천"
+          description={`판단일 ${data.todayKst} (KST) · ${formatTime(data.at)} 기준 · research/my-strategy.md 규칙을 그대로 대입했어요`}
         >
-          <section aria-labelledby="rec-buy-title">
-            <h3 id="rec-buy-title" className="flex items-center gap-2 font-semibold">
-              <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-xs text-emerald-300">매수</span>
-              추천 TOP {buys.length}
-            </h3>
+          <EventBanner data={data} />
 
-            {buys.length === 0 ? (
-              <p className="mt-3 rounded-xl bg-slate-950/50 py-6 text-center text-sm text-slate-500">분석할 수 있는 코인이 없어요.</p>
-            ) : (
-              <ol className="mt-3 grid gap-3 md:grid-cols-3">
-                {buys.map((rec, i) => {
-                  const signal = buySignal(rec.score);
-                  return (
-                    <li key={rec.coin.id} className="flex flex-col rounded-xl bg-slate-950/60 p-4 ring-1 ring-slate-800">
-                      <div className="flex items-center gap-2.5">
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-xs font-bold text-emerald-300">{i + 1}</span>
-                        <CoinAvatar src={rec.coin.image} size="h-8 w-8" />
-                        <div className="min-w-0">
-                          <p className="truncate font-semibold">{rec.coin.name}</p>
-                          <p className="text-xs text-slate-500 tabular-nums">{upper(rec.coin.symbol)} · {formatPrice(rec.coin.current_price)}</p>
-                        </div>
-                      </div>
-                      <p className="mt-3 flex items-center justify-between gap-2 text-xs">
-                        <span className={`rounded-full px-2 py-0.5 font-semibold ${signal.className}`}>{signal.label}</span>
-                        <span className="text-slate-500 tabular-nums">점수 {Math.round(rec.score)}</span>
-                      </p>
-                      <div className="mt-3">
-                        <PercentChips items={[
-                          { label: '24시간', value: rec.coin.price_change_percentage_24h },
-                          { label: '7일', value: rec.r7 },
-                          { label: '30일', value: rec.r30 },
-                        ]} />
-                      </div>
-                      <div className="mt-3 flex-1"><ReasonList reasons={rec.reasons} /></div>
-                      <Button
-                        variant="buySoft"
-                        size="sm"
-                        className="mt-4 w-full"
-                        onClick={() => onTrade(rec.coin.id, 'buy', recommendationMemo('buy', rec.reasons))}
-                      >
-                        {rec.coin.name} 매수하기
-                      </Button>
-                    </li>
-                  );
-                })}
-              </ol>
+          <section aria-labelledby="rec-buy-title" className="mt-6">
+            <h3 id="rec-buy-title" className="flex flex-wrap items-center gap-2 font-semibold">
+              <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-xs text-emerald-300">매수</span>
+              {goBuys.length ? `오늘 살 코인 ${goBuys.length}개` : '오늘은 매수하지 않아요'}
+              <span className="text-xs font-normal text-slate-500">원칙 1·2 · 상한 · 금지 조건</span>
+            </h3>
+            <ol className="mt-3 grid gap-3 md:grid-cols-3">
+              {data.buys.map((rec) => <BuyVerdictCard key={rec.rule.id} rec={rec} onTrade={onTrade} />)}
+            </ol>
+            {goBuys.length > 1 && (
+              <p className="mt-2 text-xs text-slate-500">
+                여러 코인을 사면 앞 주문만큼 현금이 줄어요. 다음 코인은 추천을 다시 받아 금액을 확인하세요.
+              </p>
             )}
           </section>
 
           <section aria-labelledby="rec-sell-title" className="mt-6">
-            <h3 id="rec-sell-title" className="flex items-center gap-2 font-semibold">
+            <h3 id="rec-sell-title" className="flex flex-wrap items-center gap-2 font-semibold">
               <span className="rounded-md bg-rose-500/15 px-2 py-0.5 text-xs text-rose-300">매도</span>
-              보유 코인 중 1개
+              보유 코인 점검
+              <span className="text-xs font-normal text-slate-500">원칙 3 · 금지 조건과 무관</span>
             </h3>
-
-            {!walletReady ? (
-              <p className="mt-3 rounded-xl bg-slate-950/50 py-6 text-center text-sm text-slate-500">지갑을 불러오지 못해 매도 추천을 할 수 없어요.</p>
-            ) : heldCount === 0 ? (
-              <p className="mt-3 rounded-xl bg-slate-950/50 py-6 text-center text-sm text-slate-500">
-                보유한 코인이 없어서 매도 추천을 드릴 수 없어요. 위 추천 코인을 먼저 매수해 보세요.
-              </p>
-            ) : !sell ? (
-              <p className="mt-3 rounded-xl bg-slate-950/50 py-6 text-center text-sm text-slate-500">
-                보유 코인이 지금 시세 목록(시가총액 상위 {COIN_COUNT}개)에 없어 분석할 수 없어요.
-              </p>
+            {data.sells == null ? (
+              <p className="mt-3 rounded-xl bg-slate-950/50 py-6 text-center text-sm text-slate-500">지갑을 불러오지 못해 매도 조건을 확인할 수 없어요.</p>
+            ) : data.sells.length === 0 ? (
+              <p className="mt-3 rounded-xl bg-slate-950/50 py-6 text-center text-sm text-slate-500">보유한 코인이 없어 매도할 것이 없어요.</p>
             ) : (
-              (() => {
-                const signal = sellSignal(sell.score);
-                const pnlStyle = TREND_STYLES[wonTrendOf(sell.pnl)].text;
-                return (
-                  <div className="mt-3 rounded-xl bg-slate-950/60 p-4 ring-1 ring-rose-500/20">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="flex min-w-0 items-center gap-2.5">
-                        <CoinAvatar src={sell.coin.image} size="h-9 w-9" />
-                        <div className="min-w-0">
-                          <p className="truncate font-semibold">{sell.coin.name}</p>
-                          <p className="text-xs text-slate-500 tabular-nums">{upper(sell.coin.symbol)} · {formatPrice(sell.coin.current_price)}</p>
-                        </div>
-                      </div>
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${signal.className}`}>{signal.label}</span>
-                    </div>
-
-                    <dl className="mt-3 grid grid-cols-3 gap-3 border-y border-slate-800 py-3 text-xs">
-                      <div>
-                        <dt className="text-slate-500">보유 수량</dt>
-                        <dd className="mt-0.5 truncate font-semibold tabular-nums">{formatQty(sell.holding.qty)}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-slate-500">평균 매수가</dt>
-                        <dd className="mt-0.5 truncate font-semibold tabular-nums">{formatPrice(sell.avgPrice)}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-slate-500">평가손익</dt>
-                        <dd className={`mt-0.5 truncate font-semibold tabular-nums ${pnlStyle}`}>
-                          {formatSignedWon(sell.pnl)} <span className="text-[11px]">({formatSignedPercent(sell.pnlRate)})</span>
-                        </dd>
-                      </div>
-                    </dl>
-
-                    <div className="mt-3 grid gap-4 md:grid-cols-[minmax(0,1fr)_16rem] md:items-start">
-                      <ReasonList reasons={sell.reasons} />
-                      <div className="space-y-3">
-                        <PercentChips items={[
-                          { label: '24시간', value: sell.coin.price_change_percentage_24h },
-                          { label: '7일', value: sell.r7 },
-                          { label: '30일', value: sell.r30 },
-                        ]} />
-                        <Button
-                          variant="sellSoft"
-                          size="sm"
-                          className="w-full"
-                          onClick={() => onTrade(sell.coin.id, 'sell', recommendationMemo('sell', sell.reasons))}
-                        >
-                          {sell.coin.name} 매도하기
-                        </Button>
-                      </div>
-                    </div>
-                    {sell.score < 0 && (
-                      <p className="mt-3 text-xs text-slate-500">보유 코인 모두 뚜렷한 매도 신호가 없어요. 그중 가장 약한 코인을 보여드렸어요.</p>
-                    )}
-                  </div>
-                );
-              })()
+              <ul className="mt-3 space-y-3">
+                {data.sells.map((rec) => <SellVerdictRow key={rec.holding.coinId} rec={rec} onTrade={onTrade} />)}
+              </ul>
             )}
           </section>
 
           <p className="mt-6 rounded-lg bg-slate-950/50 px-3 py-2 text-[11px] leading-relaxed text-slate-500">
-            달러에 가격이 묶인 코인(USDT·USDC 등)과 7일·30일 등락이 ±2% 안쪽인 코인은 매수 후보에서 뺐어요.
-            과거 가격 지표만 본 참고용 추천이라 뉴스·수급은 반영하지 않고, 수익을 보장하지 않아요.
-            매수·매도하기를 누르면 주문창에 코인과 추천 이유 메모가 채워져요.
+            매수: 주간 등락률 −3% 이하 · 금지 이벤트 전날·당일 제외 · 1회 30만 원 · 코인당 원가 40만 원 · 코인별 하루 1회.
+            매도: −10% 전량 손절 · +20% 50% 익절(포지션당 1회) · 익절 후 0% 이하면 전량.
+            금지 이벤트 일정은 코드의 BLOCKING_EVENTS 를 매주 갱신해야 해요. 모의투자용 규칙이며 수익을 보장하지 않아요.
           </p>
         </Modal>
       );
@@ -1460,7 +1570,7 @@
       const [side, setSide] = useState('buy');
       const [resetting, setResetting] = useState(false);
       const [recommendation, setRecommendation] = useState(null);
-      const [memoPreset, setMemoPreset] = useState(null);
+      const [orderPreset, setOrderPreset] = useState(null);
       const orderPanelRef = useRef(null);
 
       const coinList = coins ?? [];
@@ -1487,10 +1597,8 @@
 
       const coinValue = holdingRows.reduce((sum, r) => sum + r.value, 0);
 
-      const startTrade = (coinId, nextSide) => {
-        setSelectedId(coinId);
-        setSide(nextSide);
-        // 좁은 화면에서는 주문창이 카드 위쪽에 있으므로 보이도록 스크롤
+      // 좁은 화면에서는 주문창이 카드 위쪽에 있으므로 보이도록 스크롤
+      const scrollToOrderPanel = () => {
         const panel = orderPanelRef.current;
         if (!panel) return;
         const rect = panel.getBoundingClientRect();
@@ -1500,18 +1608,35 @@
         }
       };
 
-      // 버튼을 누른 순간의 시세·보유 코인으로 계산해 고정한다 (모달이 열린 동안 순위가 바뀌지 않도록)
-      const openRecommendations = () => {
-        if (coinList.length) setRecommendation(buildRecommendations(coinList, holdings));
+      const startTrade = (coinId, nextSide) => {
+        setSelectedId(coinId);
+        setSide(nextSide);
+        scrollToOrderPanel();
       };
 
-      const closeRecommendations = () => setRecommendation(null);
+      // 버튼을 누른 순간의 시세·지갑으로 규칙을 대입해 고정한다. 계산 중에 닫으면 결과를 버린다.
+      const recommendationRequestRef = useRef(0);
+      const openRecommendations = async () => {
+        if (!coinList.length) return;
+        const requestId = ++recommendationRequestRef.current;
+        setRecommendation({ loading: true });
+        const result = await buildStrategyRecommendations(coinList, wallet);
+        if (recommendationRequestRef.current === requestId) setRecommendation(result);
+      };
 
-      const tradeFromRecommendation = (coinId, nextSide, memo) => {
+      const closeRecommendations = () => {
+        recommendationRequestRef.current += 1;
         setRecommendation(null);
-        setMemoPreset({ text: memo, key: Date.now() });
+      };
+
+      // 코인·주문 종류·금액을 한 번에 바꿔야 주문창이 입력을 지우고 다시 채우는 순서가 꼬이지 않는다
+      const tradeFromRecommendation = (coinId, nextSide, preset) => {
+        closeRecommendations();
+        setSelectedId(coinId);
+        setSide(nextSide);
+        setOrderPreset({ ...preset, key: Date.now() });
         // 모달이 닫혀 스크롤 잠금이 풀린 다음 주문창으로 이동
-        requestAnimationFrame(() => startTrade(coinId, nextSide));
+        requestAnimationFrame(scrollToOrderPanel);
       };
 
       // 실패하면 throw 해서 주문창이 오류 메시지를 보여주게 한다
@@ -1560,8 +1685,9 @@
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <Button variant="primary" onClick={openRecommendations} disabled={!coinList.length} aria-haspopup="dialog">
-                <span aria-hidden="true">✨</span> 매수·매도 추천 받기
+              {/* 지갑이 오기 전에 누르면 상한·하루 1회를 확인할 수 없어 "판단 불가"가 되므로 기다린다 */}
+              <Button variant="primary" onClick={openRecommendations} disabled={!coinList.length || walletLoading} aria-haspopup="dialog">
+                <span aria-hidden="true">📋</span> {walletLoading ? '지갑 불러오는 중…' : '내 전략 추천'}
               </Button>
               <Button onClick={refresh} disabled={refreshing} aria-label={`지금 새로고침 (${secondsLeft}초 후 자동 갱신)`}>
                 <span className="text-sky-400"><CountdownRing secondsLeft={secondsLeft} total={REFRESH_SECONDS} /></span>
@@ -1603,7 +1729,7 @@
                       holding={holdings[selectedCoin.id]}
                       tick={ticks.byId[selectedCoin.id]}
                       tickVersion={ticks.version}
-                      memoPreset={memoPreset}
+                      orderPreset={orderPreset}
                       onOrder={handleOrder}
                     />
                   ) : (
@@ -1651,7 +1777,6 @@
 
           <RecommendationModal
             data={recommendation}
-            walletReady={Boolean(wallet)}
             onClose={closeRecommendations}
             onTrade={tradeFromRecommendation}
           />
