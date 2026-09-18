@@ -34,6 +34,13 @@ build/
 *.env
 !.env.example
 
+# 비밀번호·키를 적어둔 메모 (DB 접속정보는 .env 에만 둔다)
+*비번*
+*비밀번호*
+*password*.txt
+*secret*.txt
+!**/node_modules/**
+
 # 미디어 원본 (yt-dlp 다운로드본 - 최대 1.2GB, 재다운로드로 복구 가능)
 *.mp4
 *.mp3

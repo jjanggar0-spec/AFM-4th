@@ -1,13 +1,16 @@
-// 냉장고 재료 & 레시피 관리 — 재료 태그 등록/삭제 + 레시피 작성·수정·삭제·조회 API 서버 (Supabase PostgreSQL)
+// 냉장고 재료 & 레시피 관리 — 재료 태그 등록/삭제 + 레시피 작성·수정·삭제·조회 + Gemini 레시피 자동 생성 API 서버 (Supabase PostgreSQL)
 
 // ── Module imports ───────────────────────────
 const express = require('express');
+const fs = require('fs');
 const path = require('path');
+const util = require('util');
 const { Pool } = require('pg');
 
 // ── App init & config ────────────────────────
 // 로컬에서는 같은 폴더의 .env 를 읽고, Vercel 에서는 대시보드에 등록한 환경변수를 쓴다
-try { process.loadEnvFile(path.join(__dirname, '.env')); } catch {}
+// PC 에 같은 이름의 환경변수(예: GEMINI_API_KEY)가 있어도 이 프로젝트의 .env 값을 우선한다
+try { Object.assign(process.env, util.parseEnv(fs.readFileSync(path.join(__dirname, '.env'), 'utf8'))); } catch {}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,6 +22,11 @@ const TITLE_MAX = 60;        // 요리명 글자 수
 const STEP_MAX = 500;        // 조리 단계 하나의 글자 수
 const RECIPE_ITEMS_MAX = 30; // 레시피 하나의 재료 수 / 단계 수 상한
 const LIST_LIMIT = 500;
+
+// AI 레시피 자동 생성 (Google Gemini). 키가 비어 있으면 생성 기능만 꺼진다
+const GEMINI_API_KEY = (process.env.GEMINI_API_KEY || '').trim();
+const GEMINI_MODEL = (process.env.GEMINI_MODEL || 'gemini-3.6-flash').trim();
+const GEMINI_TIMEOUT_MS = 30000;
 
 // Supabase Transaction pooler(6543)는 연결을 짧게 쓰는 서버리스에 맞다
 const pool = new Pool({
@@ -138,6 +146,76 @@ function parseRecipeInput(body) {
   return { title, ingredients, steps };
 }
 
+// ── AI recipe generation (Gemini) ────────────
+const normalize = (s) => s.replace(/\s+/g, '').toLowerCase();
+
+const RECIPE_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    feasible: { type: 'BOOLEAN' },
+    title: { type: 'STRING' },
+    ingredients: { type: 'ARRAY', items: { type: 'STRING' } },
+    steps: { type: 'ARRAY', items: { type: 'STRING' } },
+    note: { type: 'STRING' },
+  },
+  required: ['feasible', 'title', 'ingredients', 'steps', 'note'],
+  propertyOrdering: ['feasible', 'title', 'ingredients', 'steps', 'note'],
+};
+
+function buildRecipePrompt(title, fridge) {
+  const byCategory = {};
+  fridge.forEach(({ name, category }) => { (byCategory[category] ||= []).push(name); });
+  const fridgeText = Object.entries(byCategory).map(([c, names]) => `- ${c}: ${names.join(', ')}`).join('\n');
+
+  return `냉장고 재료:
+${fridgeText}
+
+요리명: ${title || '(비어 있음 — 위 냉장고 재료로 만들기 좋은 요리를 하나 골라 줘)'}
+
+규칙:
+1. 냉장고 재료를 최대한 활용한다. 냉장고에 없는 재료는 꼭 필요한 기본 재료(물, 간장, 설탕, 식용유 등)만 최소한으로 넣는다.
+2. ingredients 에는 재료 이름만 넣는다 (양·단위 없이, 최대 15개). 냉장고 재료는 위에 적힌 이름을 글자 그대로 쓴다.
+3. steps 는 4~8단계, 한 단계는 한두 문장이다. 분량(예: 양파 1/2개, 간장 1큰술), 불 세기, 시간을 구체적으로 적고 단계 번호는 붙이지 않는다.
+4. 요리명이 주어졌으면 title 은 그 요리명을 그대로 쓴다.
+5. 요리명이 음식이 아니거나 냉장고 재료로 도저히 만들 수 없는 요리면 feasible 을 false 로 하고, note 에 이유와 대신 만들 만한 요리를 한 문장으로 적는다.
+6. feasible 이 true 면 note 에는 맛을 살리는 팁이나 대체 재료를 한 문장으로 적는다.`;
+}
+
+async function generateRecipe(title, fridge) {
+  const generationConfig = {
+    responseMimeType: 'application/json',
+    responseSchema: RECIPE_SCHEMA,
+  };
+  // 레시피 정도는 깊게 생각할 필요가 없어 thinking 을 줄이면 응답이 훨씬 빨라진다
+  if (/gemini-3/.test(GEMINI_MODEL)) generationConfig.thinkingConfig = { thinkingLevel: 'low' };
+  else if (/2\.5-flash/.test(GEMINI_MODEL)) generationConfig.thinkingConfig = { thinkingBudget: 0 };
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_API_KEY },
+      body: JSON.stringify({
+        systemInstruction: {
+          parts: [{ text: '너는 한국 가정식 요리 연구가다. 사용자의 냉장고 재료로 집에서 만들 수 있는 레시피를 주어진 JSON 형식으로만 답한다.' }],
+        },
+        contents: [{ role: 'user', parts: [{ text: buildRecipePrompt(title, fridge) }] }],
+        generationConfig,
+      }),
+      signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
+    }
+  );
+  const json = await res.json().catch(() => null);
+  if (!res.ok) {
+    const err = new Error(json?.error?.message || `Gemini HTTP ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+  const text = (json?.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('');
+  if (!text) throw new Error(`Gemini returned no text (finishReason: ${json?.candidates?.[0]?.finishReason})`);
+  return JSON.parse(text);
+}
+
 function badId(req, res) {
   if (ID_RE.test(req.params.id)) return false;
   res.status(400).json({ success: false, message: 'ID 형식이 올바르지 않아요.' });
@@ -230,6 +308,65 @@ app.post('/api/recipes', async (req, res, next) => {
       [input.title, input.ingredients, input.steps]
     );
     res.status(201).json({ success: true, data: toRecipe(rows[0]) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 냉장고 재료로 레시피 초안을 만든다 (저장은 하지 않음 — 화면에서 확인·수정 후 POST /api/recipes)
+app.post('/api/recipes/generate', async (req, res, next) => {
+  if (!GEMINI_API_KEY) {
+    return res.status(503).json({ success: false, message: 'AI 자동 생성이 설정되지 않았어요. GEMINI_API_KEY 환경변수를 확인해 주세요.' });
+  }
+  const title = cleanLine(req.body?.title);
+  if (charLen(title) > TITLE_MAX) {
+    return res.status(400).json({ success: false, message: `요리명은 ${TITLE_MAX}자까지 쓸 수 있어요.` });
+  }
+
+  try {
+    const { rows: fridge } = await pool.query('SELECT name, category FROM ingredients ORDER BY category, name');
+    if (!fridge.length) {
+      return res.status(400).json({ success: false, message: '냉장고에 재료가 없어요. 먼저 재료를 넣어 주세요.' });
+    }
+
+    let raw;
+    try {
+      raw = await generateRecipe(title, fridge);
+    } catch (err) {
+      console.error('Gemini error:', err.message);
+      const message = err.status === 429
+        ? 'AI 사용량이 잠시 몰렸어요. 조금 뒤에 다시 시도해 주세요.'
+        : [400, 401, 403].includes(err.status) && /key|credential|auth|permission/i.test(err.message)
+          ? 'Gemini API 키가 올바르지 않아요. GEMINI_API_KEY 설정을 확인해 주세요.'
+          : err.name === 'TimeoutError'
+          ? 'AI 응답이 너무 오래 걸려요. 다시 시도해 주세요.'
+          : 'AI 가 레시피를 만들지 못했어요. 다시 시도해 주세요.';
+      return res.status(err.status === 429 ? 429 : 502).json({ success: false, message });
+    }
+
+    const note = cleanText(raw?.note).slice(0, 300);
+    if (raw?.feasible === false) {
+      return res.status(422).json({ success: false, message: note || '이 요리명으로는 레시피를 만들기 어려워요.' });
+    }
+
+    // 모델이 길이 제한을 넘기거나 단계 번호를 붙여도 저장 규칙에 맞게 다듬는다
+    const input = parseRecipeInput({
+      title: title || cleanLine(raw?.title).slice(0, TITLE_MAX),
+      ingredients: (Array.isArray(raw?.ingredients) ? raw.ingredients : [])
+        .map((n) => String(n).slice(0, NAME_MAX)).slice(0, RECIPE_ITEMS_MAX),
+      steps: (Array.isArray(raw?.steps) ? raw.steps : [])
+        .map((s) => String(s).replace(/^\s*\d+\s*[.)]\s*/, '').slice(0, STEP_MAX)).slice(0, RECIPE_ITEMS_MAX),
+    });
+    if (input.error) {
+      console.error('Gemini recipe rejected:', input.error);
+      return res.status(502).json({ success: false, message: 'AI 가 만든 레시피 형식이 올바르지 않아요. 다시 시도해 주세요.' });
+    }
+
+    const have = new Set(fridge.map((f) => normalize(f.name)));
+    res.json({
+      success: true,
+      data: { ...input, note, missing: input.ingredients.filter((n) => !have.has(normalize(n))) },
+    });
   } catch (err) {
     next(err);
   }

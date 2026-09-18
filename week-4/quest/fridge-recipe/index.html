@@ -103,6 +103,7 @@
         secondary: 'bg-white text-slate-700 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus-visible:ring-slate-400',
         danger:    'bg-rose-600 text-white hover:bg-rose-700 focus-visible:ring-rose-400',
         ghost:     'text-slate-600 hover:bg-slate-100 focus-visible:ring-slate-300',
+        accent:    'bg-violet-600 text-white hover:bg-violet-700 focus-visible:ring-violet-400',
       };
       const sizes = {
         sm: 'px-2.5 py-1.5 text-sm',
@@ -653,10 +654,13 @@
     // ========================================
     const emptyDraft = () => ({ title: '', ingredients: [], steps: [''] });
 
-    function RecipeFormModal({ isOpen, recipe, fridgeNames, onClose, onSubmit }) {
+    function RecipeFormModal({ isOpen, recipe, fridgeNames, onClose, onSubmit, onGenerate }) {
       const [draft, setDraft] = useState(emptyDraft);
       const [errors, setErrors] = useState({});
       const [saving, setSaving] = useState(false);
+      const [generating, setGenerating] = useState(false);
+      const [aiResult, setAiResult] = useState(null); // { note, missing }
+      const generateSeq = useRef(0); // 창을 닫거나 다시 누르면 이전 생성 결과는 버린다
 
       // 열릴 때마다 새 작성이면 빈 폼, 수정이면 기존 값으로 채운다
       useEffect(() => {
@@ -666,7 +670,33 @@
           : emptyDraft());
         setErrors({});
         setSaving(false);
+        setGenerating(false);
+        setAiResult(null);
+        generateSeq.current += 1;
       }, [isOpen, recipe]);
+
+      const generate = async () => {
+        if (!fridgeNames.length) return setErrors({ ai: '냉장고에 재료를 먼저 넣어 주세요.' });
+        const title = draft.title.trim();
+        if (charLen(title) > TITLE_MAX) return setErrors({ title: `요리명은 ${TITLE_MAX}자까지 쓸 수 있어요.` });
+        const hasContent = draft.ingredients.length || draft.steps.some((s) => s.trim());
+        if (hasContent && !window.confirm('지금 적힌 재료와 조리법을 AI 가 만든 내용으로 바꿀까요?')) return;
+
+        const seq = ++generateSeq.current;
+        setGenerating(true);
+        setErrors({});
+        setAiResult(null);
+        try {
+          const data = await onGenerate(title);
+          if (seq !== generateSeq.current) return;
+          setDraft({ title: data.title, ingredients: data.ingredients, steps: data.steps });
+          setAiResult({ note: data.note, missing: data.missing });
+        } catch (err) {
+          if (seq === generateSeq.current) setErrors({ ai: err.message });
+        } finally {
+          if (seq === generateSeq.current) setGenerating(false);
+        }
+      };
 
       const have = useMemo(() => new Set(fridgeNames.map(normalize)), [fridgeNames]);
       const picked = new Set(draft.ingredients.map(normalize));
@@ -710,6 +740,7 @@
       const requestClose = () => {
         if (saving) return;
         if (dirty && !recipe && !window.confirm('작성 중인 레시피가 사라져요. 닫을까요?')) return;
+        generateSeq.current += 1;
         onClose();
       };
 
@@ -723,23 +754,53 @@
           footer={
             <>
               <Button variant="secondary" onClick={requestClose} disabled={saving}>취소</Button>
-              <Button type="submit" form="recipe-form" disabled={saving}>
+              <Button type="submit" form="recipe-form" disabled={saving || generating}>
                 {saving ? '저장 중…' : '저장하기'}
               </Button>
             </>
           }
         >
           <form id="recipe-form" onSubmit={submit} className="space-y-5" noValidate>
-            <Input
-              id="recipe-title"
-              label="요리명"
-              value={draft.title}
-              maxLength={TITLE_MAX}
-              onChange={(e) => set({ title: e.target.value })}
-              placeholder="예) 김치볶음밥"
-              error={errors.title}
-              autoFocus
-            />
+            <div>
+              <Input
+                id="recipe-title"
+                label="요리명"
+                value={draft.title}
+                maxLength={TITLE_MAX}
+                onChange={(e) => set({ title: e.target.value })}
+                placeholder="예) 김치볶음밥"
+                error={errors.title}
+                disabled={generating}
+                autoFocus
+              />
+
+              {/* ✨ AI 자동 생성 */}
+              <div className="mt-2 rounded-xl bg-violet-50 p-3 ring-1 ring-inset ring-violet-200" aria-live="polite">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <p className="flex-1 text-sm text-violet-900">
+                    <b>✨ AI 자동 생성</b> — 요리명을 적고 누르면 냉장고 재료로 재료와 단계별 조리법을 채워 드려요.
+                    비워 두면 AI 가 요리를 골라요.
+                  </p>
+                  <Button variant="accent" onClick={generate} disabled={generating || saving} className="shrink-0">
+                    {generating
+                      ? <><Spinner className="h-4 w-4 border-white/40 border-t-white" /> 만드는 중…</>
+                      : draft.title.trim() ? '✨ 이 요리로 생성' : '✨ 요리 추천받기'}
+                  </Button>
+                </div>
+                {errors.ai && <p className="mt-2 text-sm text-rose-700" role="alert">{errors.ai}</p>}
+                {aiResult && (
+                  <div className="mt-2 space-y-1 border-t border-violet-200 pt-2 text-sm text-violet-900">
+                    <p>AI 가 레시피를 채웠어요. 내용을 확인하고 저장해 주세요.</p>
+                    {aiResult.missing.length > 0 && (
+                      <p><span className="font-medium">냉장고에 없는 재료:</span> {aiResult.missing.join(', ')}</p>
+                    )}
+                    {aiResult.note && <p>💡 {aiResult.note}</p>}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <fieldset disabled={generating} className={`space-y-5 transition ${generating ? 'pointer-events-none opacity-50' : ''}`}>
 
             <div>
               <TagInput
@@ -816,6 +877,7 @@
                 + 단계 추가
               </Button>
             </fieldset>
+            </fieldset>
 
             {errors.form && (
               <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700" role="alert">{errors.form}</p>
@@ -883,7 +945,7 @@
       );
     }
 
-    function RecipesPage({ recipes, ingredients, loading, error, onRetry, onSave, onDelete }) {
+    function RecipesPage({ recipes, ingredients, loading, error, onRetry, onSave, onDelete, onGenerate }) {
       const [query, setQuery] = useState('');
       const [sort, setSort] = useState('latest'); // latest | cookable
       const [form, setForm] = useState({ open: false, recipe: null });
@@ -949,6 +1011,7 @@
                 <option value="latest">최신순</option>
                 <option value="cookable">만들기 쉬운 순</option>
               </select>
+              <Button variant="accent" onClick={() => setForm({ open: true, recipe: null })} className="whitespace-nowrap">✨ AI 생성</Button>
               <Button onClick={() => setForm({ open: true, recipe: null })} className="whitespace-nowrap">+ 새 레시피</Button>
             </div>
           </div>
@@ -969,7 +1032,7 @@
               <EmptyState
                 emoji="📖"
                 title="아직 저장한 레시피가 없어요"
-                description="자주 해 먹는 요리를 기록해 두세요."
+                description="직접 쓰거나, 요리명만 적고 ✨ AI 자동 생성으로 냉장고 재료 레시피를 받아 보세요."
                 action={<Button onClick={() => setForm({ open: true, recipe: null })}>첫 레시피 쓰기</Button>}
               />
             </Card>
@@ -1021,6 +1084,7 @@
             fridgeNames={fridgeNames}
             onClose={closeForm}
             onSubmit={(data) => onSave(data, form.recipe?.id)}
+            onGenerate={onGenerate}
           />
 
           {!confirm && (
@@ -1111,6 +1175,12 @@
         }
       }, [notify]);
 
+      // 저장하지 않은 초안만 돌려받는다 — 폼에서 확인 후 saveRecipe 로 저장
+      const generateRecipe = useCallback(
+        (title) => api('/recipes/generate', { method: 'POST', body: { title } }),
+        []
+      );
+
       const deleteRecipe = useCallback(async (recipe) => {
         try {
           await api(`/recipes/${recipe.id}`, { method: 'DELETE' });
@@ -1146,6 +1216,7 @@
                 onRetry={load}
                 onSave={saveRecipe}
                 onDelete={deleteRecipe}
+                onGenerate={generateRecipe}
               />
             )}
           </main>
