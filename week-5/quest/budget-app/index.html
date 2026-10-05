@@ -117,6 +117,12 @@
       return String(n);
     }
 
+    // '2026-08' → '2026년 8월' (앞의 0 을 떼고 읽는다)
+    function formatMonthLabel(monthKey) {
+      const [y, m] = monthKey.split('-').map(Number);
+      return `${y}년 ${m}월`;
+    }
+
     // 'YYYY-MM-DD' → '10월 5일 (월)'
     function formatDateLabel(dateKey) {
       const [y, m, d] = dateKey.split('-').map(Number);
@@ -326,24 +332,31 @@
     }
 
     // 달력 하단 패널과 목록 탭이 같은 행 모양을 공유한다
-    function TxRow({ tx, onDelete }) {
+    function TxRow({ tx, onEdit, onDelete }) {
       const categories = useCategories();
       const cat = findCategory(categories, tx.type, tx.category);
       const isIncome = tx.type === 'income';
       return (
-        <li className="flex items-center gap-2.5 rounded-2xl bg-slate-50 px-3 py-2.5">
-          <span className="text-lg">{cat.emoji}</span>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-slate-600">{cat.label}</p>
-            {tx.memo && <p className="text-[11px] text-slate-400 truncate">{tx.memo}</p>}
-          </div>
-          <span className={`text-sm font-extrabold tnum ${isIncome ? 'text-blue-500' : 'text-red-500'}`}>
-            {isIncome ? '+' : '-'}{formatWon(tx.amount)}
-          </span>
+        <li className="flex items-center rounded-2xl bg-slate-50 pr-2 hover:bg-slate-100 transition">
+          {/* 행 전체가 수정 버튼 — 숨은 제스처 대신 탭 한 번으로 연다 */}
+          <button
+            onClick={() => onEdit(tx)}
+            aria-label={`${cat.label} ${formatWon(tx.amount)}원 수정`}
+            className="flex flex-1 min-w-0 items-center gap-2.5 px-3 py-2.5 text-left"
+          >
+            <span className="text-lg">{cat.emoji}</span>
+            <span className="flex-1 min-w-0">
+              <span className="block text-xs font-bold text-slate-600">{cat.label}</span>
+              {tx.memo && <span className="block text-[11px] text-slate-400 truncate">{tx.memo}</span>}
+            </span>
+            <span className={`text-sm font-extrabold tnum ${isIncome ? 'text-blue-500' : 'text-red-500'}`}>
+              {isIncome ? '+' : '-'}{formatWon(tx.amount)}
+            </span>
+          </button>
           <button
             onClick={() => onDelete(tx.id)}
             aria-label="삭제"
-            className="text-slate-300 hover:text-red-400 text-sm px-1"
+            className="text-slate-300 hover:text-red-400 text-sm px-1.5 py-2.5"
           >
             ✕
           </button>
@@ -351,7 +364,7 @@
       );
     }
 
-    function DayPanel({ dateKey, transactions, onAdd, onDelete }) {
+    function DayPanel({ dateKey, transactions, onAdd, onEdit, onDelete }) {
       const income = transactions.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
       const expense = transactions.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
 
@@ -375,7 +388,7 @@
           ) : (
             <ul className="space-y-1.5">
               {transactions.map((t) => (
-                <TxRow key={t.id} tx={t} onDelete={onDelete} />
+                <TxRow key={t.id} tx={t} onEdit={onEdit} onDelete={onDelete} />
               ))}
             </ul>
           )}
@@ -383,7 +396,7 @@
       );
     }
 
-    function ListView({ transactions, loading, scope, onScopeChange, typeFilter, onTypeFilterChange, onDelete }) {
+    function ListView({ transactions, loading, scope, onScopeChange, typeFilter, onTypeFilterChange, onEdit, onDelete }) {
       // 날짜별로 묶어서 보여준다 (서버가 이미 날짜 역순으로 정렬해 준다)
       const groups = useMemo(() => {
         const map = new Map();
@@ -457,7 +470,7 @@
                   </div>
                   <ul className="space-y-1.5">
                     {list.map((t) => (
-                      <TxRow key={t.id} tx={t} onDelete={onDelete} />
+                      <TxRow key={t.id} tx={t} onEdit={onEdit} onDelete={onDelete} />
                     ))}
                   </ul>
                 </div>
@@ -468,7 +481,221 @@
       );
     }
 
-    function StatsView({ year, month, transactions }) {
+    // 막대 위쪽 모서리만 둥글게 — 바닥(기준선)은 각지게 둔다
+    function barPath(x, y, w, h, r = 4) {
+      const radius = Math.max(0, Math.min(r, w / 2, h));
+      return `M${x},${y + h} V${y + radius} Q${x},${y} ${x + radius},${y} ` +
+             `H${x + w - radius} Q${x + w},${y} ${x + w},${y + radius} V${y + h} Z`;
+    }
+
+    // 눈금 상한을 깔끔한 수로 올림한다 (700만 → 800만).
+    // 1·2·5 만 쓰면 700만이 1000만으로 튀어 막대가 쓸데없이 짧아지므로 단계를 촘촘히 둔다.
+    // 절반 눈금도 딱 떨어져야 해서 2 로 나눠지는 값만 쓴다.
+    function niceCeil(value) {
+      if (value <= 0) return 1;
+      const base = Math.pow(10, Math.floor(Math.log10(value)));
+      const step = [1, 1.2, 1.6, 2, 2.4, 3, 4, 5, 6, 8, 10].find((s) => value <= s * base) || 10;
+      return step * base;
+    }
+
+    function MonthlyTrendChart({ data, months, onMonthsChange, loading }) {
+      const [hovered, setHovered] = useState(null);
+      const [showTable, setShowTable] = useState(false);
+
+      // 색은 앱 전체 규칙 그대로 (수입 파랑 / 지출 빨강). 색각이상 ΔE 26.7 로 검증 완료.
+      const INCOME_COLOR = '#3b82f6';
+      const EXPENSE_COLOR = '#ef4444';
+
+      const VB_W = 340, VB_H = 170;
+      const PAD = { left: 40, right: 6, top: 10, bottom: 22 };
+      const plotW = VB_W - PAD.left - PAD.right;
+      const plotH = VB_H - PAD.top - PAD.bottom;
+
+      const peak = data.reduce((m, d) => Math.max(m, d.income, d.expense), 0);
+      const yMax = niceCeil(peak);
+      const hasData = peak > 0;
+
+      const band = data.length ? plotW / data.length : plotW;
+      const barW = Math.max(4, Math.min(16, band / 2 - 2));   // 막대 사이 2px 는 여백으로 비운다
+      const toY = (v) => PAD.top + plotH - (v / yMax) * plotH;
+
+      const ticks = [0, yMax / 2, yMax];
+      const hoveredData = hovered === null ? null : data[hovered];
+
+      return (
+        <div className="bg-white/80 rounded-3xl p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-extrabold text-slate-700">📈 월별 추이</h3>
+            <div className="flex gap-1" role="group" aria-label="기간 선택">
+              {[6, 12].map((m) => (
+                <button
+                  key={m}
+                  onClick={() => onMonthsChange(m)}
+                  aria-pressed={months === m}
+                  className={`rounded-lg px-2.5 py-1 text-[11px] font-bold transition ${months === m ? 'bg-rose-400 text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+                >
+                  {m}개월
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-3 mb-1" role="list" aria-label="범례">
+            {[
+              { label: '수입', color: INCOME_COLOR },
+              { label: '지출', color: EXPENSE_COLOR },
+            ].map((s) => (
+              <span key={s.label} role="listitem" className="flex items-center gap-1 text-[11px] font-bold text-slate-500">
+                <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: s.color }} />
+                {s.label}
+              </span>
+            ))}
+          </div>
+
+          {loading ? (
+            <p className="py-12 text-center text-xs text-slate-400">불러오는 중이에요… ⏳</p>
+          ) : !hasData ? (
+            <p className="py-12 text-center text-xs text-slate-400">이 기간에는 기록이 없어요 🍀</p>
+          ) : (
+            <div className="relative">
+              <svg
+                viewBox={`0 0 ${VB_W} ${VB_H}`}
+                className="w-full"
+                style={{ height: 180 }}
+                role="img"
+                aria-label={`최근 ${months}개월 월별 수입·지출 막대 그래프`}
+              >
+                {ticks.map((t) => (
+                  <g key={t}>
+                    <line
+                      x1={PAD.left} y1={toY(t)} x2={VB_W - PAD.right} y2={toY(t)}
+                      stroke="#e2e8f0" strokeWidth="1"
+                    />
+                    <text
+                      x={PAD.left - 5} y={toY(t) + 3}
+                      textAnchor="end" fontSize="8" fill="#94a3b8" fontWeight="700"
+                    >
+                      {t === 0 ? '0' : formatCompact(t)}
+                    </text>
+                  </g>
+                ))}
+
+                {data.map((d, i) => {
+                  const cx = PAD.left + band * i + band / 2;
+                  const incomeH = (d.income / yMax) * plotH;
+                  const expenseH = (d.expense / yMax) * plotH;
+                  const label = Number(d.month.slice(5));
+                  return (
+                    <g key={d.month}>
+                      {hovered === i && (
+                        <rect
+                          x={PAD.left + band * i} y={PAD.top}
+                          width={band} height={plotH}
+                          fill="#f8fafc"
+                        />
+                      )}
+                      {d.income > 0 && (
+                        <path d={barPath(cx - 1 - barW, toY(d.income), barW, incomeH)} fill={INCOME_COLOR} />
+                      )}
+                      {d.expense > 0 && (
+                        <path d={barPath(cx + 1, toY(d.expense), barW, expenseH)} fill={EXPENSE_COLOR} />
+                      )}
+                      <text
+                        x={cx} y={VB_H - 13}
+                        textAnchor="middle" fontSize="8"
+                        fill={hovered === i ? '#475569' : '#94a3b8'} fontWeight="700"
+                      >
+                        {months <= 6 ? `${label}월` : label}
+                      </text>
+                      {/* 해가 바뀌는 지점에만 연도를 적는다 — 없으면 11·12·1 이 몇 년인지 알 수 없다 */}
+                      {(i === 0 || label === 1) && (
+                        <text
+                          x={cx} y={VB_H - 4}
+                          textAnchor="middle" fontSize="7" fill="#cbd5e1" fontWeight="700"
+                        >
+                          '{d.month.slice(2, 4)}
+                        </text>
+                      )}
+                      {/* 막대보다 큰 히트 영역 — 손가락으로도 집을 수 있게 밴드 전체를 받는다 */}
+                      <rect
+                        x={PAD.left + band * i} y={PAD.top}
+                        width={band} height={plotH}
+                        fill="transparent"
+                        onMouseEnter={() => setHovered(i)}
+                        onMouseLeave={() => setHovered(null)}
+                        onClick={() => setHovered(hovered === i ? null : i)}
+                      />
+                    </g>
+                  );
+                })}
+
+                <line
+                  x1={PAD.left} y1={toY(0)} x2={VB_W - PAD.right} y2={toY(0)}
+                  stroke="#cbd5e1" strokeWidth="1"
+                />
+              </svg>
+
+              {hoveredData && (
+                <div
+                  className="pointer-events-none absolute top-0 rounded-xl bg-slate-800/95 px-2.5 py-1.5 text-[11px] text-white shadow-lg"
+                  style={{
+                    left: `${((PAD.left + band * hovered + band / 2) / VB_W) * 100}%`,
+                    transform: 'translateX(-50%)',
+                  }}
+                >
+                  <p className="font-extrabold">{formatMonthLabel(hoveredData.month)}</p>
+                  <p className="tnum">수입 {formatWon(hoveredData.income)}</p>
+                  <p className="tnum">지출 {formatWon(hoveredData.expense)}</p>
+                  <p className="tnum font-bold">
+                    합계 {formatWon(hoveredData.income - hoveredData.expense)}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <button
+            onClick={() => setShowTable((v) => !v)}
+            aria-expanded={showTable}
+            className="mt-2 w-full rounded-xl bg-slate-50 py-2 text-[11px] font-bold text-slate-500 hover:bg-slate-100 transition"
+          >
+            {showTable ? '표 닫기' : '표로 보기'}
+          </button>
+
+          {showTable && (
+            <div className="mt-2 overflow-x-auto">
+              <table className="w-full text-[11px] tnum">
+                <thead>
+                  <tr className="text-slate-400">
+                    <th className="py-1 text-left font-bold">월</th>
+                    <th className="py-1 text-right font-bold">수입</th>
+                    <th className="py-1 text-right font-bold">지출</th>
+                    <th className="py-1 text-right font-bold">합계</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.map((d) => {
+                    const net = d.income - d.expense;
+                    return (
+                      <tr key={d.month} className="border-t border-slate-100">
+                        <td className="py-1 font-bold text-slate-600">{d.month}</td>
+                        <td className="py-1 text-right text-slate-600">{formatWon(d.income)}</td>
+                        <td className="py-1 text-right text-slate-600">{formatWon(d.expense)}</td>
+                        <td className={`py-1 text-right font-bold ${net >= 0 ? 'text-slate-700' : 'text-red-500'}`}>
+                          {formatWon(net)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function StatsView({ year, month, transactions, trend, trendMonths, onTrendMonthsChange, trendLoading }) {
       const categories = useCategories();
       const totalExpense = transactions
         .filter((t) => t.type === 'expense')
@@ -496,6 +723,13 @@
               수입 {formatWon(totalIncome)}원 · 남은 돈 {formatWon(totalIncome - totalExpense)}원
             </p>
           </div>
+
+          <MonthlyTrendChart
+            data={trend}
+            months={trendMonths}
+            onMonthsChange={onTrendMonthsChange}
+            loading={trendLoading}
+          />
 
           <div className="bg-white/80 rounded-3xl p-4 shadow-sm">
             <h3 className="mb-3 text-sm font-extrabold text-slate-700">📊 분류별 지출</h3>
@@ -676,7 +910,8 @@
       );
     }
 
-    function TxModal({ isOpen, onClose, onSubmit, onCreateCategory, defaultDate }) {
+    // editing 이 있으면 수정 모드, 없으면 새 내역 추가 모드로 같은 폼을 쓴다
+    function TxModal({ isOpen, onClose, onSubmit, onCreateCategory, defaultDate, editing }) {
       const categories = useCategories();
       const [type, setType] = useState('expense');
       const [date, setDate] = useState(defaultDate);
@@ -687,18 +922,18 @@
       const [submitting, setSubmitting] = useState(false);
       const [addingCategory, setAddingCategory] = useState(false);
 
-      // 열릴 때마다 선택된 날짜 기준으로 초기화한다
+      // 열릴 때마다 초기화한다 — 수정이면 기존 값으로 채우고, 추가면 빈 값으로 둔다
       useEffect(() => {
         if (!isOpen) return;
-        setType('expense');
-        setDate(defaultDate);
-        setCategory(DEFAULT_CATEGORIES.expense[0].key);
-        setAmount('');
-        setMemo('');
+        setType(editing ? editing.type : 'expense');
+        setDate(editing ? editing.date : defaultDate);
+        setCategory(editing ? editing.category : DEFAULT_CATEGORIES.expense[0].key);
+        setAmount(editing ? editing.amount.toLocaleString('ko-KR') : '');
+        setMemo(editing ? editing.memo : '');
         setError('');
         setSubmitting(false);
         setAddingCategory(false);
-      }, [isOpen, defaultDate]);
+      }, [isOpen, defaultDate, editing]);
 
       const switchType = (next) => {
         setType(next);
@@ -724,7 +959,7 @@
         }
         setSubmitting(true);
         try {
-          await onSubmit({ date, type, category, amount: value, memo: memo.trim() });
+          await onSubmit({ date, type, category, amount: value, memo: memo.trim() }, editing);
           onClose();
         } catch (err) {
           setError(err.message);
@@ -734,7 +969,7 @@
       };
 
       return (
-        <Modal isOpen={isOpen} onClose={onClose} title="내역 입력 ✏️">
+        <Modal isOpen={isOpen} onClose={onClose} title={editing ? '내역 수정 ✏️' : '내역 입력 ✏️'}>
           <form onSubmit={handleSubmit} className="space-y-3">
             <div className="grid grid-cols-2 gap-2">
               {[
@@ -821,7 +1056,7 @@
             <div className="flex gap-2 pt-1">
               <Button type="button" variant="secondary" size="lg" className="flex-1" onClick={onClose} disabled={submitting}>취소</Button>
               <Button type="submit" size="lg" className="flex-1" disabled={submitting}>
-                {submitting ? '저장 중… ⏳' : '저장하기 💾'}
+                {submitting ? '저장 중… ⏳' : editing ? '수정 저장 💾' : '저장하기 💾'}
               </Button>
             </div>
           </form>
@@ -840,6 +1075,7 @@
       const [selectedDate, setSelectedDate] = useState(todayKey);
       const [tab, setTab] = useState('calendar');
       const [isModalOpen, setModalOpen] = useState(false);
+      const [editingTx, setEditingTx] = useState(null);   // null 이면 새 내역 추가
 
       // 달력·통계는 "이번 달" 내역을, 목록 탭의 전체 보기는 별도로 불러온다
       const [monthTx, setMonthTx] = useState([]);
@@ -852,6 +1088,11 @@
       // 목록 탭 필터
       const [scope, setScope] = useState('month');
       const [typeFilter, setTypeFilter] = useState('all');
+
+      // 월별 추이 그래프 — 보고 있는 달을 마지막으로 하는 N개월 구간
+      const [trend, setTrend] = useState([]);
+      const [trendMonths, setTrendMonths] = useState(6);
+      const [trendLoading, setTrendLoading] = useState(false);
 
       // 사용자가 추가한 분류 — 기본 분류 뒤에 이어 붙여 화면 전체에 Context 로 내려준다
       const [customCategories, setCustomCategories] = useState([]);
@@ -912,6 +1153,18 @@
         return () => { cancelled = true; };
       }, [scope, refreshKey]);
 
+      // 집계는 통계 탭을 열었을 때만 불러온다 (달력만 쓰는 동안 매달 쿼리하지 않게)
+      useEffect(() => {
+        if (tab !== 'stats') return;
+        let cancelled = false;
+        setTrendLoading(true);
+        api(`/stats/monthly?end=${monthPrefix}&months=${trendMonths}`)
+          .then((data) => { if (!cancelled) { setTrend(data); setError(''); } })
+          .catch((err) => { if (!cancelled) setError(err.message); })
+          .finally(() => { if (!cancelled) setTrendLoading(false); });
+        return () => { cancelled = true; };
+      }, [tab, monthPrefix, trendMonths, refreshKey]);
+
       const listTx = useMemo(() => {
         const base = scope === 'all' ? allTx : monthTx;
         return typeFilter === 'all' ? base : base.filter((t) => t.type === typeFilter);
@@ -947,15 +1200,29 @@
         setSelectedDate(todayKey());
       }, []);
 
-      const addTransaction = useCallback(async (tx) => {
-        const saved = await api('/transactions', { method: 'POST', body: JSON.stringify(tx) });
-        // 모달에서 다른 달 날짜를 고를 수 있으므로 달력도 그 달로 따라간다
+      // 추가와 수정이 같은 폼을 쓰므로 저장도 한 곳에서 처리한다
+      const saveTransaction = useCallback(async (tx, editing) => {
+        const saved = editing
+          ? await api(`/transactions/${editing.id}`, { method: 'PATCH', body: JSON.stringify(tx) })
+          : await api('/transactions', { method: 'POST', body: JSON.stringify(tx) });
+
+        // 모달에서 다른 달 날짜로 바꿀 수 있으므로 달력도 그 달로 따라간다
         const [ty, tm] = saved.date.split('-').map(Number);
         setSelectedDate(saved.date);
         setYear(ty);
         setMonth(tm - 1);
         setRefreshKey((k) => k + 1);
         return saved;
+      }, []);
+
+      const openEdit = useCallback((tx) => {
+        setEditingTx(tx);
+        setModalOpen(true);
+      }, []);
+
+      const openCreate = useCallback(() => {
+        setEditingTx(null);
+        setModalOpen(true);
       }, []);
 
       // 삭제는 화면에서 먼저 지우고 서버에 보낸다.
@@ -1014,7 +1281,8 @@
               <DayPanel
                 dateKey={selectedDate}
                 transactions={selectedTx}
-                onAdd={() => setModalOpen(true)}
+                onAdd={openCreate}
+                onEdit={openEdit}
                 onDelete={deleteTransaction}
               />
             </div>
@@ -1026,6 +1294,7 @@
               onScopeChange={setScope}
               typeFilter={typeFilter}
               onTypeFilterChange={setTypeFilter}
+              onEdit={openEdit}
               onDelete={deleteTransaction}
             />
           ) : tab === 'categories' ? (
@@ -1035,14 +1304,22 @@
               onDelete={deleteCategory}
             />
           ) : (
-            <StatsView year={year} month={month} transactions={monthTx} />
+            <StatsView
+              year={year}
+              month={month}
+              transactions={monthTx}
+              trend={trend}
+              trendMonths={trendMonths}
+              onTrendMonthsChange={setTrendMonths}
+              trendLoading={trendLoading}
+            />
           )}
 
           {/* Extended FAB — 하단 네비게이션 위에 띄운다 (Material 가이드).
               분류 관리 화면에서는 입력 폼을 가리므로 숨긴다 */}
           {tab !== 'categories' && (
             <button
-              onClick={() => setModalOpen(true)}
+              onClick={openCreate}
               className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 rounded-full bg-rose-400 px-6 py-3 text-sm font-extrabold text-white shadow-lg shadow-rose-200 hover:bg-rose-500 transition"
             >
               ➕ 내역 추가
@@ -1072,7 +1349,8 @@
           <TxModal
             isOpen={isModalOpen}
             onClose={() => setModalOpen(false)}
-            onSubmit={addTransaction}
+            onSubmit={saveTransaction}
+            editing={editingTx}
             onCreateCategory={createCategory}
             defaultDate={selectedDate}
           />

@@ -7,6 +7,7 @@ require('dotenv').config();
 
 const express = require('express');
 const path = require('path');
+const crypto = require('crypto');
 const { Pool } = require('pg');
 
 // ── App init & config ────────────────────────
@@ -19,6 +20,7 @@ const TYPES = ['income', 'expense'];
 
 const MAX_LABEL_LENGTH = 12;            // 분류 이름 — 달력/모달 타일에 들어가는 길이 한계
 const MAX_EMOJI_LENGTH = 8;             // 👨‍👩‍👧 같은 ZWJ 결합 이모지를 고려한 길이
+const MAX_TREND_MONTHS = 24;            // 월별 추이 그래프가 한 번에 보여줄 수 있는 최대 개월
 
 // ── DB 연결 ──────────────────────────────────
 // Supabase Transaction Pooler(6543). 환경변수에 trailing newline 이 붙는 경우가
@@ -171,6 +173,27 @@ function parseId(raw) {
 }
 
 // ── Middleware ───────────────────────────────
+
+// 접속 비밀번호 (HTTP Basic Auth). APP_PASSWORD 가 있으면 페이지와 API 전체를 잠근다.
+// 브라우저가 기본 로그인 창을 띄우고, 사용자 이름은 아무거나 넣어도 된다.
+// 비어 있으면(로컬 개발) 잠그지 않는다.
+const APP_PASSWORD = (process.env.APP_PASSWORD || '').trim();
+const PASSWORD_HASH = crypto.createHash('sha256').update(APP_PASSWORD).digest();
+
+app.use((req, res, next) => {
+  if (!APP_PASSWORD) return next();
+  const [scheme, encoded] = (req.headers.authorization || '').split(' ');
+  if (scheme === 'Basic' && encoded) {
+    const decoded = Buffer.from(encoded, 'base64').toString('utf8');
+    const password = decoded.slice(decoded.indexOf(':') + 1);
+    // 길이가 달라도 비교 시간이 같도록 해시끼리 비교한다
+    const hash = crypto.createHash('sha256').update(password).digest();
+    if (crypto.timingSafeEqual(hash, PASSWORD_HASH)) return next();
+  }
+  res.set('WWW-Authenticate', 'Basic realm="budget-app", charset="UTF-8"');
+  res.status(401).send('비밀번호가 필요해요');
+});
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
@@ -347,6 +370,52 @@ app.delete('/api/transactions/:id', async (req, res) => {
   } catch (err) {
     console.error('DELETE /api/transactions/:id:', err.message);
     res.status(500).json({ success: false, message: '내역을 삭제하지 못했어요' });
+  }
+});
+
+// 월별 집계 — ?end=YYYY-MM(마지막 달), ?months=개수
+// 내역이 없는 달도 0 으로 채워서 돌려준다 (그래프에 구멍이 생기지 않게)
+app.get('/api/stats/monthly', async (req, res) => {
+  try {
+    const end = cleanMonth(req.query.end);
+    if (!end) {
+      return res.status(400).json({ success: false, message: 'end 는 YYYY-MM 형식이어야 해요' });
+    }
+
+    const months = Number(req.query.months || 6);
+    if (!Number.isInteger(months) || months < 1 || months > MAX_TREND_MONTHS) {
+      return res.status(400).json({ success: false, message: `months 는 1~${MAX_TREND_MONTHS} 사이여야 해요` });
+    }
+
+    const { rows } = await pool.query(
+      `WITH span AS (
+         SELECT generate_series(
+           date_trunc('month', $1::date) - make_interval(months => $2::int - 1),
+           date_trunc('month', $1::date),
+           INTERVAL '1 month'
+         ) AS m
+       )
+       SELECT to_char(span.m, 'YYYY-MM') AS month,
+              COALESCE(SUM(t.amount) FILTER (WHERE t.type = 'income'),  0)::bigint AS income,
+              COALESCE(SUM(t.amount) FILTER (WHERE t.type = 'expense'), 0)::bigint AS expense
+       FROM span
+       LEFT JOIN transactions t ON date_trunc('month', t.tx_date) = span.m
+       GROUP BY span.m
+       ORDER BY span.m`,
+      [`${end}-01`, months]
+    );
+
+    res.json({
+      success: true,
+      data: rows.map((r) => ({
+        month: r.month,
+        income: Number(r.income),
+        expense: Number(r.expense),
+      })),
+    });
+  } catch (err) {
+    console.error('GET /api/stats/monthly:', err.message);
+    res.status(500).json({ success: false, message: '월별 통계를 불러오지 못했어요' });
   }
 });
 
