@@ -1,0 +1,27 @@
+수업정리
+
+1주차
+
+1. Claude, VS(Visual Studio) Cord
+2. 나노바나나 API Key
+    https://aistudio.google.com/u/1/api-keys 
+
+
+2주차
+
+1. Git, Github 사용
+    https://github.com/
+
+   commit, ignore
+
+   /single-react-dev  - 웹사이트 제작스킬
+
+  자체제작 skill
+
+
+3주차
+
+1. playwright - 인터넷 서치 API
+2. pokeapi - 포켓몬도감 API
+2. openweathermap - 날씨 API
+   https://openweathermap.org/

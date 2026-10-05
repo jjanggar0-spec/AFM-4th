@@ -1,0 +1,19 @@
+{
+  "name": "budget-app-week5",
+  "version": "1.0.0",
+  "private": true,
+  "description": "달력 가계부 🐷 — 달력 중심 가계부 (React CDN + Express 5 + Supabase PostgreSQL)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=20.12"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "pg": "^8.16.3"
+  }
+}

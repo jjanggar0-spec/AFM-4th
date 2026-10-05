@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>냉장고 야식 · 2편</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #f7f2ea;
+    --surface:   #fffdf9;
+    --ink:       #2f2822;
+    --ink-soft:  #6b5f52;
+    --ink-faint: #9a8b7a;
+    --line:      #e6dbc9;
+    --accent:    #c2410c;
+    --accent-2:  #d97706;
+    --chip:      #f2e7d5;
+    --shadow:    0 1px 2px rgba(74,58,40,.06), 0 12px 32px -12px rgba(74,58,40,.22);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Noto Sans KR', system-ui, -apple-system, sans-serif;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .serif { font-family: 'Gowun Batang', Georgia, serif; }
+
+  .wrap {
+    max-width: 780px;
+    margin: 0 auto;
+    padding-inline: 20px;
+  }
+
+  /* ── 상단 바 ─────────────────────────── */
+  header.top {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(247,242,234,.88);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  header.top .wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-block: 12px;
+    flex-wrap: wrap;
+  }
+  .brand {
+    font-weight: 900;
+    font-size: 15px;
+    letter-spacing: -.01em;
+  }
+  .brand span { color: var(--accent); }
+  nav.jump { display: flex; gap: 8px; flex-wrap: wrap; }
+  nav.jump a {
+    font-size: 13px;
+    color: var(--ink-soft);
+    text-decoration: none;
+    padding: 5px 12px;
+    border: 1px solid var(--line);
+    border-radius: 99px;
+    background: var(--surface);
+    white-space: nowrap;
+    transition: .15s;
+  }
+  nav.jump a:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* ── 히어로 ──────────────────────────── */
+  .hero { padding-block: 56px 40px; text-align: center; }
+  .hero .eyebrow {
+    font-size: 12px;
+    letter-spacing: .22em;
+    color: var(--accent-2);
+    font-weight: 700;
+    margin: 0 0 14px;
+  }
+  .hero h1 {
+    font-size: clamp(34px, 8vw, 52px);
+    line-height: 1.22;
+    margin: 0 0 18px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+  }
+  .hero p {
+    color: var(--ink-soft);
+    margin: 0 auto;
+    max-width: 30em;
+    font-size: 16px;
+  }
+
+  .rule {
+    border: 0;
+    border-top: 1px solid var(--line);
+    margin: 0;
+  }
+
+  /* ── 냉장고 재료 ─────────────────────── */
+  .pantry { padding-block: 34px; }
+  .pantry h2 {
+    font-size: 13px;
+    letter-spacing: .14em;
+    color: var(--ink-faint);
+    font-weight: 700;
+    margin: 0 0 14px;
+    text-align: center;
+  }
+  .tags { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; }
+  .tag {
+    font-size: 13px;
+    background: var(--chip);
+    color: var(--ink-soft);
+    padding: 4px 11px;
+    border-radius: 99px;
+  }
+  .tag.used {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 500;
+  }
+  .legend {
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    margin: 14px 0 0;
+  }
+
+  /* ── 레시피 카드 ─────────────────────── */
+  article.recipe {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-block: 30px;
+    scroll-margin-top: 78px;
+  }
+
+  .shot {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    max-width: 100%;
+    object-fit: cover;
+    background: var(--chip);
+  }
+
+  .body { padding: 30px 26px 34px; }
+
+  .recipe h2.title {
+    font-size: clamp(26px, 5.5vw, 34px);
+    margin: 0 0 6px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+  }
+  .hook {
+    margin: 0 0 20px;
+    color: var(--ink-soft);
+    font-size: 16.5px;
+    border-left: 3px solid var(--accent-2);
+    padding-left: 14px;
+  }
+
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 28px; }
+  .meta b {
+    font-size: 13px;
+    font-weight: 500;
+    background: var(--chip);
+    padding: 5px 12px;
+    border-radius: 8px;
+    color: var(--ink-soft);
+  }
+  .meta b i {
+    font-style: normal;
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  h3.sec {
+    font-size: 12px;
+    letter-spacing: .16em;
+    color: var(--accent);
+    font-weight: 700;
+    margin: 34px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  h3.sec:first-of-type { margin-top: 0; }
+
+  ul.items { list-style: none; margin: 0; padding: 0; }
+  ul.items li {
+    padding: 9px 0;
+    border-bottom: 1px dashed var(--line);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: baseline;
+    font-size: 15px;
+  }
+  ul.items li:last-child { border-bottom: 0; }
+  ul.items .nm { font-weight: 700; min-width: 5.5em; }
+  ul.items .qty { color: var(--accent); font-size: 14px; font-weight: 500; }
+  ul.items .how { color: var(--ink-faint); font-size: 14px; flex: 1 1 12em; }
+
+  .tablebox { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14.5px;
+    min-width: 260px;
+  }
+  table th {
+    text-align: left;
+    font-size: 12px;
+    letter-spacing: .08em;
+    color: var(--ink-faint);
+    font-weight: 700;
+    padding: 0 0 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  table td { padding: 9px 0; border-bottom: 1px dashed var(--line); }
+  table td:last-child { text-align: right; color: var(--accent); font-weight: 500; }
+  table tr:last-child td { border-bottom: 0; }
+
+  ol.steps { list-style: none; counter-reset: s; margin: 0; padding: 0; }
+  ol.steps li {
+    counter-increment: s;
+    position: relative;
+    padding: 0 0 22px 46px;
+    border-left: 2px solid var(--line);
+    margin-left: 13px;
+  }
+  ol.steps li:last-child { border-left-color: transparent; padding-bottom: 0; }
+  ol.steps li::before {
+    content: counter(s);
+    position: absolute;
+    left: -14px;
+    top: -2px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+  }
+  .step-h {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+  }
+  .step-h b { font-size: 16px; }
+  .clock {
+    font-size: 12px;
+    background: var(--chip);
+    color: var(--ink-soft);
+    padding: 2px 9px;
+    border-radius: 99px;
+    font-weight: 500;
+  }
+  .why {
+    margin: 9px 0 0;
+    font-size: 14px;
+    color: var(--ink-soft);
+    background: #fbf5e9;
+    border-left: 3px solid var(--accent-2);
+    padding: 9px 13px;
+    border-radius: 0 7px 7px 0;
+  }
+  .why::before { content: "왜 "; font-weight: 700; color: var(--accent-2); }
+
+  ul.notes { margin: 0; padding-left: 20px; }
+  ul.notes li { margin-bottom: 9px; font-size: 15px; }
+  ul.notes li:last-child { margin-bottom: 0; }
+  ul.notes b { color: var(--accent); }
+
+  footer.foot {
+    padding-block: 40px 60px;
+    text-align: center;
+    color: var(--ink-faint);
+    font-size: 13px;
+  }
+  footer.foot code {
+    background: var(--chip);
+    padding: 2px 6px;
+    border-radius: 5px;
+    font-size: 12px;
+    word-break: break-all;
+  }
+
+  @media (max-width: 480px) {
+    .body { padding: 24px 18px 28px; }
+    ul.items .nm { min-width: 100%; }
+  }
+
+  @media print {
+    header.top, nav.jump { display: none; }
+    body { background: #fff; }
+    article.recipe { box-shadow: none; break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">냉장고 <span>야식</span></div>
+    <nav class="jump">
+      <a href="#noodle">삼겹 김치 쌀국수</a>
+      <a href="#mandu">치즈 김치 군만두</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section class="hero">
+    <p class="eyebrow">MIDNIGHT · 2 RECIPES</p>
+    <h1 class="serif">밤 열한 시,<br>냉장고에 있는 것만으로</h1>
+    <p>장을 보지 않는다. 냉장고 재료 22개 안에서만 고른 야식 두 편.<br>둘 다 팬·냄비 하나로 끝나고, 15분을 넘기지 않는다.</p>
+  </section>
+
+  <hr class="rule">
+
+  <section class="pantry">
+    <h2>냉장고에 있는 재료</h2>
+    <div class="tags">
+      <span class="tag used">쌀국수</span>
+      <span class="tag used">국수</span>
+      <span class="tag">쌀</span>
+      <span class="tag used">삼겹살</span>
+      <span class="tag">등심</span>
+      <span class="tag">안창살</span>
+      <span class="tag used">프랭크소세지</span>
+      <span class="tag used">만두</span>
+      <span class="tag used">김치</span>
+      <span class="tag used">달걀</span>
+      <span class="tag used">치즈</span>
+      <span class="tag">우유</span>
+      <span class="tag used">양파</span>
+      <span class="tag used">마늘</span>
+      <span class="tag used">깻잎</span>
+      <span class="tag used">상추</span>
+      <span class="tag used">사과</span>
+      <span class="tag used">배</span>
+      <span class="tag used">고춧가루</span>
+      <span class="tag used">참기름</span>
+      <span class="tag used">깨소금</span>
+      <span class="tag used">소금</span>
+    </div>
+    <p class="legend">진한 칠 = 아래 두 레시피에 쓰인 재료 (22개 중 18개)</p>
+  </section>
+
+  <!-- ══ 레시피 1 ══════════════════════════ -->
+  <article class="recipe" id="noodle">
+    <img class="shot" src="삼겹-김치-쌀국수.png"
+         alt="늦은 밤 부엌 식탁에서 붉은 국물의 쌀국수를 젓가락으로 들어올리는 사람. 그릇에는 구운 삼겹살, 김치, 반숙 달걀, 채 썬 깻잎이 얹혀 있다">
+    <div class="body">
+      <h2 class="title serif">삼겹 김치 쌀국수</h2>
+      <p class="hook">냄비 하나로 끝나는 야식. 냉장고에 있는 삼겹살 세 줄과 김치면 국물까지 나온다.</p>
+
+      <div class="meta">
+        <b>소요 시간 <i>15분</i></b>
+        <b>분량 <i>1인분</i></b>
+        <b>난이도 <i>쉬움</i></b>
+        <b>냄비 <i>1개</i></b>
+      </div>
+
+      <h3 class="sec">재료</h3>
+      <ul class="items">
+        <li><span class="nm">쌀국수</span><span class="qty">100g</span><span class="how">마른 면 그대로 (미리 불릴 필요 없음)</span></li>
+        <li><span class="nm">삼겹살</span><span class="qty">100g</span><span class="how">한 입 크기로 썰기 (3~4줄)</span></li>
+        <li><span class="nm">김치</span><span class="qty">1컵</span><span class="how">잘 익은 것으로, 2cm 폭으로 썰기</span></li>
+        <li><span class="nm">김치 국물</span><span class="qty">2큰술</span><span class="how">국물 간의 핵심이라 꼭 챙길 것</span></li>
+        <li><span class="nm">양파</span><span class="qty">1/4개</span><span class="how">굵게 채 썰기</span></li>
+        <li><span class="nm">마늘</span><span class="qty">2쪽</span><span class="how">편으로 썰기</span></li>
+        <li><span class="nm">달걀</span><span class="qty">1개</span><span class="how">반숙으로 삶거나 프라이</span></li>
+        <li><span class="nm">깻잎</span><span class="qty">3장</span><span class="how">돌돌 말아 채 썰기</span></li>
+        <li><span class="nm">물</span><span class="qty">500ml</span><span class="how"></span></li>
+        <li><span class="nm">상추</span><span class="qty">2장</span><span class="how">(선택) 깻잎 대신 올려도 된다</span></li>
+      </ul>
+
+      <h3 class="sec">국물 간</h3>
+      <div class="tablebox">
+        <table>
+          <thead><tr><th>재료</th><th>분량</th></tr></thead>
+          <tbody>
+            <tr><td>김치 국물</td><td>2큰술</td></tr>
+            <tr><td>고춧가루</td><td>1작은술</td></tr>
+            <tr><td>소금</td><td>1/3작은술</td></tr>
+            <tr><td>참기름 <span style="color:var(--ink-faint)">(마무리)</span></td><td>1작은술</td></tr>
+            <tr><td>깨소금 <span style="color:var(--ink-faint)">(마무리)</span></td><td>1/2작은술</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="sec">만드는 법</h3>
+      <ol class="steps">
+        <li>
+          <div class="step-h"><b>재료 손질</b><span class="clock">2분</span></div>
+          양파와 마늘을 썰고, 김치는 2cm 폭으로, 삼겹살은 한 입 크기로 썬다. 깻잎은 마지막에 올릴 것이니 채 썰어 따로 둔다.
+        </li>
+        <li>
+          <div class="step-h"><b>삼겹살 굽기</b><span class="clock">4분</span></div>
+          기름 없이 달군 냄비에 삼겹살을 넣고 센 불에서 겉이 노릇해질 때까지 굽는다. 나온 기름은 버리지 말고 그대로 둔다.
+          <p class="why">삼겹살 기름이 이 국물의 육수 역할을 한다. 따로 육수를 낼 시간을 여기서 번다.</p>
+        </li>
+        <li>
+          <div class="step-h"><b>김치·양파 볶기</b><span class="clock">3분</span></div>
+          같은 냄비에 김치, 양파, 마늘을 넣고 중불에서 볶는다. 김치 가장자리가 투명해지고 신 냄새가 고소하게 바뀌면 된다.
+          <p class="why">김치를 물에 바로 넣으면 신맛만 남는다. 기름에 먼저 볶아야 단맛이 올라온다.</p>
+        </li>
+        <li>
+          <div class="step-h"><b>국물 끓이기</b><span class="clock">3분</span></div>
+          물 500ml, 김치 국물 2큰술, 고춧가루 1작은술을 넣고 센 불로 끓인다. 끓어오르면 소금으로 간을 맞춘다.
+        </li>
+        <li>
+          <div class="step-h"><b>면 삶기</b><span class="clock">2분</span></div>
+          끓는 국물에 마른 쌀국수를 그대로 넣고 2분간 삶는다. 젓가락으로 한 번 풀어준다.
+          <p class="why">쌀국수는 불에서 내린 뒤에도 국물 열로 계속 익는다. 살짝 덜 익었다 싶을 때 불을 끄는 게 맞다.</p>
+        </li>
+        <li>
+          <div class="step-h"><b>담기</b><span class="clock">1분</span></div>
+          그릇에 옮기고 반숙 달걀을 반으로 갈라 올린다. 채 썬 깻잎을 얹고 참기름 1작은술, 깨소금 1/2작은술을 뿌린다.
+        </li>
+      </ol>
+
+      <h3 class="sec">곁들이면 좋은 것</h3>
+      <ul class="notes">
+        <li><b>치즈 1장</b> — 면 위에 올려 국물 열로 녹이면 매운맛이 눌리고 부드러워진다.</li>
+        <li><b>사과 몇 조각</b> — 느끼함을 끊어줘서 야식 뒤 입이 개운하다.</li>
+        <li><b>만두 2~3개</b> — 4번 단계에서 국물에 같이 넣으면 한 그릇이 든든해진다.</li>
+      </ul>
+
+      <h3 class="sec">팁</h3>
+      <ul class="notes">
+        <li><b>대체 재료</b> — 쌀국수가 없으면 소면(국수)으로. 대신 밀가루 면은 국물이 탁해지니 따로 삶아 헹군 뒤 넣는다. 삼겹살 대신 프랭크소세지를 어슷 썰어 써도 된다.</li>
+        <li><b>맛 조절</b> — 너무 시면 물을 50ml 더 넣고 소금으로 다시 잡는다. 반대로 밍밍하면 김치 국물을 1큰술씩 더한다. 고춧가루는 처음부터 다 넣지 말고 마지막에 맛을 보며 더하는 게 안전하다.</li>
+        <li><b>밤에 부담될 때</b> — 삼겹살을 50g으로 줄이고 물을 600ml로 늘리면 훨씬 가벼워진다.</li>
+        <li><b>면이 불었다면</b> — 다음 날 남은 국물은 면을 건져내고 밥을 말아 먹는 쪽이 낫다. 쌀국수는 재가열하면 끊어진다.</li>
+      </ul>
+    </div>
+  </article>
+
+  <!-- ══ 레시피 2 ══════════════════════════ -->
+  <article class="recipe" id="mandu">
+    <img class="shot" src="치즈-김치-군만두.png"
+         alt="스탠드 불빛 아래 식탁에 놓인 팬. 노릇하게 구운 만두 위에 볶은 김치와 녹은 치즈, 채 썬 깻잎이 얹혀 있고 옆에는 상추 접시가 놓여 있다. 두 사람이 젓가락으로 만두를 집으며 웃고 있다">
+    <div class="body">
+      <h2 class="title serif">치즈 김치 군만두</h2>
+      <p class="hook">팬 하나, 기름 한 방울 없이. 둘이서 맥주 한 캔씩 놓고 집어 먹기 좋은 야식.</p>
+
+      <div class="meta">
+        <b>소요 시간 <i>10분</i></b>
+        <b>분량 <i>2인분</i></b>
+        <b>난이도 <i>쉬움</i></b>
+        <b>팬 <i>1개</i></b>
+      </div>
+
+      <h3 class="sec">재료</h3>
+      <ul class="items">
+        <li><span class="nm">만두</span><span class="qty">10개</span><span class="how">냉동 그대로, 해동하지 말 것</span></li>
+        <li><span class="nm">김치</span><span class="qty">1컵</span><span class="how">잘 익은 것으로, 잘게 썰기</span></li>
+        <li><span class="nm">양파</span><span class="qty">1/4개</span><span class="how">잘게 다지기</span></li>
+        <li><span class="nm">치즈</span><span class="qty">2장</span><span class="how">반으로 잘라 두기</span></li>
+        <li><span class="nm">깻잎</span><span class="qty">4장</span><span class="how">돌돌 말아 채 썰기</span></li>
+        <li><span class="nm">물</span><span class="qty">4큰술</span><span class="how">만두 찔 때</span></li>
+        <li><span class="nm">상추</span><span class="qty">4장</span><span class="how">(선택) 쌈으로 싸 먹을 것</span></li>
+      </ul>
+
+      <h3 class="sec">김치 양념</h3>
+      <div class="tablebox">
+        <table>
+          <thead><tr><th>재료</th><th>분량</th></tr></thead>
+          <tbody>
+            <tr><td>김치 국물</td><td>1큰술</td></tr>
+            <tr><td>고춧가루</td><td>1/2작은술</td></tr>
+            <tr><td>참기름</td><td>1작은술</td></tr>
+            <tr><td>깨소금</td><td>1/2작은술</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="sec">만드는 법</h3>
+      <ol class="steps">
+        <li>
+          <div class="step-h"><b>재료 손질</b><span class="clock">2분</span></div>
+          김치와 양파를 잘게 썬다. 깻잎은 마지막에 올릴 것이니 채 썰어 따로 둔다. 치즈는 반으로 잘라 둔다.
+          <p class="why">김치를 잘게 썰어야 만두 위에 얹었을 때 한 입에 같이 잡힌다.</p>
+        </li>
+        <li>
+          <div class="step-h"><b>만두 찌듯 굽기</b><span class="clock">4분</span></div>
+          달군 팬에 냉동 만두를 간격 두고 올리고 물 4큰술을 부은 뒤 뚜껑을 덮는다. 3분 뒤 뚜껑을 열고 물이 다 날아갈 때까지 1분 더 둔다.
+          <p class="why">기름 없이도 바삭해진다. 물이 마르는 순간 만두 바닥이 팬에 눌어붙으며 구워지기 때문. 뚜껑을 일찍 열면 속이 덜 익는다.</p>
+        </li>
+        <li>
+          <div class="step-h"><b>김치·양파 볶기</b><span class="clock">3분</span></div>
+          만두를 팬 한쪽으로 밀고 빈 자리에 김치와 양파를 넣는다. 김치 국물 1큰술, 고춧가루 1/2작은술을 넣고 중불에서 볶는다. 김치 가장자리가 투명해지면 만두 위에 얹는다.
+          <p class="why">만두에서 나온 기름으로 김치가 볶인다. 팬을 새로 쓸 필요가 없다.</p>
+        </li>
+        <li>
+          <div class="step-h"><b>치즈 덮고 녹이기</b><span class="clock">1분</span></div>
+          김치 위에 치즈를 올리고 불을 끈 뒤 뚜껑을 30초 덮는다. 치즈가 녹으면 채 썬 깻잎을 뿌리고 참기름 1작은술, 깨소금 1/2작은술로 마무리한다.
+          <p class="why">불을 켠 채로 치즈를 녹이면 팬 바닥에 눌어붙는다. 남은 열만으로 충분하다.</p>
+        </li>
+      </ol>
+
+      <h3 class="sec">곁들이면 좋은 것</h3>
+      <ul class="notes">
+        <li><b>상추쌈</b> — 만두 하나에 김치·치즈째로 싸면 느끼함이 딱 끊긴다.</li>
+        <li><b>달걀프라이 2개</b> — 4번 단계 전에 팬 빈 자리에서 같이 부치면 설거지가 안 는다.</li>
+        <li><b>사과나 배 몇 조각</b> — 매운 김치 뒤에 두면 입이 개운하다.</li>
+      </ul>
+
+      <h3 class="sec">팁</h3>
+      <ul class="notes">
+        <li><b>대체 재료</b> — 만두가 없으면 프랭크소세지 2개를 어슷 썰어 같은 방법으로 굽는다. 이때는 물 대신 그냥 중불에 굴려가며 굽는 게 낫다. 깻잎이 떨어졌으면 상추를 채 썰어 올려도 된다.</li>
+        <li><b>맛 조절</b> — 김치가 너무 시면 고춧가루를 빼고 치즈를 3장으로 늘린다. 반대로 밍밍하면 김치 국물을 1큰술 더. 고춧가루는 마지막에 맛을 보며 더하는 쪽이 안전하다.</li>
+        <li><b>밤에 부담될 때</b> — 만두를 6개로 줄이고 상추를 넉넉히 깔아 쌈 위주로 먹으면 훨씬 가볍다. 치즈도 1장이면 충분하다.</li>
+        <li><b>바삭함을 되살리려면</b> — 다 만든 뒤 시간이 지나 눅눅해졌으면 뚜껑 없이 센 불에 30초만 다시 굽는다. 뚜껑을 덮으면 김이 차서 더 눅눅해진다.</li>
+      </ul>
+    </div>
+  </article>
+
+  <hr class="rule">
+
+  <footer class="foot">
+    재료 목록 출처 — 냉장고 재료 DB <code>week-4/quest/fridge-recipe</code><br>
+    이미지는 Nano Banana(Gemini)로 생성했습니다.
+  </footer>
+
+</div>
+
+</body>
+</html>

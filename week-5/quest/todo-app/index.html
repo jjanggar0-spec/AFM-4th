@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>오늘의 할 일 🌸</title>
+
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <!-- ⚠️ 모든 CDN은 버전을 명시적으로 고정한다. 미고정 시 @babel/standalone 이
+       최신(8.x)으로 올라가 type="text/babel" 인라인 변환이 통째로 깨진다. -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.25.9/babel.min.js"></script>
+
+  <style>
+    /* Tailwind 유틸리티로 표현 불가능한 것만 여기에 둔다 */
+    @keyframes pop-in {
+      0%   { opacity: 0; transform: translateY(-6px) scale(0.98); }
+      100% { opacity: 1; transform: translateY(0)    scale(1); }
+    }
+    .animate-pop-in { animation: pop-in 0.18s ease-out; }
+
+    @keyframes toast-up {
+      0%   { opacity: 0; transform: translateY(12px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .animate-toast-up { animation: toast-up 0.22s ease-out; }
+
+    /* 파스텔 체크박스 */
+    input[type="checkbox"].pastel-check { accent-color: #f472b6; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-rose-50 via-orange-50 to-amber-50 min-h-screen">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useRef, useCallback } = React;
+
+    // ========================================
+    // ⚙️ 설정 & API 헬퍼
+    // ========================================
+
+    // ❗ localhost 하드코딩 금지 — server.js 가 이 파일을 같은 오리진에서 서빙한다
+    const API_BASE_URL = '/api';
+
+    const MAX_TITLE_LENGTH = 200;
+
+    const FILTERS = [
+      { key: 'all',    label: '전체',   emoji: '📋' },
+      { key: 'active', label: '진행중', emoji: '🔥' },
+      { key: 'done',   label: '완료',   emoji: '✅' },
+    ];
+
+    // 서버 응답은 항상 { success, data, message? } 구조다
+    async function api(path, options = {}) {
+      let res;
+      try {
+        res = await fetch(`${API_BASE_URL}${path}`, {
+          headers: { 'Content-Type': 'application/json' },
+          ...options,
+        });
+      } catch (networkError) {
+        throw new Error('서버에 연결할 수 없어요. 서버가 켜져 있는지 확인해 주세요 🥲');
+      }
+
+      let body = null;
+      try { body = await res.json(); } catch (_) { /* 본문 없는 응답 허용 */ }
+
+      if (!res.ok || !body || body.success === false) {
+        throw new Error((body && body.message) || `요청에 실패했어요 (${res.status})`);
+      }
+      return body.data;
+    }
+
+    // ========================================
+    // 🎨 Design System Components
+    // ========================================
+
+    function Button({ variant = 'primary', size = 'md', disabled, onClick, type = 'button', className = '', children, ...rest }) {
+      const variants = {
+        primary:   'bg-pink-400 hover:bg-pink-500 text-white shadow-sm shadow-pink-200',
+        secondary: 'bg-white hover:bg-rose-50 text-rose-500 border border-rose-200',
+        danger:    'bg-white hover:bg-red-50 text-red-400 border border-red-200',
+        ghost:     'bg-transparent hover:bg-rose-100/60 text-rose-400',
+      };
+      const sizes = {
+        sm: 'px-2.5 py-1 text-xs rounded-lg',
+        md: 'px-4 py-2 text-sm rounded-xl',
+        lg: 'px-5 py-2.5 text-base rounded-xl',
+      };
+      return (
+        <button
+          type={type}
+          onClick={onClick}
+          disabled={disabled}
+          className={`font-semibold transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed
+                      focus:outline-none focus:ring-2 focus:ring-pink-300 focus:ring-offset-1
+                      ${variants[variant]} ${sizes[size]} ${className}`}
+          {...rest}
+        >
+          {children}
+        </button>
+      );
+    }
+
+    function Input({ value, onChange, placeholder, disabled, maxLength, error, className = '', inputRef, ...rest }) {
+      return (
+        <div className="w-full">
+          <input
+            ref={inputRef}
+            type="text"
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            disabled={disabled}
+            maxLength={maxLength}
+            className={`w-full px-4 py-2.5 rounded-xl bg-white border text-sm text-stone-700
+                        placeholder:text-stone-300 transition-colors
+                        focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-transparent
+                        disabled:bg-stone-50 disabled:text-stone-400
+                        ${error ? 'border-red-300' : 'border-rose-200'} ${className}`}
+            {...rest}
+          />
+          {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
+        </div>
+      );
+    }
+
+    function Card({ className = '', children }) {
+      return (
+        <div className={`bg-white/80 backdrop-blur rounded-3xl shadow-sm shadow-rose-100 border border-rose-100 ${className}`}>
+          {children}
+        </div>
+      );
+    }
+
+    function Spinner({ className = '' }) {
+      return (
+        <svg className={`animate-spin h-5 w-5 text-pink-400 ${className}`} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+        </svg>
+      );
+    }
+
+    function Toast({ message, onClose }) {
+      useEffect(() => {
+        if (!message) return;
+        const timer = setTimeout(onClose, 3200);
+        return () => clearTimeout(timer);
+      }, [message, onClose]);
+
+      if (!message) return null;
+
+      return (
+        <div
+          role="alert"
+          className="animate-toast-up fixed bottom-5 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-sm
+                     bg-white border border-red-200 text-red-500 text-sm font-medium
+                     px-4 py-3 rounded-2xl shadow-lg shadow-red-100 flex items-start gap-2"
+        >
+          <span aria-hidden="true">😢</span>
+          <span className="flex-1">{message}</span>
+          <button onClick={onClose} aria-label="알림 닫기" className="text-red-300 hover:text-red-500">✕</button>
+        </div>
+      );
+    }
+
+    // ========================================
+    // 🧩 Common Components
+    // ========================================
+
+    function Header({ remaining }) {
+      return (
+        <header className="text-center mb-6">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-stone-700 tracking-tight">
+            오늘의 할 일 <span aria-hidden="true">🌸</span>
+          </h1>
+          <p className="mt-2 text-sm text-stone-400">
+            {remaining > 0
+              ? <>남은 일이 <span className="font-bold text-pink-400">{remaining}개</span> 있어요. 화이팅! 💪</>
+              : '오늘 할 일을 전부 끝냈어요! 대단해요 🎉'}
+          </p>
+        </header>
+      );
+    }
+
+    function FilterTabs({ current, onChange, counts }) {
+      return (
+        <div role="tablist" aria-label="할 일 필터" className="flex gap-1.5 p-1.5 bg-rose-50 rounded-2xl">
+          {FILTERS.map((f) => {
+            const active = current === f.key;
+            return (
+              <button
+                key={f.key}
+                role="tab"
+                aria-selected={active}
+                onClick={() => onChange(f.key)}
+                className={`flex-1 px-2 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-colors
+                            ${active ? 'bg-white text-pink-500 shadow-sm' : 'text-stone-400 hover:text-stone-600'}`}
+              >
+                <span aria-hidden="true">{f.emoji}</span> {f.label}
+                <span className="ml-1 text-[11px] text-stone-300">{counts[f.key]}</span>
+              </button>
+            );
+          })}
+        </div>
+      );
+    }
+
+    function EmptyState({ filter }) {
+      const messages = {
+        all:    { emoji: '🎉', title: '할 일이 없어요!',        desc: '아래에서 첫 할 일을 추가해 보세요 ✏️' },
+        active: { emoji: '🛋️', title: '진행중인 일이 없어요!',  desc: '전부 끝냈네요. 푹 쉬세요 ☕' },
+        done:   { emoji: '🌱', title: '완료한 일이 아직 없어요', desc: '하나씩 체크해 나가 볼까요?' },
+      };
+      const m = messages[filter];
+      return (
+        <div className="py-14 text-center select-none">
+          <div className="text-5xl mb-3" aria-hidden="true">{m.emoji}</div>
+          <p className="font-bold text-stone-500">{m.title}</p>
+          <p className="mt-1 text-sm text-stone-300">{m.desc}</p>
+        </div>
+      );
+    }
+
+    // ========================================
+    // 📝 Todo Components
+    // ========================================
+
+    function AddTodoForm({ onAdd, disabled }) {
+      const [title, setTitle] = useState('');
+      const [submitting, setSubmitting] = useState(false);
+
+      const trimmed = title.trim();
+
+      const submit = async (e) => {
+        e.preventDefault();
+        if (!trimmed || submitting) return;
+        setSubmitting(true);
+        const ok = await onAdd(trimmed);
+        setSubmitting(false);
+        if (ok) setTitle('');   // 실패하면 입력값을 남겨 다시 시도할 수 있게 한다
+      };
+
+      return (
+        <form onSubmit={submit} className="flex gap-2">
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="무엇을 해야 하나요? ✏️"
+            maxLength={MAX_TITLE_LENGTH}
+            disabled={disabled}
+            aria-label="새 할 일 제목"
+          />
+          <Button type="submit" size="lg" disabled={disabled || !trimmed || submitting} className="shrink-0">
+            {submitting ? '추가중…' : '추가'}
+          </Button>
+        </form>
+      );
+    }
+
+    function TodoItem({ todo, onToggle, onRename, onDelete }) {
+      const [editing, setEditing] = useState(false);
+      const [draft, setDraft] = useState(todo.title);
+      const inputRef = useRef(null);
+
+      useEffect(() => {
+        if (editing && inputRef.current) {
+          inputRef.current.focus();
+          inputRef.current.select();
+        }
+      }, [editing]);
+
+      const startEdit = () => {
+        setDraft(todo.title);
+        setEditing(true);
+      };
+
+      const commit = () => {
+        const next = draft.trim();
+        setEditing(false);
+        if (next && next !== todo.title) onRename(todo.id, next);
+      };
+
+      const onKeyDown = (e) => {
+        if (e.key === 'Enter') commit();
+        else if (e.key === 'Escape') setEditing(false);
+      };
+
+      // 서버 응답 전의 임시 항목은 흐리게 보여주고 조작을 막는다
+      const pending = String(todo.id).startsWith('tmp-');
+
+      return (
+        <li className={`animate-pop-in group flex items-center gap-3 px-3 sm:px-4 py-3 rounded-2xl
+                        border border-transparent hover:border-rose-100 hover:bg-rose-50/50 transition-colors
+                        ${pending ? 'opacity-50' : ''}`}>
+          <input
+            type="checkbox"
+            className="pastel-check w-5 h-5 shrink-0 cursor-pointer"
+            checked={todo.done}
+            onChange={() => onToggle(todo)}
+            disabled={pending}
+            aria-label={`${todo.title} 완료 여부`}
+          />
+
+          {editing ? (
+            <Input
+              inputRef={inputRef}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={onKeyDown}
+              onBlur={commit}
+              maxLength={MAX_TITLE_LENGTH}
+              className="py-1.5"
+              aria-label="할 일 제목 수정"
+            />
+          ) : (
+            <div className="flex-1 min-w-0" onDoubleClick={startEdit}>
+              <p
+                title="더블클릭하면 수정할 수 있어요"
+                className={`text-sm sm:text-base break-words cursor-text
+                            ${todo.done ? 'line-through text-stone-300' : 'text-stone-700'}`}
+              >
+                {todo.title}
+              </p>
+              <p className="text-[11px] text-stone-300 mt-0.5">{todo.createdAt}</p>
+            </div>
+          )}
+
+          {!editing && (
+            <div className="flex items-center gap-1 shrink-0 sm:opacity-0 sm:group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+              <Button variant="ghost" size="sm" onClick={startEdit} disabled={pending} aria-label="수정">✏️</Button>
+              <Button variant="ghost" size="sm" onClick={() => onDelete(todo)} disabled={pending} aria-label="삭제">🗑️</Button>
+            </div>
+          )}
+        </li>
+      );
+    }
+
+    // ========================================
+    // 📄 Page Component
+    // ========================================
+
+    function TodoPage() {
+      const [todos, setTodos] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [loadError, setLoadError] = useState(null);
+      const [filter, setFilter] = useState('all');
+      const [toast, setToast] = useState('');
+
+      const closeToast = useCallback(() => setToast(''), []);
+
+      const load = useCallback(async () => {
+        setLoading(true);
+        setLoadError(null);
+        try {
+          const data = await api('/todos');
+          setTodos(Array.isArray(data) ? data : []);
+        } catch (err) {
+          setLoadError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      }, []);
+
+      useEffect(() => { load(); }, [load]);
+
+      // ── 추가 (낙관적 업데이트) ──
+      const handleAdd = async (title) => {
+        const tempId = `tmp-${Date.now()}`;
+        const optimistic = { id: tempId, title, done: false, createdAt: '방금 전' };
+        setTodos((prev) => [optimistic, ...prev]);
+        try {
+          const created = await api('/todos', { method: 'POST', body: JSON.stringify({ title }) });
+          setTodos((prev) => prev.map((t) => (t.id === tempId ? created : t)));
+          return true;
+        } catch (err) {
+          setTodos((prev) => prev.filter((t) => t.id !== tempId));   // 롤백
+          setToast(err.message);
+          return false;
+        }
+      };
+
+      // ── 완료 토글 (낙관적 업데이트) ──
+      const handleToggle = async (todo) => {
+        const next = !todo.done;
+        setTodos((prev) => prev.map((t) => (t.id === todo.id ? { ...t, done: next } : t)));
+        try {
+          await api(`/todos/${todo.id}`, { method: 'PATCH', body: JSON.stringify({ done: next }) });
+        } catch (err) {
+          setTodos((prev) => prev.map((t) => (t.id === todo.id ? { ...t, done: todo.done } : t)));  // 롤백
+          setToast(err.message);
+        }
+      };
+
+      // ── 제목 수정 (낙관적 업데이트) ──
+      const handleRename = async (id, title) => {
+        const before = todos.find((t) => t.id === id);
+        if (!before) return;
+        setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, title } : t)));
+        try {
+          await api(`/todos/${id}`, { method: 'PATCH', body: JSON.stringify({ title }) });
+        } catch (err) {
+          setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, title: before.title } : t)));   // 롤백
+          setToast(err.message);
+        }
+      };
+
+      // ── 삭제 (확인 후 낙관적 업데이트) ──
+      const handleDelete = async (todo) => {
+        if (!window.confirm(`"${todo.title}"\n정말 삭제할까요? 🗑️`)) return;
+        const index = todos.findIndex((t) => t.id === todo.id);
+        setTodos((prev) => prev.filter((t) => t.id !== todo.id));
+        try {
+          await api(`/todos/${todo.id}`, { method: 'DELETE' });
+        } catch (err) {
+          setTodos((prev) => {                                        // 원래 자리로 롤백
+            const next = [...prev];
+            next.splice(index, 0, todo);
+            return next;
+          });
+          setToast(err.message);
+        }
+      };
+
+      const counts = useMemo(() => {
+        const done = todos.filter((t) => t.done).length;
+        return { all: todos.length, done, active: todos.length - done };
+      }, [todos]);
+
+      const visible = useMemo(() => {
+        if (filter === 'active') return todos.filter((t) => !t.done);
+        if (filter === 'done')   return todos.filter((t) => t.done);
+        return todos;
+      }, [todos, filter]);
+
+      return (
+        <div className="min-h-screen px-4 py-8 sm:py-14">
+          <div className="max-w-xl mx-auto">
+            <Header remaining={counts.active} />
+
+            <Card className="p-4 sm:p-6">
+              <AddTodoForm onAdd={handleAdd} disabled={loading || !!loadError} />
+
+              <div className="mt-4">
+                <FilterTabs current={filter} onChange={setFilter} counts={counts} />
+              </div>
+
+              <div className="mt-2 min-h-[220px]">
+                {loading ? (
+                  <div className="py-16 flex flex-col items-center gap-3 text-stone-300">
+                    <Spinner />
+                    <p className="text-sm">할 일을 불러오는 중이에요…</p>
+                  </div>
+                ) : loadError ? (
+                  <div className="py-14 text-center">
+                    <div className="text-4xl mb-3" aria-hidden="true">🥲</div>
+                    <p className="font-bold text-stone-500">불러오지 못했어요</p>
+                    <p className="mt-1 text-sm text-stone-400 break-words">{loadError}</p>
+                    <Button variant="secondary" className="mt-4" onClick={load}>다시 시도 🔄</Button>
+                  </div>
+                ) : visible.length === 0 ? (
+                  <EmptyState filter={filter} />
+                ) : (
+                  <ul className="divide-y divide-rose-50">
+                    {visible.map((todo) => (
+                      <TodoItem
+                        key={todo.id}
+                        todo={todo}
+                        onToggle={handleToggle}
+                        onRename={handleRename}
+                        onDelete={handleDelete}
+                      />
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <footer className="mt-4 pt-4 border-t border-rose-100 text-center text-xs sm:text-sm text-stone-400">
+                전체 <span className="font-bold text-stone-600">{counts.all}</span>개
+                <span className="mx-1.5 text-rose-200">·</span>
+                완료 <span className="font-bold text-emerald-400">{counts.done}</span>개
+                <span className="mx-1.5 text-rose-200">·</span>
+                남은 일 <span className="font-bold text-pink-400">{counts.active}</span>개
+              </footer>
+            </Card>
+
+            <p className="mt-4 text-center text-[11px] text-stone-300">
+              제목을 <b>더블클릭</b>하면 수정할 수 있어요 · Enter 저장 / Esc 취소
+            </p>
+          </div>
+
+          <Toast message={toast} onClose={closeToast} />
+        </div>
+      );
+    }
+
+    // ========================================
+    // 🚀 App & Rendering
+    // ========================================
+
+    function App() {
+      return <TodoPage />;
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

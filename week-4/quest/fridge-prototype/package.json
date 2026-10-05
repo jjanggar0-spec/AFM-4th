@@ -1,0 +1,20 @@
+{
+  "name": "fridge-prototype",
+  "version": "1.0.0",
+  "private": true,
+  "description": "냉장고 재료 & 레시피 관리 프로토타입 (React CDN + Express + Supabase PostgreSQL)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=20.12"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.16.3"
+  }
+}

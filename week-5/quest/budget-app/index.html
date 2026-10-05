@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>달력 가계부 🐷</title>
+
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <!-- ⚠️ 모든 CDN은 버전을 명시적으로 고정한다. 미고정 시 @babel/standalone 이
+       최신(8.x)으로 올라가 type="text/babel" 인라인 변환이 통째로 깨진다. -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.25.9/babel.min.js"></script>
+
+  <style>
+    /* Tailwind 유틸리티로 표현 불가능한 것만 여기에 둔다 */
+    @keyframes sheet-up {
+      0%   { opacity: 0; transform: translateY(16px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .animate-sheet-up { animation: sheet-up 0.2s ease-out; }
+
+    @keyframes fade-in {
+      0%   { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    .animate-fade-in { animation: fade-in 0.15s ease-out; }
+
+    /* 달력 셀 안의 금액은 좁으니 숫자 폭을 고정해 줄을 맞춘다 */
+    .tnum { font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-rose-50 via-pink-50 to-amber-50 min-h-screen">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useCallback } = React;
+
+    // ========================================
+    // ⚙️ 상수 & 헬퍼
+    // ========================================
+
+    // ❗ localhost 하드코딩 금지 — server.js 가 이 파일을 같은 오리진에서 서빙한다
+    const API_BASE_URL = '/api';
+
+    // 네이버 가계부 분류를 참고한 기본 분류.
+    // 사용자가 추가한 분류는 서버에서 받아와 뒤에 이어 붙인다(DEFAULT 는 지울 수 없다).
+    const DEFAULT_CATEGORIES = {
+      expense: [
+        { key: 'food',     label: '식비',      emoji: '🍚' },
+        { key: 'cafe',     label: '카페/간식', emoji: '☕' },
+        { key: 'transit',  label: '교통',      emoji: '🚌' },
+        { key: 'living',   label: '생활용품',  emoji: '🧻' },
+        { key: 'home',     label: '주거/통신', emoji: '🏠' },
+        { key: 'shopping', label: '쇼핑',      emoji: '🛍️' },
+        { key: 'health',   label: '의료/건강', emoji: '💊' },
+        { key: 'culture',  label: '문화/여가', emoji: '🎬' },
+        { key: 'event',    label: '경조사',    emoji: '🎁' },
+        { key: 'etcOut',   label: '기타',      emoji: '📦' },
+      ],
+      income: [
+        { key: 'salary',   label: '월급',      emoji: '💰' },
+        { key: 'pocket',   label: '용돈',      emoji: '🧧' },
+        { key: 'side',     label: '부수입',    emoji: '💼' },
+        { key: 'refund',   label: '환급',      emoji: '🔁' },
+        { key: 'etcIn',    label: '기타',      emoji: '✨' },
+      ],
+    };
+
+    const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
+
+    // 분류 입력을 도와주는 이모지 후보 (직접 입력도 가능)
+    const EMOJI_SUGGESTIONS = ['🏷️', '🐶', '🍺', '📚', '✈️', '💄', '🏋️', '🎮', '🚗', '💸', '🧾', '🎀'];
+
+    // 분류 목록은 서버에서 받아오므로 화면 전체가 같은 값을 보도록 Context 로 내려준다
+    const CategoriesContext = React.createContext(DEFAULT_CATEGORIES);
+    const useCategories = () => React.useContext(CategoriesContext);
+
+    // 지워진 분류를 쓰던 지난 내역도 깨지지 않게 '알 수 없음' 으로 표시한다.
+    // (기본 분류로 되돌리면 전혀 다른 분류 이름이 붙어버린다)
+    function findCategory(categories, type, key) {
+      return (categories[type] || []).find((c) => c.key === key)
+        || { key, label: '알 수 없음', emoji: '❔' };
+    }
+
+    // 날짜는 'YYYY-MM-DD' 문자열로만 다룬다 — Date 객체를 돌리면 타임존 때문에 하루씩 밀린다
+    function toDateKey(year, month, day) {
+      const mm = String(month + 1).padStart(2, '0');
+      const dd = String(day).padStart(2, '0');
+      return `${year}-${mm}-${dd}`;
+    }
+
+    function todayKey() {
+      const now = new Date();
+      return toDateKey(now.getFullYear(), now.getMonth(), now.getDate());
+    }
+
+    function daysInMonth(year, month) {
+      return new Date(year, month + 1, 0).getDate();
+    }
+
+    function firstWeekday(year, month) {
+      return new Date(year, month, 1).getDay();
+    }
+
+    function formatWon(n) {
+      return n.toLocaleString('ko-KR');
+    }
+
+    // 달력 셀은 좁으니 12,000 → 1.2만 으로 줄여서 보여준다
+    function formatCompact(n) {
+      if (n >= 10000) {
+        const man = n / 10000;
+        return (man >= 100 ? Math.round(man) : Math.round(man * 10) / 10) + '만';
+      }
+      if (n >= 1000) return Math.round(n / 1000) + '천';
+      return String(n);
+    }
+
+    // 'YYYY-MM-DD' → '10월 5일 (월)'
+    function formatDateLabel(dateKey) {
+      const [y, m, d] = dateKey.split('-').map(Number);
+      return `${m}월 ${d}일 (${WEEKDAYS[new Date(y, m - 1, d).getDay()]})`;
+    }
+
+    // ========================================
+    // 📡 API 통신
+    // ========================================
+
+    // 서버 응답은 항상 { success, data, message? } 구조다
+    async function api(path, options = {}) {
+      let res;
+      try {
+        res = await fetch(`${API_BASE_URL}${path}`, {
+          headers: { 'Content-Type': 'application/json' },
+          ...options,
+        });
+      } catch (err) {
+        throw new Error('서버에 연결하지 못했어요 😢');
+      }
+
+      let body = null;
+      try {
+        body = await res.json();
+      } catch (err) {
+        throw new Error('서버 응답을 읽지 못했어요 😢');
+      }
+
+      if (!res.ok || !body.success) {
+        throw new Error(body.message || '요청을 처리하지 못했어요 😢');
+      }
+      return body.data;
+    }
+
+    // ========================================
+    // 🎨 Design System Components
+    // ========================================
+
+    function Button({ variant = 'primary', size = 'md', className = '', children, ...rest }) {
+      const variants = {
+        primary:   'bg-rose-400 text-white hover:bg-rose-500 shadow-sm',
+        secondary: 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50',
+        danger:    'bg-red-50 text-red-500 border border-red-200 hover:bg-red-100',
+        ghost:     'text-slate-500 hover:bg-slate-100',
+      };
+      const sizes = {
+        sm: 'px-2.5 py-1.5 text-xs',
+        md: 'px-4 py-2 text-sm',
+        lg: 'px-5 py-3 text-base',
+      };
+      return (
+        <button
+          className={`rounded-xl font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${className}`}
+          {...rest}
+        >
+          {children}
+        </button>
+      );
+    }
+
+    // group=true 면 <label> 대신 role="group" 으로 감싼다.
+    // 버튼 묶음을 <label> 로 감싸면 첫 버튼의 접근성 이름이 묶음 전체를 삼켜버린다.
+    function Field({ label, error, group = false, children }) {
+      const Wrapper = group ? 'div' : 'label';
+      const wrapperProps = group ? { role: 'group', 'aria-label': label } : {};
+      return (
+        <Wrapper className="block" {...wrapperProps}>
+          <span className="block mb-1 text-xs font-semibold text-slate-500">{label}</span>
+          {children}
+          {error && <span className="block mt-1 text-xs text-red-500">{error}</span>}
+        </Wrapper>
+      );
+    }
+
+    function Input({ className = '', ...rest }) {
+      return (
+        <input
+          className={`w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100 ${className}`}
+          {...rest}
+        />
+      );
+    }
+
+    function Modal({ isOpen, onClose, title, children }) {
+      useEffect(() => {
+        if (!isOpen) return;
+        const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+      }, [isOpen, onClose]);
+
+      if (!isOpen) return null;
+
+      return (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/40 animate-fade-in"
+          onClick={onClose}
+          role="dialog"
+          aria-modal="true"
+          aria-label={title}
+        >
+          <div
+            className="w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl p-5 animate-sheet-up max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-bold text-slate-700">{title}</h2>
+              <button onClick={onClose} aria-label="닫기" className="text-slate-400 hover:text-slate-600 text-xl leading-none">✕</button>
+            </div>
+            {children}
+          </div>
+        </div>
+      );
+    }
+
+    // ========================================
+    // 🧩 Layout Components
+    // ========================================
+
+    function MonthNavigator({ year, month, onPrev, onNext, onToday }) {
+      return (
+        <div className="flex items-center justify-between px-1 py-3">
+          <button onClick={onPrev} aria-label="이전 달" className="w-9 h-9 rounded-full hover:bg-white/70 text-slate-500 text-lg">‹</button>
+          <button onClick={onToday} className="text-lg font-extrabold text-slate-700 tracking-tight">
+            🗓️ {year}년 {month + 1}월
+          </button>
+          <button onClick={onNext} aria-label="다음 달" className="w-9 h-9 rounded-full hover:bg-white/70 text-slate-500 text-lg">›</button>
+        </div>
+      );
+    }
+
+    function SummaryBar({ income, expense }) {
+      const net = income - expense;
+      const items = [
+        { label: '수입', value: income,  color: 'text-blue-500', emoji: '💙' },
+        { label: '지출', value: expense, color: 'text-red-500',  emoji: '❤️' },
+        { label: '합계', value: net,     color: net >= 0 ? 'text-emerald-600' : 'text-red-500', emoji: '💚' },
+      ];
+      return (
+        <div className="grid grid-cols-3 gap-2 mb-3">
+          {items.map((it) => (
+            <div key={it.label} className="bg-white/80 rounded-2xl py-2.5 text-center shadow-sm">
+              <p className="text-[11px] text-slate-400 font-semibold">{it.emoji} {it.label}</p>
+              <p className={`text-sm font-extrabold tnum ${it.color}`}>{formatWon(it.value)}</p>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    function Calendar({ year, month, dailyTotals, selectedDate, onSelectDate }) {
+      const total = daysInMonth(year, month);
+      const pad = firstWeekday(year, month);
+      const cells = [...Array(pad).fill(null), ...Array.from({ length: total }, (_, i) => i + 1)];
+      const today = todayKey();
+
+      return (
+        <div className="bg-white/80 rounded-3xl p-2.5 shadow-sm">
+          <div className="grid grid-cols-7 mb-1">
+            {WEEKDAYS.map((w, i) => (
+              <div
+                key={w}
+                className={`text-center text-[11px] font-bold py-1 ${i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : 'text-slate-400'}`}
+              >
+                {w}
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-7 gap-px">
+            {cells.map((day, idx) => {
+              if (day === null) return <div key={`pad-${idx}`} />;
+
+              const key = toDateKey(year, month, day);
+              const totals = dailyTotals[key];
+              const isToday = key === today;
+              const isSelected = key === selectedDate;
+              const weekday = idx % 7;
+              const dayColor = weekday === 0 ? 'text-red-400' : weekday === 6 ? 'text-blue-400' : 'text-slate-600';
+
+              return (
+                <button
+                  key={key}
+                  onClick={() => onSelectDate(key)}
+                  aria-label={`${month + 1}월 ${day}일`}
+                  aria-pressed={isSelected}
+                  className={`h-[58px] rounded-xl flex flex-col items-center pt-1 transition ${isSelected ? 'bg-rose-100 ring-2 ring-rose-300' : 'hover:bg-rose-50'}`}
+                >
+                  <span className={`text-xs font-bold ${isToday ? 'bg-rose-400 text-white rounded-full w-5 h-5 flex items-center justify-center' : dayColor}`}>
+                    {day}
+                  </span>
+                  <span className="mt-0.5 leading-tight text-center">
+                    {totals && totals.income > 0 && (
+                      <span className="block text-[9px] font-bold text-blue-500 tnum">+{formatCompact(totals.income)}</span>
+                    )}
+                    {totals && totals.expense > 0 && (
+                      <span className="block text-[9px] font-bold text-red-400 tnum">-{formatCompact(totals.expense)}</span>
+                    )}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // 달력 하단 패널과 목록 탭이 같은 행 모양을 공유한다
+    function TxRow({ tx, onDelete }) {
+      const categories = useCategories();
+      const cat = findCategory(categories, tx.type, tx.category);
+      const isIncome = tx.type === 'income';
+      return (
+        <li className="flex items-center gap-2.5 rounded-2xl bg-slate-50 px-3 py-2.5">
+          <span className="text-lg">{cat.emoji}</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-slate-600">{cat.label}</p>
+            {tx.memo && <p className="text-[11px] text-slate-400 truncate">{tx.memo}</p>}
+          </div>
+          <span className={`text-sm font-extrabold tnum ${isIncome ? 'text-blue-500' : 'text-red-500'}`}>
+            {isIncome ? '+' : '-'}{formatWon(tx.amount)}
+          </span>
+          <button
+            onClick={() => onDelete(tx.id)}
+            aria-label="삭제"
+            className="text-slate-300 hover:text-red-400 text-sm px-1"
+          >
+            ✕
+          </button>
+        </li>
+      );
+    }
+
+    function DayPanel({ dateKey, transactions, onAdd, onDelete }) {
+      const income = transactions.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+      const expense = transactions.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+
+      return (
+        <div className="bg-white/80 rounded-3xl p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="text-sm font-extrabold text-slate-700">{formatDateLabel(dateKey)}</h3>
+              <p className="text-[11px] text-slate-400 tnum">
+                수입 {formatWon(income)}원 · 지출 {formatWon(expense)}원
+              </p>
+            </div>
+            {/* 네이버 가계부처럼 날짜 옆 연필로 그 날짜에 바로 입력 */}
+            <Button size="sm" onClick={onAdd}>✏️ 이 날 입력</Button>
+          </div>
+
+          {transactions.length === 0 ? (
+            <p className="py-6 text-center text-xs text-slate-400">
+              아직 기록이 없어요 🌱<br />오늘 쓴 돈을 적어볼까요?
+            </p>
+          ) : (
+            <ul className="space-y-1.5">
+              {transactions.map((t) => (
+                <TxRow key={t.id} tx={t} onDelete={onDelete} />
+              ))}
+            </ul>
+          )}
+        </div>
+      );
+    }
+
+    function ListView({ transactions, loading, scope, onScopeChange, typeFilter, onTypeFilterChange, onDelete }) {
+      // 날짜별로 묶어서 보여준다 (서버가 이미 날짜 역순으로 정렬해 준다)
+      const groups = useMemo(() => {
+        const map = new Map();
+        transactions.forEach((t) => {
+          if (!map.has(t.date)) map.set(t.date, []);
+          map.get(t.date).push(t);
+        });
+        return [...map.entries()];
+      }, [transactions]);
+
+      const income = transactions.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+      const expense = transactions.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+
+      return (
+        <div className="space-y-3">
+          <div className="bg-white/80 rounded-3xl p-4 shadow-sm">
+            <div className="flex gap-1.5 mb-2" role="group" aria-label="조회 범위">
+              {[
+                { key: 'month', label: '이번 달' },
+                { key: 'all',   label: '전체 기간' },
+              ].map((s) => (
+                <button
+                  key={s.key}
+                  onClick={() => onScopeChange(s.key)}
+                  aria-pressed={scope === s.key}
+                  className={`flex-1 rounded-xl py-2 text-xs font-bold transition ${scope === s.key ? 'bg-rose-400 text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex gap-1.5" role="group" aria-label="종류 필터">
+              {[
+                { key: 'all',     label: '전체', active: 'bg-slate-600 text-white' },
+                { key: 'expense', label: '지출', active: 'bg-red-400 text-white' },
+                { key: 'income',  label: '수입', active: 'bg-blue-400 text-white' },
+              ].map((f) => (
+                <button
+                  key={f.key}
+                  onClick={() => onTypeFilterChange(f.key)}
+                  aria-pressed={typeFilter === f.key}
+                  className={`flex-1 rounded-xl py-2 text-xs font-bold transition ${typeFilter === f.key ? f.active : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+
+            <p className="mt-3 text-center text-[11px] text-slate-400 tnum">
+              총 <b className="text-slate-600">{transactions.length}</b>건 · 수입 {formatWon(income)}원 · 지출 {formatWon(expense)}원
+            </p>
+          </div>
+
+          {loading ? (
+            <div className="bg-white/80 rounded-3xl p-10 text-center text-xs text-slate-400 shadow-sm">불러오는 중이에요… ⏳</div>
+          ) : groups.length === 0 ? (
+            <div className="bg-white/80 rounded-3xl p-10 text-center text-xs text-slate-400 shadow-sm">
+              조건에 맞는 내역이 없어요 🍀
+            </div>
+          ) : (
+            groups.map(([date, list]) => {
+              const dayTotal = list.reduce((s, t) => s + (t.type === 'income' ? t.amount : -t.amount), 0);
+              return (
+                <div key={date} className="bg-white/80 rounded-3xl p-4 shadow-sm">
+                  <div className="flex items-baseline justify-between mb-2">
+                    <h3 className="text-xs font-extrabold text-slate-700">{formatDateLabel(date)}</h3>
+                    <span className={`text-[11px] font-bold tnum ${dayTotal >= 0 ? 'text-blue-500' : 'text-red-500'}`}>
+                      {dayTotal >= 0 ? '+' : '-'}{formatWon(Math.abs(dayTotal))}원
+                    </span>
+                  </div>
+                  <ul className="space-y-1.5">
+                    {list.map((t) => (
+                      <TxRow key={t.id} tx={t} onDelete={onDelete} />
+                    ))}
+                  </ul>
+                </div>
+              );
+            })
+          )}
+        </div>
+      );
+    }
+
+    function StatsView({ year, month, transactions }) {
+      const categories = useCategories();
+      const totalExpense = transactions
+        .filter((t) => t.type === 'expense')
+        .reduce((s, t) => s + t.amount, 0);
+      const totalIncome = transactions
+        .filter((t) => t.type === 'income')
+        .reduce((s, t) => s + t.amount, 0);
+
+      const byCategory = useMemo(() => {
+        const map = new Map();
+        transactions
+          .filter((t) => t.type === 'expense')
+          .forEach((t) => map.set(t.category, (map.get(t.category) || 0) + t.amount));
+        return [...map.entries()]
+          .map(([key, amount]) => ({ ...findCategory(categories, 'expense', key), amount }))
+          .sort((a, b) => b.amount - a.amount);
+      }, [transactions, categories]);
+
+      return (
+        <div className="space-y-3">
+          <div className="bg-white/80 rounded-3xl p-4 shadow-sm text-center">
+            <p className="text-[11px] font-semibold text-slate-400">{year}년 {month + 1}월 총 지출</p>
+            <p className="text-2xl font-extrabold text-red-500 tnum">{formatWon(totalExpense)}원</p>
+            <p className="mt-1 text-[11px] text-slate-400 tnum">
+              수입 {formatWon(totalIncome)}원 · 남은 돈 {formatWon(totalIncome - totalExpense)}원
+            </p>
+          </div>
+
+          <div className="bg-white/80 rounded-3xl p-4 shadow-sm">
+            <h3 className="mb-3 text-sm font-extrabold text-slate-700">📊 분류별 지출</h3>
+            {byCategory.length === 0 ? (
+              <p className="py-6 text-center text-xs text-slate-400">이번 달 지출 기록이 없어요 🍀</p>
+            ) : (
+              <ul className="space-y-2.5">
+                {byCategory.map((c) => {
+                  const pct = totalExpense ? Math.round((c.amount / totalExpense) * 100) : 0;
+                  return (
+                    <li key={c.key}>
+                      <div className="flex items-center justify-between mb-1 text-xs">
+                        <span className="font-bold text-slate-600">{c.emoji} {c.label}</span>
+                        <span className="text-slate-500 tnum">{formatWon(c.amount)}원 ({pct}%)</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                        <div className="h-full rounded-full bg-rose-400" style={{ width: `${pct}%` }} />
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // 분류 추가 폼 — 내역 입력 모달 안에서도, 분류 관리 탭에서도 똑같이 쓴다
+    function CategoryForm({ type, onCreate, onCancel, compact = false }) {
+      const [label, setLabel] = useState('');
+      const [emoji, setEmoji] = useState(EMOJI_SUGGESTIONS[0]);
+      const [error, setError] = useState('');
+      const [submitting, setSubmitting] = useState(false);
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        const name = label.trim();
+        if (!name) {
+          setError('분류 이름을 입력해 주세요');
+          return;
+        }
+        setSubmitting(true);
+        try {
+          await onCreate({ type, label: name, emoji });
+          setLabel('');
+          setEmoji(EMOJI_SUGGESTIONS[0]);
+          setError('');
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setSubmitting(false);
+        }
+      };
+
+      return (
+        <form onSubmit={handleSubmit} className={compact ? 'space-y-2' : 'space-y-2.5'}>
+          <div className="flex gap-2">
+            <input
+              value={emoji}
+              onChange={(e) => setEmoji(e.target.value)}
+              aria-label="이모지"
+              maxLength={8}
+              className="w-14 shrink-0 rounded-xl border border-slate-200 bg-white px-2 py-2.5 text-center text-lg outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
+            />
+            <input
+              value={label}
+              onChange={(e) => { setLabel(e.target.value); setError(''); }}
+              aria-label="분류 이름"
+              maxLength={12}
+              placeholder={type === 'income' ? '예) 중고판매' : '예) 반려동물'}
+              className="flex-1 min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-1" role="group" aria-label="이모지 후보">
+            {EMOJI_SUGGESTIONS.map((em) => (
+              <button
+                key={em}
+                type="button"
+                onClick={() => setEmoji(em)}
+                aria-pressed={emoji === em}
+                className={`h-8 w-8 rounded-lg text-base transition ${emoji === em ? 'bg-rose-100 ring-2 ring-rose-300' : 'bg-slate-50 hover:bg-slate-100'}`}
+              >
+                {em}
+              </button>
+            ))}
+          </div>
+
+          {error && <p className="text-xs text-red-500">{error}</p>}
+
+          <div className="flex gap-2">
+            {onCancel && (
+              <Button type="button" variant="secondary" size="md" className="flex-1" onClick={onCancel} disabled={submitting}>
+                취소
+              </Button>
+            )}
+            <Button type="submit" size="md" className="flex-1" disabled={submitting}>
+              {submitting ? '추가 중…' : '분류 추가'}
+            </Button>
+          </div>
+        </form>
+      );
+    }
+
+    function CategoryManager({ customCategories, onCreate, onDelete }) {
+      const categories = useCategories();
+      const [type, setType] = useState('expense');
+
+      const customOfType = customCategories.filter((c) => c.type === type);
+      const defaultsOfType = DEFAULT_CATEGORIES[type];
+
+      return (
+        <div className="space-y-3">
+          <div className="bg-white/80 rounded-3xl p-4 shadow-sm">
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              {[
+                { key: 'expense', label: '지출 분류', active: 'bg-red-400 text-white' },
+                { key: 'income',  label: '수입 분류', active: 'bg-blue-400 text-white' },
+              ].map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setType(t.key)}
+                  aria-pressed={type === t.key}
+                  className={`rounded-xl py-2.5 text-sm font-bold transition ${type === t.key ? t.active : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            <h3 className="mb-2 text-xs font-extrabold text-slate-700">➕ 새 분류 추가</h3>
+            <CategoryForm type={type} onCreate={onCreate} />
+          </div>
+
+          <div className="bg-white/80 rounded-3xl p-4 shadow-sm">
+            <h3 className="mb-2 text-xs font-extrabold text-slate-700">
+              내가 추가한 분류 <span className="text-slate-400 font-bold">({customOfType.length})</span>
+            </h3>
+            {customOfType.length === 0 ? (
+              <p className="py-5 text-center text-xs text-slate-400">아직 추가한 분류가 없어요</p>
+            ) : (
+              <ul className="space-y-1.5">
+                {customOfType.map((c) => (
+                  <li key={c.id} className="flex items-center gap-2.5 rounded-2xl bg-slate-50 px-3 py-2.5">
+                    <span className="text-lg">{c.emoji}</span>
+                    <span className="flex-1 min-w-0 truncate text-xs font-bold text-slate-600">{c.label}</span>
+                    <button
+                      onClick={() => onDelete(c.id)}
+                      aria-label={`${c.label} 삭제`}
+                      className="text-slate-300 hover:text-red-400 text-sm px-1"
+                    >
+                      ✕
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="mt-2 text-[11px] text-slate-400">
+              이미 내역에서 쓰고 있는 분류는 지울 수 없어요
+            </p>
+          </div>
+
+          <div className="bg-white/80 rounded-3xl p-4 shadow-sm">
+            <h3 className="mb-2 text-xs font-extrabold text-slate-700">
+              기본 분류 <span className="text-slate-400 font-bold">({defaultsOfType.length})</span>
+            </h3>
+            <div className="flex flex-wrap gap-1.5">
+              {defaultsOfType.map((c) => (
+                <span key={c.key} className="rounded-xl bg-slate-50 px-2.5 py-1.5 text-[11px] font-bold text-slate-500">
+                  {c.emoji} {c.label}
+                </span>
+              ))}
+            </div>
+            <p className="mt-2 text-[11px] text-slate-400">기본 분류는 지울 수 없어요</p>
+          </div>
+        </div>
+      );
+    }
+
+    function TxModal({ isOpen, onClose, onSubmit, onCreateCategory, defaultDate }) {
+      const categories = useCategories();
+      const [type, setType] = useState('expense');
+      const [date, setDate] = useState(defaultDate);
+      const [category, setCategory] = useState(DEFAULT_CATEGORIES.expense[0].key);
+      const [amount, setAmount] = useState('');
+      const [memo, setMemo] = useState('');
+      const [error, setError] = useState('');
+      const [submitting, setSubmitting] = useState(false);
+      const [addingCategory, setAddingCategory] = useState(false);
+
+      // 열릴 때마다 선택된 날짜 기준으로 초기화한다
+      useEffect(() => {
+        if (!isOpen) return;
+        setType('expense');
+        setDate(defaultDate);
+        setCategory(DEFAULT_CATEGORIES.expense[0].key);
+        setAmount('');
+        setMemo('');
+        setError('');
+        setSubmitting(false);
+        setAddingCategory(false);
+      }, [isOpen, defaultDate]);
+
+      const switchType = (next) => {
+        setType(next);
+        setCategory(categories[next][0].key);
+        setAddingCategory(false);
+      };
+
+      // 새로 만든 분류를 바로 선택해 준다 (한 번 더 고르게 하지 않는다)
+      const handleCreateCategory = async (payload) => {
+        const created = await onCreateCategory(payload);
+        setCategory(created.key);
+        setAddingCategory(false);
+        return created;
+      };
+
+      // 저장이 실패하면 모달을 닫지 않고 사유를 보여준다 (입력한 내용을 날리지 않기 위해)
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        const value = Number(String(amount).replace(/[^0-9]/g, ''));
+        if (!value) {
+          setError('금액을 입력해 주세요');
+          return;
+        }
+        setSubmitting(true);
+        try {
+          await onSubmit({ date, type, category, amount: value, memo: memo.trim() });
+          onClose();
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setSubmitting(false);
+        }
+      };
+
+      return (
+        <Modal isOpen={isOpen} onClose={onClose} title="내역 입력 ✏️">
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { key: 'expense', label: '지출', active: 'bg-red-400 text-white' },
+                { key: 'income',  label: '수입', active: 'bg-blue-400 text-white' },
+              ].map((t) => (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => switchType(t.key)}
+                  className={`rounded-xl py-2.5 text-sm font-bold transition ${type === t.key ? t.active : 'bg-slate-100 text-slate-400'}`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            <Field label="날짜">
+              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            </Field>
+
+            <Field label="분류" group>
+              {addingCategory ? (
+                <div className="rounded-2xl bg-slate-50 p-3">
+                  <CategoryForm
+                    type={type}
+                    onCreate={handleCreateCategory}
+                    onCancel={() => setAddingCategory(false)}
+                    compact
+                  />
+                </div>
+              ) : (
+                <div className="grid grid-cols-4 gap-1.5">
+                  {categories[type].map((c) => (
+                    <button
+                      key={c.key}
+                      type="button"
+                      aria-pressed={category === c.key}
+                      onClick={() => setCategory(c.key)}
+                      className={`rounded-xl py-2 text-[11px] font-bold transition ${category === c.key ? 'bg-rose-100 ring-2 ring-rose-300 text-slate-700' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
+                    >
+                      <span className="block text-base leading-tight">{c.emoji}</span>
+                      {c.label}
+                    </button>
+                  ))}
+                  {/* 입력 중에 딱 맞는 분류가 없을 때 그 자리에서 만든다 */}
+                  <button
+                    type="button"
+                    onClick={() => setAddingCategory(true)}
+                    className="rounded-xl py-2 text-[11px] font-bold text-rose-400 bg-rose-50 border border-dashed border-rose-200 hover:bg-rose-100 transition"
+                  >
+                    <span className="block text-base leading-tight">➕</span>
+                    분류 추가
+                  </button>
+                </div>
+              )}
+            </Field>
+
+            <Field label="금액 (원)" error={error}>
+              <Input
+                type="text"
+                inputMode="numeric"
+                placeholder="0"
+                value={amount}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/[^0-9]/g, '');
+                  setAmount(digits ? Number(digits).toLocaleString('ko-KR') : '');
+                  setError('');
+                }}
+                className="text-right text-lg font-extrabold tnum"
+              />
+            </Field>
+
+            <Field label="메모 (선택)">
+              <Input
+                type="text"
+                maxLength={40}
+                placeholder="예) 점심 김치찌개"
+                value={memo}
+                onChange={(e) => setMemo(e.target.value)}
+              />
+            </Field>
+
+            <div className="flex gap-2 pt-1">
+              <Button type="button" variant="secondary" size="lg" className="flex-1" onClick={onClose} disabled={submitting}>취소</Button>
+              <Button type="submit" size="lg" className="flex-1" disabled={submitting}>
+                {submitting ? '저장 중… ⏳' : '저장하기 💾'}
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      );
+    }
+
+    // ========================================
+    // 🚀 App
+    // ========================================
+
+    function App() {
+      const now = new Date();
+      const [year, setYear] = useState(now.getFullYear());
+      const [month, setMonth] = useState(now.getMonth());
+      const [selectedDate, setSelectedDate] = useState(todayKey);
+      const [tab, setTab] = useState('calendar');
+      const [isModalOpen, setModalOpen] = useState(false);
+
+      // 달력·통계는 "이번 달" 내역을, 목록 탭의 전체 보기는 별도로 불러온다
+      const [monthTx, setMonthTx] = useState([]);
+      const [allTx, setAllTx] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [allLoading, setAllLoading] = useState(false);
+      const [error, setError] = useState('');
+      const [refreshKey, setRefreshKey] = useState(0);
+
+      // 목록 탭 필터
+      const [scope, setScope] = useState('month');
+      const [typeFilter, setTypeFilter] = useState('all');
+
+      // 사용자가 추가한 분류 — 기본 분류 뒤에 이어 붙여 화면 전체에 Context 로 내려준다
+      const [customCategories, setCustomCategories] = useState([]);
+
+      const categories = useMemo(() => ({
+        expense: [...DEFAULT_CATEGORIES.expense, ...customCategories.filter((c) => c.type === 'expense')],
+        income:  [...DEFAULT_CATEGORIES.income,  ...customCategories.filter((c) => c.type === 'income')],
+      }), [customCategories]);
+
+      useEffect(() => {
+        let cancelled = false;
+        api('/categories')
+          .then((data) => { if (!cancelled) setCustomCategories(data); })
+          .catch((err) => { if (!cancelled) setError(err.message); });
+        return () => { cancelled = true; };
+      }, []);
+
+      const createCategory = useCallback(async (payload) => {
+        const created = await api('/categories', { method: 'POST', body: JSON.stringify(payload) });
+        setCustomCategories((prev) => [...prev, created]);
+        setError('');
+        return created;
+      }, []);
+
+      const deleteCategory = useCallback(async (id) => {
+        try {
+          await api(`/categories/${id}`, { method: 'DELETE' });
+          setCustomCategories((prev) => prev.filter((c) => c.id !== id));
+          setError('');
+        } catch (err) {
+          // 사용 중이라 거절된 경우를 포함 — 목록은 그대로 두고 사유만 알린다
+          setError(err.message);
+        }
+      }, []);
+
+      const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+
+      // 달이 바뀌거나 내역이 변경되면 그 달 내역을 다시 불러온다
+      useEffect(() => {
+        let cancelled = false;
+        setLoading(true);
+        api(`/transactions?month=${monthPrefix}`)
+          .then((data) => { if (!cancelled) { setMonthTx(data); setError(''); } })
+          .catch((err) => { if (!cancelled) setError(err.message); })
+          .finally(() => { if (!cancelled) setLoading(false); });
+        return () => { cancelled = true; };
+      }, [monthPrefix, refreshKey]);
+
+      // 전체 기간 보기는 실제로 켰을 때만 불러온다
+      useEffect(() => {
+        if (scope !== 'all') return;
+        let cancelled = false;
+        setAllLoading(true);
+        api('/transactions')
+          .then((data) => { if (!cancelled) { setAllTx(data); setError(''); } })
+          .catch((err) => { if (!cancelled) setError(err.message); })
+          .finally(() => { if (!cancelled) setAllLoading(false); });
+        return () => { cancelled = true; };
+      }, [scope, refreshKey]);
+
+      const listTx = useMemo(() => {
+        const base = scope === 'all' ? allTx : monthTx;
+        return typeFilter === 'all' ? base : base.filter((t) => t.type === typeFilter);
+      }, [scope, allTx, monthTx, typeFilter]);
+
+      const dailyTotals = useMemo(() => {
+        const map = {};
+        monthTx.forEach((t) => {
+          if (!map[t.date]) map[t.date] = { income: 0, expense: 0 };
+          map[t.date][t.type] += t.amount;
+        });
+        return map;
+      }, [monthTx]);
+
+      const monthIncome = monthTx.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+      const monthExpense = monthTx.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+
+      const selectedTx = useMemo(
+        () => monthTx.filter((t) => t.date === selectedDate),
+        [monthTx, selectedDate]
+      );
+
+      const moveMonth = useCallback((delta) => {
+        const next = new Date(year, month + delta, 1);
+        setYear(next.getFullYear());
+        setMonth(next.getMonth());
+      }, [year, month]);
+
+      const goToday = useCallback(() => {
+        const t = new Date();
+        setYear(t.getFullYear());
+        setMonth(t.getMonth());
+        setSelectedDate(todayKey());
+      }, []);
+
+      const addTransaction = useCallback(async (tx) => {
+        const saved = await api('/transactions', { method: 'POST', body: JSON.stringify(tx) });
+        // 모달에서 다른 달 날짜를 고를 수 있으므로 달력도 그 달로 따라간다
+        const [ty, tm] = saved.date.split('-').map(Number);
+        setSelectedDate(saved.date);
+        setYear(ty);
+        setMonth(tm - 1);
+        setRefreshKey((k) => k + 1);
+        return saved;
+      }, []);
+
+      // 삭제는 화면에서 먼저 지우고 서버에 보낸다.
+      // 그래야 응답을 기다리는 사이에 같은 행을 또 눌러 404 가 뜨는 일이 없다.
+      const deleteTransaction = useCallback(async (id) => {
+        setMonthTx((prev) => prev.filter((t) => t.id !== id));
+        setAllTx((prev) => prev.filter((t) => t.id !== id));
+        try {
+          await api(`/transactions/${id}`, { method: 'DELETE' });
+          setError('');
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          // 성공이든 실패든 서버 기준으로 다시 맞춘다 (실패 시 지운 행이 되살아난다)
+          setRefreshKey((k) => k + 1);
+        }
+      }, []);
+
+      // 하단 여백(pb-36)은 네비(약 56px)와 FAB(bottom-20 기준 약 124px)를 모두 비워
+      // 마지막 카드가 가려지지 않게 한다
+      return (
+        <CategoriesContext.Provider value={categories}>
+        <div className="max-w-md mx-auto min-h-screen px-3 pb-36">
+          <header className="pt-4 text-center">
+            <h1 className="text-xl font-extrabold text-slate-700">🐷 달력 가계부</h1>
+            <p className="text-[11px] text-slate-400">하루 5분, 달력에 콕콕 기록해요 💕</p>
+          </header>
+
+          <MonthNavigator
+            year={year}
+            month={month}
+            onPrev={() => moveMonth(-1)}
+            onNext={() => moveMonth(1)}
+            onToday={goToday}
+          />
+
+          <SummaryBar income={monthIncome} expense={monthExpense} />
+
+          {error && (
+            <div className="mb-3 rounded-2xl bg-red-50 border border-red-200 px-4 py-2.5 text-xs font-semibold text-red-500" role="alert">
+              {error}
+            </div>
+          )}
+
+          {loading && (tab === 'calendar' || tab === 'stats') ? (
+            <div className="bg-white/80 rounded-3xl p-10 text-center text-xs text-slate-400 shadow-sm">불러오는 중이에요… ⏳</div>
+          ) : tab === 'calendar' ? (
+            <div className="space-y-3">
+              <Calendar
+                year={year}
+                month={month}
+                dailyTotals={dailyTotals}
+                selectedDate={selectedDate}
+                onSelectDate={setSelectedDate}
+              />
+              <DayPanel
+                dateKey={selectedDate}
+                transactions={selectedTx}
+                onAdd={() => setModalOpen(true)}
+                onDelete={deleteTransaction}
+              />
+            </div>
+          ) : tab === 'list' ? (
+            <ListView
+              transactions={listTx}
+              loading={scope === 'all' ? allLoading : loading}
+              scope={scope}
+              onScopeChange={setScope}
+              typeFilter={typeFilter}
+              onTypeFilterChange={setTypeFilter}
+              onDelete={deleteTransaction}
+            />
+          ) : tab === 'categories' ? (
+            <CategoryManager
+              customCategories={customCategories}
+              onCreate={createCategory}
+              onDelete={deleteCategory}
+            />
+          ) : (
+            <StatsView year={year} month={month} transactions={monthTx} />
+          )}
+
+          {/* Extended FAB — 하단 네비게이션 위에 띄운다 (Material 가이드).
+              분류 관리 화면에서는 입력 폼을 가리므로 숨긴다 */}
+          {tab !== 'categories' && (
+            <button
+              onClick={() => setModalOpen(true)}
+              className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 rounded-full bg-rose-400 px-6 py-3 text-sm font-extrabold text-white shadow-lg shadow-rose-200 hover:bg-rose-500 transition"
+            >
+              ➕ 내역 추가
+            </button>
+          )}
+
+          {/* 하단 네비게이션 — 메뉴는 3~5개로 고정 (Material 가이드) */}
+          <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/95 backdrop-blur border-t border-slate-100 flex">
+            {[
+              { key: 'calendar',   label: '달력', emoji: '🗓️' },
+              { key: 'list',       label: '목록', emoji: '📜' },
+              { key: 'stats',      label: '통계', emoji: '📊' },
+              { key: 'categories', label: '분류', emoji: '🏷️' },
+            ].map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                aria-current={tab === t.key ? 'page' : undefined}
+                className={`flex-1 py-3 text-[11px] font-bold transition ${tab === t.key ? 'text-rose-500' : 'text-slate-400'}`}
+              >
+                <span className="block text-lg leading-tight">{t.emoji}</span>
+                {t.label}
+              </button>
+            ))}
+          </nav>
+
+          <TxModal
+            isOpen={isModalOpen}
+            onClose={() => setModalOpen(false)}
+            onSubmit={addTransaction}
+            onCreateCategory={createCategory}
+            defaultDate={selectedDate}
+          />
+        </div>
+        </CategoriesContext.Provider>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
