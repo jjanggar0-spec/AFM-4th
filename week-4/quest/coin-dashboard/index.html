@@ -1242,6 +1242,328 @@
       );
     }
 
+    // ========================================
+    // 📈 Daily Profit — 보유 코인 일자별 수익현황 (server.js /api/portfolio/daily)
+    // ========================================
+
+    // 코인 색은 처음 산 순서로 고정 (순위가 바뀌어도 색이 바뀌지 않게). dataviz 검증 팔레트 다크 1~8번
+    // — 어두운 배경(#0f172a)에서 색각이상·대비 검사를 모두 통과한 순서라 섞지 않는다
+    const SERIES_COLORS = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9', '#e66767'];
+    const TOTAL_COLOR = '#e2e8f0';
+    const CHART_HEIGHT = 280;
+    const CHART_MARGIN = { top: 16, right: 16, bottom: 28, left: 64 };
+
+    // 0·1·2·2.5·5 단위로 떨어지는 눈금
+    function niceTicks(min, max, count = 5) {
+      if (min === max) { min -= 1; max += 1; }
+      const raw = (max - min) / count;
+      const mag = 10 ** Math.floor(Math.log10(raw));
+      const n = raw / mag;
+      const step = (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * mag;
+      const ticks = [];
+      for (let v = Math.floor(min / step) * step; v <= Math.ceil(max / step) * step + step / 2; v += step) ticks.push(Math.round(v * 1e6) / 1e6);
+      return ticks;
+    }
+
+    const compactWon = new Intl.NumberFormat('ko-KR', { notation: 'compact', maximumFractionDigits: 1 });
+    function formatAxis(value, unit) {
+      if (unit === 'rate') return `${value}%`;
+      return value === 0 ? '0' : `${value < 0 ? '−' : ''}${compactWon.format(Math.abs(value))}`;
+    }
+
+    function pointLabel(point, long = false) {
+      if (point.isNow) return '지금';
+      const [, m, d] = point.date.split('-').map(Number);
+      return long ? `${m}월 ${d}일 오전 9시` : `${m}/${d}`;
+    }
+
+    function usePortfolioDaily(ordersKey) {
+      const [data, setData] = useState(null);
+      const [error, setError] = useState(null);
+      const [loading, setLoading] = useState(true);
+
+      const load = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+          setData(await apiRequest('/portfolio/daily'));
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      }, []);
+
+      // 주문이 체결·초기화되면 보유 내역이 바뀌므로 다시 받는다
+      useEffect(() => { if (ordersKey != null) load(); }, [ordersKey, load]);
+
+      return { data, error, loading, reload: load };
+    }
+
+    function useElementWidth() {
+      const ref = useRef(null);
+      const [width, setWidth] = useState(0);
+      useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const ro = new ResizeObserver(([entry]) => setWidth(Math.floor(entry.contentRect.width)));
+        ro.observe(el);
+        return () => ro.disconnect();
+      }, []);
+      return [ref, width];
+    }
+
+    // 값이 없는 날(아직 안 샀던 날)은 선을 끊는다
+    function linePath(values, x, y) {
+      let d = '';
+      let pen = false;
+      values.forEach((v, i) => {
+        if (v == null) { pen = false; return; }
+        d += `${pen ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`;
+        pen = true;
+      });
+      return d;
+    }
+
+    function ProfitChart({ points, lines, unit }) {
+      const [wrapRef, width] = useElementWidth();
+      const [hover, setHover] = useState(null);
+      const fmt = unit === 'rate' ? formatSignedPercent : formatSignedWon;
+
+      const innerW = Math.max(0, width - CHART_MARGIN.left - CHART_MARGIN.right);
+      const innerH = CHART_HEIGHT - CHART_MARGIN.top - CHART_MARGIN.bottom;
+      const all = lines.flatMap((l) => l.values).filter((v) => v != null);
+      const ticks = niceTicks(Math.min(0, ...all), Math.max(0, ...all));
+      const yMin = ticks[0];
+      const yMax = ticks[ticks.length - 1];
+      const n = points.length;
+      const x = (i) => CHART_MARGIN.left + (n <= 1 ? innerW / 2 : (i / (n - 1)) * innerW);
+      const y = (v) => CHART_MARGIN.top + ((yMax - v) / (yMax - yMin || 1)) * innerH;
+
+      // 날짜 라벨은 겹치지 않을 만큼만 (마지막 '지금'은 항상)
+      const labelEvery = Math.max(1, Math.ceil(n / Math.max(1, Math.floor(innerW / 52))));
+      const showLabel = (i) => i === n - 1 || (i % labelEvery === 0 && n - 1 - i >= labelEvery / 2);
+
+      const handleMove = (e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const px = e.clientX - rect.left;
+        const i = n <= 1 ? 0 : Math.round(((px - CHART_MARGIN.left) / innerW) * (n - 1));
+        setHover(Math.min(n - 1, Math.max(0, i)));
+      };
+
+      const hoverRows = hover == null ? [] : lines.filter((l) => l.values[hover] != null);
+      const tipLeft = hover == null ? 0 : x(hover);
+      const tipOnLeft = tipLeft > width / 2;
+
+      return (
+        <div ref={wrapRef} className="relative mt-4 select-none">
+          {width > 0 && (
+            <svg width={width} height={CHART_HEIGHT} role="img" aria-label="보유 코인 일자별 수익 선 그래프 (자세한 값은 아래 표로 보기)">
+              {/* 눈금선 — 0 선만 진하게 */}
+              {ticks.map((t) => (
+                <g key={t}>
+                  <line x1={CHART_MARGIN.left} x2={width - CHART_MARGIN.right} y1={y(t)} y2={y(t)}
+                    stroke={t === 0 ? '#64748b' : '#1e293b'} strokeWidth="1" shapeRendering="crispEdges" />
+                  <text x={CHART_MARGIN.left - 8} y={y(t)} dy="0.32em" textAnchor="end" className="fill-slate-500 text-[11px] tabular-nums">
+                    {formatAxis(t, unit)}
+                  </text>
+                </g>
+              ))}
+              {points.map((p, i) => showLabel(i) && (
+                <text key={p.at} x={x(i)} y={CHART_HEIGHT - 8} textAnchor={i === n - 1 ? 'end' : 'middle'}
+                  className={`text-[11px] tabular-nums ${p.isNow ? 'fill-slate-300' : 'fill-slate-500'}`}>
+                  {pointLabel(p)}
+                </text>
+              ))}
+
+              {/* 선 — 합계는 굵게 맨 위에 */}
+              {[...lines].reverse().map((l) => (
+                <path key={l.key} d={linePath(l.values, x, y)} fill="none" stroke={l.color}
+                  strokeWidth={l.isTotal ? 3 : 2} strokeLinejoin="round" strokeLinecap="round" />
+              ))}
+              {/* 끝점 */}
+              {lines.map((l) => l.values[n - 1] != null && (
+                <circle key={l.key} cx={x(n - 1)} cy={y(l.values[n - 1])} r="4" fill={l.color} stroke="#0f172a" strokeWidth="2" />
+              ))}
+
+              {hover != null && (
+                <g pointerEvents="none">
+                  <line x1={x(hover)} x2={x(hover)} y1={CHART_MARGIN.top} y2={CHART_MARGIN.top + innerH} stroke="#475569" strokeWidth="1" />
+                  {hoverRows.map((l) => (
+                    <circle key={l.key} cx={x(hover)} cy={y(l.values[hover])} r="4.5" fill={l.color} stroke="#0f172a" strokeWidth="2" />
+                  ))}
+                </g>
+              )}
+
+              <rect x={CHART_MARGIN.left - 8} y={0} width={innerW + 16} height={CHART_HEIGHT} fill="transparent"
+                onPointerMove={handleMove} onPointerDown={handleMove} onPointerLeave={() => setHover(null)} style={{ touchAction: 'pan-y' }} />
+            </svg>
+          )}
+
+          {hover != null && (
+            <div
+              className="pointer-events-none absolute top-2 z-10 min-w-[12rem] rounded-xl bg-slate-950/95 px-3 py-2.5 text-xs shadow-xl ring-1 ring-slate-700"
+              style={tipOnLeft ? { right: width - tipLeft + 12 } : { left: tipLeft + 12 }}
+            >
+              <p className="mb-1.5 font-semibold text-slate-200">{pointLabel(points[hover], true)}</p>
+              <ul className="space-y-1">
+                {hoverRows.map((l) => (
+                  <li key={l.key} className="flex items-center justify-between gap-4">
+                    <span className="flex items-center gap-1.5 text-slate-400">
+                      <span className="inline-block h-0.5 w-3 rounded-full" style={{ backgroundColor: l.color, height: l.isTotal ? 3 : 2 }} />
+                      <span className={l.isTotal ? 'font-semibold text-slate-200' : ''}>{l.label}</span>
+                    </span>
+                    <span className={`tabular-nums ${l.isTotal ? 'font-semibold text-slate-100' : 'text-slate-200'}`}>{fmt(l.values[hover])}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function DailyProfitCard({ ordersKey }) {
+      const { data, error, loading, reload } = usePortfolioDaily(ordersKey);
+      const [unit, setUnit] = useState('profit'); // 'profit' | 'rate'
+      const [hidden, setHidden] = useState({});    // { [key]: true } — 범례로 끈 선
+      const [showTable, setShowTable] = useState(false);
+
+      const points = data?.points ?? [];
+      const allLines = useMemo(() => {
+        if (!data?.series?.length) return [];
+        const pick = (v) => (v == null ? null : v[unit]);
+        return [
+          { key: 'total', label: '합계', color: TOTAL_COLOR, isTotal: true, values: data.total.map(pick) },
+          ...data.series.slice(0, SERIES_COLORS.length).map((s, i) => ({
+            key: s.coinId, label: s.name, symbol: s.symbol, color: SERIES_COLORS[i], values: s.values.map(pick),
+          })),
+        ];
+      }, [data, unit]);
+      const lines = allLines.filter((l) => !hidden[l.key]);
+
+      const last = data?.total?.[data.total.length - 1];
+      const t = TREND_STYLES[wonTrendOf(last?.profit)];
+      const failed = Object.keys(data?.errors ?? {});
+      const extra = (data?.series?.length ?? 0) - SERIES_COLORS.length;
+      const fmt = unit === 'rate' ? formatSignedPercent : formatSignedWon;
+
+      return (
+        <Card as="section" aria-labelledby="daily-title">
+          <SectionTitle
+            title={<span id="daily-title">일자별 수익현황</span>}
+            meta={points.length ? `${pointLabel(points[0])} ~ 지금 · 매일 오전 9시 시세 기준` : null}
+            action={
+              <Button variant="ghost" size="xs" className="shrink-0 whitespace-nowrap" onClick={reload} disabled={loading} aria-label="일자별 수익 다시 불러오기">
+                {loading ? '불러오는 중…' : '↻ 새로고침'}
+              </Button>
+            }
+          />
+
+          {error && !data && (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-rose-500/10 px-4 py-3 text-sm text-rose-300 ring-1 ring-rose-500/30">
+              <span>⚠️ {error}</span>
+              <Button size="xs" onClick={reload}>다시 시도</Button>
+            </div>
+          )}
+
+          {!data && loading && <Skeleton className="mt-4 h-[280px] w-full" />}
+
+          {data && !data.series.length && (
+            <TablePlaceholder loading={false}>보유한 코인이 생기면 날마다 얼마나 벌었는지 그래프로 보여드려요.</TablePlaceholder>
+          )}
+
+          {data && data.series.length > 0 && (
+            <>
+              <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <p className="text-xs text-slate-500">지금 보유 코인 평가손익</p>
+                  <p className={`mt-0.5 text-2xl font-bold tabular-nums ${t.text}`}>
+                    {formatSignedWon(last?.profit)}
+                    <span className="ml-2 text-base font-semibold">{formatSignedPercent(last?.rate)}</span>
+                  </p>
+                </div>
+                <div role="tablist" aria-label="그래프 단위" className="inline-flex rounded-xl bg-slate-800 p-1 text-xs font-semibold">
+                  {[{ v: 'profit', l: '평가손익(원)' }, { v: 'rate', l: '수익률(%)' }].map((o) => (
+                    <button key={o.v} type="button" role="tab" aria-selected={unit === o.v} onClick={() => setUnit(o.v)}
+                      className={`rounded-lg px-3 py-1.5 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${unit === o.v ? 'bg-slate-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}>
+                      {o.l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 범례 — 눌러서 선 켜고 끄기 */}
+              <ul className="mt-3 flex flex-wrap gap-1.5" aria-label="범례 (눌러서 선 숨기기)">
+                {allLines.map((l) => {
+                  const off = !!hidden[l.key];
+                  return (
+                    <li key={l.key}>
+                      <button type="button" aria-pressed={!off} onClick={() => setHidden((h) => ({ ...h, [l.key]: !h[l.key] }))}
+                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs ring-1 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400
+                          ${off ? 'text-slate-600 ring-slate-800 line-through' : 'text-slate-300 ring-slate-700 hover:bg-slate-800'}`}>
+                        <span className="inline-block w-3.5 rounded-full" style={{ backgroundColor: off ? '#334155' : l.color, height: l.isTotal ? 3 : 2 }} />
+                        <span className={l.isTotal ? 'font-semibold' : ''}>{l.label}</span>
+                        {l.symbol && <span className="uppercase text-slate-500">{l.symbol}</span>}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {failed.length > 0 && (
+                <p role="status" className="mt-3 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-300 ring-1 ring-amber-500/30">
+                  ⚠️ {failed.join(', ')} 시세 기록을 받지 못해 그래프와 합계에서 빠졌어요. 잠시 뒤 새로고침해 주세요.
+                </p>
+              )}
+              {extra > 0 && <p className="mt-2 text-xs text-slate-500">그 외 {extra}개 코인은 합계에만 들어가 있어요.</p>}
+
+              {lines.length > 0
+                ? <ProfitChart points={points} lines={lines} unit={unit} />
+                : <TablePlaceholder loading={false}>범례에서 볼 항목을 하나 이상 켜 주세요.</TablePlaceholder>}
+
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <p className="text-[11px] text-slate-600">CoinGecko 일별 시세(매일 오전 9시 KST)로 그날까지의 주문을 다시 계산했어요 · 마지막 점은 현재가</p>
+                <Button variant="ghost" size="xs" className="shrink-0 whitespace-nowrap" onClick={() => setShowTable((v) => !v)} aria-expanded={showTable}>
+                  {showTable ? '표 닫기' : '표로 보기'}
+                </Button>
+              </div>
+
+              {showTable && (
+                <div className="relative -mx-5 mt-2 max-h-[22rem] overflow-auto px-5">
+                  <table className="w-full min-w-[640px] text-sm">
+                    <thead className="sticky top-0 z-10 bg-slate-900">
+                      <tr className="border-b border-slate-800 text-left text-xs text-slate-500">
+                        <th scope="col" className="py-2 pr-3 font-medium">날짜</th>
+                        {allLines.map((l) => (
+                          <th key={l.key} scope="col" className="py-2 pl-3 text-right font-medium">{l.isTotal ? '합계' : upper(l.symbol)}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/70 tabular-nums">
+                      {[...points].map((p, i) => ({ p, i })).reverse().map(({ p, i }) => (
+                        <tr key={p.at}>
+                          <th scope="row" className="whitespace-nowrap py-2 pr-3 text-left font-normal text-slate-300">{p.isNow ? '지금' : formatDate(Date.parse(p.at))}</th>
+                          {allLines.map((l) => {
+                            const v = l.values[i];
+                            return (
+                              <td key={l.key} className={`whitespace-nowrap py-2 pl-3 text-right ${v == null ? 'text-slate-600' : TREND_STYLES[unit === 'rate' ? trendOf(v) : wonTrendOf(v)].text} ${l.isTotal ? 'font-semibold' : ''}`}>
+                                {v == null ? '—' : fmt(v)}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
+          )}
+        </Card>
+      );
+    }
+
     function OrderHistory({ orders, loading }) {
       return (
         <Card as="section" aria-labelledby="history-title">
@@ -1768,6 +2090,8 @@
             </div>
 
             <HoldingsCard rows={holdingRows} loading={walletLoading} onSell={(coinId) => startTrade(coinId, 'sell')} />
+            {/* 주문이 체결·초기화될 때마다(최신 주문 ID·건수가 바뀌면) 다시 계산 */}
+            <DailyProfitCard ordersKey={wallet ? `${wallet.orders.length}:${wallet.orders[0]?.id ?? 0}` : null} />
             <OrderHistory orders={wallet?.orders ?? EMPTY_ORDERS} loading={walletLoading} />
           </main>
 

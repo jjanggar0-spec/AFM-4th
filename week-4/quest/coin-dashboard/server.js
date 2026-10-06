@@ -308,6 +308,112 @@ app.get('/api/wallet', async (_req, res, next) => {
   }
 });
 
+// ── API: 보유 코인 일자별 수익현황 ─────────────
+// CoinGecko 일봉(매일 00:00 UTC = 09:00 KST 가격 + 마지막 점은 현재가)으로, 그 시각까지의 주문을
+// 다시 체결해 만든 지갑을 평가한다. 무료 API 는 분당 호출 수가 적어 서버에서 순서대로 받고 10분간 캐시한다.
+const COINGECKO_API_URL = 'https://api.coingecko.com/api/v3';
+const DAY_MS = 24 * 60 * 60 * 1000;
+const HISTORY_MAX_DAYS = 365; // 무료 API 가 주는 최대 기간
+const HISTORY_CACHE_MS = 10 * 60 * 1000;
+const historyCache = new Map(); // coinId → { fetchedAt, days, prices: [[ms, krw], ...] }
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function fetchDailyPrices(coinId, days) {
+  const hit = historyCache.get(coinId);
+  if (hit && hit.days >= days && Date.now() - hit.fetchedAt < HISTORY_CACHE_MS) return hit.prices;
+  const url = `${COINGECKO_API_URL}/coins/${encodeURIComponent(coinId)}/market_chart?vs_currency=krw&days=${days}&interval=daily`;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const res = await fetch(url);
+    if (res.status === 429) {
+      await sleep(1500 * (attempt + 1));
+      continue;
+    }
+    if (!res.ok) throw new Error(`CoinGecko HTTP ${res.status}`);
+    const body = await res.json();
+    if (!Array.isArray(body?.prices) || !body.prices.length) throw new Error('가격 기록이 비어 있어요.');
+    historyCache.set(coinId, { fetchedAt: Date.now(), days, prices: body.prices });
+    return body.prices;
+  }
+  // 한도에 걸렸어도 예전에 받아 둔 기록이 있으면 그걸로 그린다
+  if (hit) return hit.prices;
+  throw new Error('CoinGecko 요청 한도를 잠시 초과했어요.');
+}
+
+// KST 기준 날짜 "YYYY-MM-DD"
+const kstDate = (ms) => new Date(ms + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+app.get('/api/portfolio/daily', async (_req, res, next) => {
+  try {
+    const orders = await selectOrders(pool);
+    const held = buildWallet(orders).holdings;
+    // 색이 순위 따라 바뀌지 않도록 처음 산 순서로 고정한다
+    const coinIds = [...new Set(orders.map((o) => o.coinId))].filter((id) => held[id]);
+    if (!coinIds.length) return res.json({ success: true, data: { points: [], series: [], total: [], errors: {} } });
+
+    const now = Date.now();
+    const firstAt = Math.min(...orders.filter((o) => held[o.coinId]).map((o) => Date.parse(o.at)));
+    const days = Math.min(HISTORY_MAX_DAYS, Math.ceil((now - firstAt) / DAY_MS) + 2);
+
+    // 첫 매수 다음 00:00 UTC 부터 하루 간격 + 마지막에 '지금'
+    const firstMidnight = Math.max(Math.ceil(firstAt / DAY_MS) * DAY_MS, now - HISTORY_MAX_DAYS * DAY_MS);
+    const times = [];
+    for (let t = firstMidnight; t <= now; t += DAY_MS) times.push(t);
+    const points = [
+      ...times.map((t) => ({ at: new Date(t).toISOString(), date: kstDate(t), isNow: false })),
+      { at: new Date(now).toISOString(), date: kstDate(now), isNow: true },
+    ];
+
+    // 코인마다 그 시각의 가격 — 일봉은 정확히 00:00 UTC 에 찍히므로 반나절 안의 점을 쓴다
+    const errors = {};
+    const priceAt = {};
+    for (const coinId of coinIds) {
+      try {
+        const prices = await fetchDailyPrices(coinId, days);
+        const near = (t) => {
+          let best = null;
+          for (const [ts, p] of prices) if (Math.abs(ts - t) < DAY_MS / 2 && (!best || Math.abs(ts - t) < Math.abs(best[0] - t))) best = [ts, p];
+          return best?.[1] ?? null;
+        };
+        priceAt[coinId] = [...times.map(near), prices[prices.length - 1][1]];
+      } catch (err) {
+        errors[coinId] = err.message;
+      }
+    }
+
+    // 각 시각까지의 주문으로 지갑을 다시 만들어 평가 (주문이 시간순이라 앞부분만 자르면 된다)
+    const wallets = points.map((p, i) =>
+      p.isNow ? held : buildWallet(orders.filter((o) => Date.parse(o.at) <= times[i])).holdings
+    );
+
+    const series = coinIds.map((coinId) => {
+      const h = held[coinId];
+      return {
+        coinId, symbol: h.symbol, name: h.name, image: h.image,
+        values: points.map((_, i) => {
+          const w = wallets[i][coinId];
+          const price = priceAt[coinId]?.[i];
+          if (!w || price == null) return null;
+          const value = w.qty * price;
+          return { price, qty: w.qty, cost: w.cost, value, profit: value - w.cost, rate: ((value - w.cost) / w.cost) * 100 };
+        }),
+      };
+    });
+
+    const total = points.map((_, i) => {
+      const vals = series.map((s) => s.values[i]).filter(Boolean);
+      if (!vals.length) return null;
+      const cost = vals.reduce((sum, v) => sum + v.cost, 0);
+      const value = vals.reduce((sum, v) => sum + v.value, 0);
+      return { cost, value, profit: value - cost, rate: ((value - cost) / cost) * 100 };
+    });
+
+    res.json({ success: true, data: { points, series, total, errors } });
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.post('/api/orders', async (req, res, next) => {
   const input = parseOrderInput(req.body);
   if (input.error) return res.status(400).json({ success: false, message: input.error });

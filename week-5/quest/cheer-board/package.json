@@ -1,0 +1,18 @@
+{
+  "name": "cheer-board",
+  "version": "1.0.0",
+  "private": true,
+  "description": "고민·칭찬·응원 게시판 — 글쓰기·공감·최신순/공감순 정렬 (React CDN + Express + Supabase PostgreSQL)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=20.12"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "pg": "^8.16.3"
+  }
+}
