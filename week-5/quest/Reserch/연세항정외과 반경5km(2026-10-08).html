@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>일산 외과 리서치</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f7f9; --surface:#ffffff; --surface-2:#f0f2f5; --text:#1b1f24; --muted:#5b6470;
+  --border:#e1e5ea; --accent:#2563eb; --good:#15803d; --good-soft:#e6f4ea;
+  --bad:#b42318; --bad-soft:#fdecea; --warn:#9a6700; --warn-soft:#fff4d6; --mid:#6b4fbb; --mid-soft:#efeafb;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1216; --surface:#171b21; --surface-2:#1f242c; --text:#e6e9ee; --muted:#9aa3ae;
+    --border:#2a3039; --accent:#7aa2ff; --good:#5cc983; --good-soft:#15291d;
+    --bad:#ff8a80; --bad-soft:#3a1d1b; --warn:#e8c063; --warn-soft:#352a12; --mid:#b9a4f5; --mid-soft:#2a2340;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1216; --surface:#171b21; --surface-2:#1f242c; --text:#e6e9ee; --muted:#9aa3ae;
+  --border:#2a3039; --accent:#7aa2ff; --good:#5cc983; --good-soft:#15291d;
+  --bad:#ff8a80; --bad-soft:#3a1d1b; --warn:#e8c063; --warn-soft:#352a12; --mid:#b9a4f5; --mid-soft:#2a2340;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Noto Sans KR",system-ui,sans-serif;line-height:1.6;font-size:15px}
+a{color:var(--accent)}
+.wrap{max-width:1120px;margin:0 auto;padding:32px 16px 64px}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+h1{font-size:26px;margin:0 0 6px;letter-spacing:-.02em}
+h2{font-size:21px;margin:48px 0 6px;letter-spacing:-.01em;padding-top:12px;border-top:2px solid var(--border)}
+h3{font-size:17px;margin:28px 0 10px}
+.lead{color:var(--muted);font-size:14px;margin:0 0 14px}
+.meta{color:var(--muted);font-size:14px}
+nav.toc{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 0}
+nav.toc a{font-size:13px;text-decoration:none;border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:4px 12px;color:var(--text)}
+.note{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:12px 14px;font-size:14px;margin:18px 0 8px}
+.note ul{margin:4px 0 0;padding-left:18px}
+.themebtn{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:8px;padding:5px 10px;font-size:13px;cursor:pointer;font-family:inherit}
+.qa{display:grid;gap:8px}
+.qa div{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:grid;grid-template-columns:200px 1fr;gap:12px}
+.qa b{font-weight:500;color:var(--muted);font-size:14px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:16px}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.tile .k{font-size:13px;color:var(--muted)} .tile .v{font-size:22px;font-weight:700;margin-top:2px} .tile .s{font-size:13px;color:var(--muted)}
+.regions{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.region{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.region h4{margin:0;font-size:15px} .region .d{font-size:12px;color:var(--muted)}
+.region .list{font-size:13px;margin:6px 0} .region p{margin:0;font-size:13px;color:var(--muted)}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.filters .label{font-size:13px;color:var(--muted);align-self:center;margin-right:4px;min-width:36px}
+.chip{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer;font-family:inherit}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+th{background:var(--surface-2);font-weight:500;color:var(--muted);white-space:nowrap;font-size:13px}
+th.sortable{cursor:pointer;user-select:none} th.sortable:hover{color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr.base td{background:var(--mid-soft)}
+.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.name{font-weight:500;white-space:nowrap}
+.small{font-size:12px;color:var(--muted)}
+.mini{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+.mini .track{width:60px;flex:none;margin:0}
+.track{background:var(--surface-2);border-radius:4px;height:8px;margin-top:4px}
+.fill{background:var(--accent);border-radius:4px;height:8px}
+.fill.bad{background:var(--bad)} .fill.good{background:var(--good)} .fill.warn{background:var(--warn)}
+.count{font-size:13px;color:var(--muted);margin:6px 2px}
+.tag{display:inline-block;font-size:11px;padding:1px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);white-space:nowrap;margin:1px 2px 1px 0}
+.tag.bad{background:var(--bad-soft);color:var(--bad)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.tag.ok{background:var(--good-soft);color:var(--good)}
+.tag.src{background:var(--mid-soft);color:var(--mid)}
+.clinics{display:grid;gap:8px}
+details.clinic{background:var(--surface);border:1px solid var(--border);border-radius:10px}
+details.clinic summary{cursor:pointer;padding:10px 14px;list-style:none;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+details.clinic summary::-webkit-details-marker{display:none}
+details.clinic summary::before{content:"▸";color:var(--muted);transition:transform .15s}
+details.clinic[open] summary::before{transform:rotate(90deg)}
+details.clinic summary b{font-size:15px}
+.clinic .body{padding:0 14px 14px 30px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pt{border-radius:8px;padding:10px 12px;font-size:14px}
+.pt b{display:block;font-size:12px;margin-bottom:2px}
+.pt.good{background:var(--good-soft)} .pt.good b{color:var(--good)}
+.pt.bad{background:var(--bad-soft)} .pt.bad b{color:var(--bad)}
+.pt.info{background:var(--surface-2)} .pt.info b{color:var(--muted)}
+.patterns{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.patterns .p{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;font-size:14px}
+.patterns .p h4{margin:0 0 4px;font-size:15px}
+.cats{display:grid;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px}
+.cat{display:grid;grid-template-columns:minmax(150px,220px) 1fr 36px;gap:10px;align-items:center}
+.cat .n{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.cat .track{height:12px;margin:0} .cat .fill{height:12px}
+.cat .ex{grid-column:1/-1;font-size:13px;color:var(--muted);margin-top:-6px}
+.reviews{display:grid;gap:10px}
+.rv{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--bad);border-radius:10px;padding:12px 14px}
+.rv.mixed{border-left-color:var(--warn)}
+.rv .head{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px;color:var(--muted)}
+.rv .head b{color:var(--text)}
+.rv p{margin:6px 0 0}
+.rv .good{margin-top:6px;font-size:13px;color:var(--good)}
+.analysis{display:grid;gap:12px}
+.an{min-width:0;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px}
+.an h4{margin:0 0 6px;font-size:16px}
+.an ul{margin:4px 0 0;padding-left:18px} .an li{margin:3px 0}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.timeline{position:relative;margin:6px 0 0;padding-left:20px;list-style:none}
+.timeline::before{content:"";position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:var(--border)}
+.timeline li{position:relative;margin:0 0 12px}
+.timeline li::before{content:"";position:absolute;left:-19px;top:7px;width:10px;height:10px;border-radius:50%;background:var(--mid)}
+.timeline .when{font-size:12px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.grid .p{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.grid h4{font-size:15px;margin:0 0 6px}
+.grid .why{font-size:13px;color:var(--muted);margin-top:4px}
+.sources{font-size:14px} .sources li{margin-bottom:4px}
+footer{margin-top:48px;color:var(--muted);font-size:13px}
+@media (max-width:640px){
+  h1{font-size:22px}
+  .qa div{grid-template-columns:1fr;gap:2px}
+  .clinic .body{grid-template-columns:1fr;padding-left:14px}
+  .vs{grid-template-columns:1fr}
+  .cat{grid-template-columns:1fr 36px}
+  .cat .track{grid-column:1/-1;grid-row:2}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="toolbar">
+    <span class="meta">조사일 2026-10-08 · 네이버 플레이스 · 네이버 블로그 · 카카오맵</span>
+    <button class="themebtn" id="themeBtn" type="button">테마 전환</button>
+  </div>
+  <h1>연세항정외과 반경 5km 외과 리서치 · 연세항정외과의원 부정 리뷰 분석</h1>
+  <div class="meta">기준: 연세항정외과의원 (경기 고양시 일산동구 고봉로 266 4층, 중산동) · 직선거리 5km 이내 외과 16곳 · 주변 리뷰 표본 716건 + 대상 텍스트 리뷰 176건 · 별점만 94건 · 카카오 8건</div>
+  <nav class="toc">
+    <a href="#summary">1. 한눈에 보기</a><a href="#area">2. Area 외과 요약</a><a href="#target">3. 연세항정외과 부정 리뷰 분석</a><a href="#conclusion">4. 결론</a><a href="#sources">출처</a>
+  </nav>
+
+  <div class="note">
+    <b>읽기 전에</b>
+    <ul>
+      <li>"연세항정외과"는 네이버에 없어서 <b>"연세항정외과의원"(외과)</b>으로 조사했습니다. 항문 질환이 중심이라 Area 비교 대상을 외과·대장항문과로 잡았습니다.</li>
+      <li>수치는 2026-10-08 기준이고 거리는 직선거리입니다. 주변 의원은 최신 리뷰 표본만 봤습니다(기간 4개월~3년).</li>
+      <li>연세항정외과는 리뷰의 <b>62.5%가 다섯 글자 이하</b>이고, 2025년 이후 리뷰는 14건뿐입니다. 리뷰로 판단할 근거가 적습니다.</li>
+      <li>부정 리뷰는 키워드로 1차 필터한 뒤 직접 읽어 분류했습니다. 개인 경험담이라 사실 여부는 확인할 수 없고, 실명은 뺐습니다.</li>
+    </ul>
+  </div>
+
+  <h2 id="summary">1. 한눈에 보기</h2>
+  <div class="tiles">
+    <div class="tile"><div class="k">Area 외과</div><div class="v">16곳</div><div class="s">항문 5 · 정맥 3 · 유방 4 · 일반 4</div></div>
+    <div class="tile"><div class="k">연세항정 부정 리뷰</div><div class="v">7건 · 3.8%</div><div class="s">네이버 5 + 카카오 2 / 텍스트 184건</div></div>
+    <div class="tile"><div class="k">주된 불만</div><div class="v">설명 부족 4건</div><div class="s">7건 중</div></div>
+    <div class="tile"><div class="k">대기</div><div class="v">빠른 입장 92%</div><div class="s">1시간 이상 0건</div></div>
+    <div class="tile"><div class="k">리뷰 정보량</div><div class="v">62.5%가 ≤5자</div><div class="s">2025년 이후 14건</div></div>
+  </div>
+  <div class="qa" style="margin-top:14px">
+    <div><b>항문 경쟁 의원</b><span>연세항맥병원(2.0km, 전문의 3, 여의사·검진) · 한솔학문외과(2.0km, 수술 후기 많음, 수 20시) · 연세청담항외과(3.3km, 1인실 입원) · 운정문항외과(3.9km, 대기 김)</span></div>
+    <div><b>연세항정 강점</b><span>치질 수술 당일 퇴원, 무통주사, 원장 설명·친절, 어려운 치루 수술 성공 사례, 대기가 짧음</span></div>
+    <div><b>연세항정 약점</b><span>진찰·설명 부족(4) · 수술·비보험약 권유(2) · 시술 통증(1) · 불친절(1) · 주차(1)</span></div>
+    <div><b>가장 큰 약점</b><span>불만보다 <b>리뷰가 오래되고 내용이 적은 것</b>. 답글 2건, 최근 1년 리뷰 4건. 경쟁 의원은 같은 60건 안에 수술 후기가 30건 이상씩 있습니다.</span></div>
+  </div>
+
+  <h2 id="area">2. Area 외과 리서치 요약 (16곳)</h2>
+  <p class="lead">네이버 플레이스의 진료시간·전문의 정보와 곳별 최신 리뷰 표본으로 정리했습니다. 분야는 리뷰에 나온 진료 내용(치질·정맥·유방 등)으로 나눴습니다.</p>
+
+  <h3>2-1. 분야별 분포</h3>
+  <div class="regions">
+    <div class="region"><h4>항문 (치질·치루)</h4><div class="d">5곳 · 0~3.9km</div><div class="list">연세항정(기준) · 연세항맥 · 한솔학문 · 연세청담항 · 운정문항</div><p>기준 의원만 중산동에 있습니다. 2km 안의 직접 경쟁자는 주엽역 두 곳입니다.</p></div>
+    <div class="region"><h4>하지정맥류</h4><div class="d">3곳 · 2.8~4.2km</div><div class="list">푸른맥 · 서울아산맥 · 일산수</div><p>정발산역에 두 곳이 모여 있습니다. 기준 의원도 정맥류를 진료합니다.</p></div>
+    <div class="region"><h4>유방·갑상선</h4><div class="d">4곳 · 2.0~4.8km</div><div class="list">박세호 · 플라워 · 유앤미 · 닥터길(일부)</div><p>예약이 몇 달씩 밀린 곳이 있고, 대기 불만이 많습니다.</p></div>
+    <div class="region"><h4>일반 외과</h4><div class="d">4곳 · 1.9~3.6km</div><div class="list">아이산 · 일산도담 · 새봄 · 연세진</div><p>상처·낭종·지방종을 당일 처치합니다. "과잉진료 없음"이 강점입니다.</p></div>
+  </div>
+
+  <h3>2-2. 비교표</h3>
+  <div class="filters" id="fRegion"><span class="label">분야</span></div>
+  <div class="count" id="clCount"></div>
+  <div class="card"><div class="tablewrap">
+    <table>
+      <thead><tr>
+        <th class="sortable" data-k="d">거리 ↕</th>
+        <th class="sortable" data-k="name">의원 ↕</th>
+        <th class="sortable" data-k="sp">전문의 ↕</th>
+        <th class="sortable" data-k="vr">방문자 리뷰 ↕</th>
+        <th class="sortable" data-k="fast">빠른 입장 ↕</th>
+        <th class="sortable" data-k="long">1시간+ ↕</th>
+        <th class="sortable" data-k="neg">부정 ↕</th>
+        <th>진료시간 특이점</th>
+      </tr></thead>
+      <tbody id="clinics"></tbody>
+    </table>
+  </div></div>
+  <p class="small">빠른 입장 = 대기 태그 중 "바로 입장 + 10분 이내" 비율 · 1시간+ = "1시간 이상 + 2시간 이상" 비율 · 부정 = 표본 중 부정 리뷰 비율 · 부정 비율 중앙값: 16곳 약 2%, 항문 5곳 1.7%</p>
+
+  <h3>2-3. 곳별 요약 <span class="small">눌러서 펼치기 · 위 분야 필터가 같이 적용됩니다</span></h3>
+  <div class="clinics" id="details"></div>
+
+  <h3>2-4. Area 전체에서 보이는 패턴</h3>
+  <div class="patterns">
+    <div class="p"><h4>① 당일 퇴원 vs 입원</h4>연세항정은 <b>당일 퇴원</b>을 내세우고, 연세항맥·한솔·청담 리뷰에는 <b>2박3일 입원·1인실</b>이 나옵니다.</div>
+    <div class="p"><h4>② "과잉진료 없음"이 최고의 칭찬</h4>한솔·청담·문항·새봄·푸른맥·일산수·유앤미에서 반복됩니다. 거꾸로 "권유가 과하다"는 박세호·플라워·연세항정(1건)에서 나옵니다.</div>
+    <div class="p"><h4>③ 대기는 몇 곳에 몰림</h4>박세호(1시간+ 59%), 운정문항(21%). 나머지는 대부분 0~5%입니다.</div>
+    <div class="p"><h4>④ 응대 불만 &gt; 의사 불만</h4>한솔·문항·박세호·플라워·닥터길은 데스크·간호 응대 불만이 의사 불만보다 많습니다.</div>
+    <div class="p"><h4>⑤ 리뷰 관리 수준 차이</h4>답글: 서울아산맥 100% · 일산도담 94% · 푸른맥 75%. 항문 5곳은 0~1%입니다. 블로그 리뷰: 연세청담 2,404건, 연세항맥 1,026건, 연세항정 66건.</div>
+  </div>
+
+  <h2 id="target">3. 연세항정외과의원 부정 리뷰 정리·분석</h2>
+  <p class="lead">고봉로 266 4층(중산동, 일산 복음병원 앞) · 외과 전문의 1명 + 마취통증의학과 과목 · 평일 09–18(접수마감 17:30), 토 09–13, 일 휴무, <b>둘째·넷째 주 수요일 휴무</b> · 치질·치루·농양·모소낭, 하지정맥류, 대장내시경 · PPH·HEM33, 당일 퇴원</p>
+
+  <div class="tiles">
+    <div class="tile"><div class="k">네이버 텍스트 리뷰</div><div class="v">5 / 176</div><div class="s">뚜렷한 부정 4 + 불만 섞인 긍정 1 · 2.8%</div></div>
+    <div class="tile"><div class="k">네이버 별점만 (2019~21)</div><div class="v">평균 4.27</div><div class="s">94건 · 3점 미만 0건</div></div>
+    <div class="tile"><div class="k">카카오맵</div><div class="v">★3.9 · 1점 2</div><div class="s">8건</div></div>
+    <div class="tile"><div class="k">블로그 7편</div><div class="v">부정 0</div><div class="s">2022년 소개글 5편은 광고성으로 보임</div></div>
+  </div>
+
+  <h3>3-1. 유형별 집계 <span class="small">7건, 한 리뷰가 여러 유형에 걸칠 수 있음</span></h3>
+  <div class="cats" id="cats"></div>
+
+  <h3>3-2. 분석</h3>
+  <div class="analysis">
+    <div class="an"><h4>① 부정은 적지만, 판단할 근거 자체가 적습니다</h4>
+      <ul>
+        <li>텍스트 리뷰 176건 중 <b>110건(62.5%)이 다섯 글자 이하</b>("굿", "좋아요", "ㅇ", "👍")입니다. 그중 70건은 <b>2~10번째 방문</b> 리뷰로, 통원 치료 중 짧게 남긴 것으로 보입니다.</li>
+        <li>내용이 있는 리뷰(20자 이상)는 <b>33건</b>뿐입니다.</li>
+        <li>연도별: 2022년 56건 → 2023년 46 → 2024년 36 → <b>2025년 10 → 2026년 4</b>.</li>
+        <li>그래서 낮은 부정 비율은 "만족"일 수도 있지만, <b>"말이 적다"</b>는 뜻일 수도 있습니다.</li>
+      </ul>
+    </div>
+    <div class="an"><h4>② 불만의 공통점: 진찰·설명 부족</h4>
+      <ul>
+        <li>7건 중 4건이 설명 문제입니다: "병명도 못 들었다"(2025) · "설명이 미흡"(2020) · "비보험약인지 설명 없이 처방"(2025) · "대장·항문은 제로"(2019).</li>
+        <li>2025-09 리뷰에 "<b>다음 수술이 있다고</b>" 진찰을 서둘렀다는 말이 있습니다. 전문의 1명이 외래와 수술을 같이 보는 구조에서 생기는 문제로 보입니다.</li>
+        <li>반대로 긍정 리뷰 49건에 "친절", 17건에 "설명·상담"이 나옵니다. 설명 만족도는 환자와 그날 상황에 따라 엇갈립니다.</li>
+      </ul>
+    </div>
+    <div class="an"><h4>③ "수술 권유"는 엇갈림</h4>
+      <div class="vs">
+        <div class="pt bad"><b>부정적으로 본 사람</b>"바로 수술하자고 해서 겁먹었는데 약 먹고 좌욕하니 완전 좋아짐, 의사 정말 나빠요"(2023) · "약간의 겁을 주셨는데…"(카카오 5점, 2023)</div>
+        <div class="pt good"><b>긍정적으로 본 사람</b>"진료 다음 날 수술, 원래 고통보다 훨씬 덜 아팠다"(2026) · "다른 병원에서 안 된다던 치루 수술 성공"(2025) · "모소낭 수술… 수술비도 과잉 없이 저렴"(2022)</div>
+      </div>
+      <ul><li>이웃 의원들은 "과잉진료 없음"으로 자주 칭찬받습니다. 그래서 수술을 권할 때 이유를 설명하는 것이 중요해 보입니다.</li></ul>
+    </div>
+    <div class="an"><h4>④ 항문 경쟁 의원과 비교</h4>
+      <div class="tablewrap"><table>
+        <thead><tr><th>항목</th><th>연세항정</th><th>연세항맥</th><th>한솔학문</th><th>연세청담</th><th>운정문항</th></tr></thead>
+        <tbody>
+          <tr><td>거리</td><td class="num">0</td><td class="num">1.98</td><td class="num">1.98</td><td class="num">3.34</td><td class="num">3.88</td></tr>
+          <tr><td>전문의</td><td class="num">1</td><td class="num">3</td><td class="num">1</td><td class="num">1</td><td class="num">1</td></tr>
+          <tr><td>방문자 리뷰</td><td class="num">270</td><td class="num">1,050</td><td class="num">664</td><td class="num">307</td><td class="num">404</td></tr>
+          <tr><td>최근 표본 기간</td><td><b>3년 3개월</b>(60)</td><td>7개월(45)</td><td>10개월(60)</td><td>1년 7개월(60)</td><td>1년 8개월(40)</td></tr>
+          <tr><td>빠른 입장</td><td class="num">92%</td><td class="num">85%</td><td class="num">98%</td><td class="num">94%</td><td class="num">30%</td></tr>
+          <tr><td>부정 (최근)</td><td class="num">1.7%</td><td class="num">0%</td><td class="num">5%</td><td class="num">1.7%</td><td class="num">10%</td></tr>
+          <tr><td>주된 불만</td><td>진찰·설명 부족</td><td>–</td><td>간호 응대·원장 태도</td><td>진찰 중 통증·면박</td><td>대기·데스크</td></tr>
+          <tr><td>입원</td><td>당일 퇴원</td><td>2박3일</td><td>당일~2박3일</td><td>1인실</td><td>입원 가능</td></tr>
+          <tr><td>차별점</td><td>당일 퇴원, 마취통증 과목</td><td>여의사, 검진·내시경</td><td>수 20시, 미추마취</td><td>정맥·검진</td><td>임산부 진료</td></tr>
+          <tr><td>답글</td><td class="num">1%</td><td class="num">0%</td><td class="num">0%</td><td class="num">0%</td><td class="num">0%</td></tr>
+        </tbody>
+      </table></div>
+      <ul><li>부정 비율과 대기는 경쟁 의원과 같거나 더 좋은 편입니다. 다만 <b>리뷰가 쌓이는 속도가 가장 느려</b> 최근 1년 경험담이 거의 없습니다.</li></ul>
+    </div>
+    <div class="an"><h4>⑤ 시기별 흐름</h4>
+      <ul class="timeline">
+        <li><div class="when">2019~2020 (별점제 시절)</div>카카오 1점(2019), 네이버 0.5점·1.5점(2020). 마취·설명·불친절에 대한 불만이었습니다.</li>
+        <li><div class="when">2021~2024</div>부정은 2023년 1건뿐입니다. 대신 다섯 글자 이하 짧은 리뷰가 몰렸습니다(2022년 40 · 2023년 30 · 2024년 25건, 상당수가 재방문).</li>
+        <li><div class="when">2025~2026</div>리뷰가 크게 줄었습니다(14건). 그중 부정 2건이 모두 <b>설명 부족</b>입니다(2025-08 카카오, 2025-09 네이버).</li>
+      </ul>
+    </div>
+    <div class="an"><h4>⑥ 병원 대응과 마케팅</h4>
+      <ul>
+        <li><b>답글</b>: 176건 중 2건뿐입니다. 다만 2025-09 부정 리뷰에는 <b>당일</b> "설명이 부실해서 죄송합니다… 혈액검사 결과 보고 치료 안내해 드릴게요"라고 구체적으로 사과했습니다.</li>
+        <li><b>블로그</b>: 2022년 5~12월에 "수십 년 항문외과 전문가", "마취과 전문의 상주", "무박 당일 퇴원" 같은 같은 문구, 전화번호, 해시태그를 반복하는 소개글이 5편 이상 있습니다. 광고성일 가능성이 높습니다(협찬 여부는 확인 못 함).</li>
+        <li>병원 쪽 블로그(hjclinickr, monogen88)는 분석에서 뺐습니다. 실제 경험담으로 보이는 2024-09 후기는 "생각보다 안 아프다", "4일째 첫 배변이 가장 아프다"는 내용입니다.</li>
+      </ul>
+    </div>
+    <div class="an"><h4>반대 의견 (균형을 위해)</h4>
+      <ul>
+        <li>"치질을 10년 앓다가… 진료 다음 날 수술… 당일 수술 후 퇴원을 바로 할 수 있어서 너무 편리"(2026-07)</li>
+        <li>"운정 쪽 병원에서 치루 수술했으나 안 된다고 큰 병원 가라고… 여기서 수술 잘 받고… 3달 반 외래, 갈 때마다 친절"(2025-05)</li>
+        <li>"치핵 4기이며 용종도 붙어 있어 쉽지 않은 상황… 수술은 너무 잘됐고 당일 퇴원"(2025-05)</li>
+        <li>대기 태그 36건 중 "바로 입장" 20건, "10분 이내" 13건 → 대기 불만 0건</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>3-3. 부정 리뷰 원문 요약 (7건)</h3>
+  <div class="filters" id="fType"><span class="label">유형</span></div>
+  <div class="filters" id="fSrc"><span class="label">출처</span></div>
+  <div class="count" id="rvCount"></div>
+  <div class="reviews" id="reviews"></div>
+
+  <h2 id="conclusion">4. 결론 <span class="small">리뷰를 바탕으로 정리했으며 단정하지 않습니다</span></h2>
+  <div class="grid">
+    <div class="p"><h4>치질 수술 + 빠른 일상 복귀</h4>연세항정외과(당일 퇴원)가 맞을 수 있습니다. 입원 회복을 원하면 연세항맥·연세청담도 비교해 보세요.<div class="why">근거: 분석 ③ · 패턴 ①</div></div>
+    <div class="p"><h4>여의사를 원할 때</h4>연세항맥병원<div class="why">근거: 2-3 곳별 요약</div></div>
+    <div class="p"><h4>평일 저녁</h4>한솔학문외과(수요일 20시)<div class="why">근거: 2-2 비교표</div></div>
+    <div class="p"><h4>수술 여부가 애매할 때</h4>수술을 권하면 이유와 약·좌욕으로 지켜볼 수 있는지 물어보세요. 비보험약은 미리 확인하세요.<div class="why">근거: 분석 ②③ · 2025-08 카카오</div></div>
+    <div class="p"><h4>연세항정외과 방문 일정</h4>둘째·넷째 주 수요일 휴무, 토 12:30 접수마감<div class="why">근거: 네이버 진료시간</div></div>
+    <div class="p"><h4>하지정맥류</h4>정발산역 푸른맥·서울아산맥, 백석 일산수외과에 관련 리뷰가 많습니다.<div class="why">근거: 2-1 분포</div></div>
+  </div>
+
+  <h2 id="sources">참고한 글 · 출처</h2>
+  <ul class="sources">
+    <li><a href="https://pcmap.place.naver.com/hospital/12051572/review/visitor?reviewSort=recent" target="_blank" rel="noopener">네이버 플레이스 · 연세항정외과 방문자 리뷰 (텍스트 176 + 별점만 94, 전체)</a></li>
+    <li><a href="https://place.map.kakao.com/9253466" target="_blank" rel="noopener">카카오맵 · 연세항정외과의원 후기 8건 (전체)</a></li>
+    <li>네이버 플레이스 · 병원 목록 검색(지역 28개 × 업종 검색어 6개), 16곳의 홈과 방문자 리뷰 최신순 (위 표에서 의원 이름을 누르면 해당 리뷰 페이지로 이동)</li>
+    <li><a href="https://blog.naver.com/jungbubble/223583320494" target="_blank" rel="noopener">블로그 · [실화 100%] 치핵 4기 수술 후기 [일산 항문외과 연세항정외과]</a> (2024-09-13, 실제 경험담으로 보임)</li>
+    <li><a href="https://blog.naver.com/monogen88/224087763050" target="_blank" rel="noopener">블로그 · 일산 연세항정외과 치질 예방</a> (2025-11-25, 병원 쪽 글로 보임)</li>
+    <li>2022년 소개글(광고성으로 보임): <a href="https://blog.naver.com/qpdb1818/222903424033" target="_blank" rel="noopener">qpdb1818</a> · <a href="https://blog.naver.com/aldms631/222742199744" target="_blank" rel="noopener">aldms631</a> · <a href="https://blog.naver.com/solmindae/222937043326" target="_blank" rel="noopener">solmindae</a> · <a href="https://blog.naver.com/phn7735/222966260807" target="_blank" rel="noopener">phn7735</a> · <a href="https://blog.naver.com/s2eunhyes2/222868247355" target="_blank" rel="noopener">s2eunhyes2</a></li>
+    <li><a href="https://blog.naver.com/hjclinickr" target="_blank" rel="noopener">병원 공식 블로그 (hjclinickr)</a></li>
+  </ul>
+
+  <footer>Playwright 브라우저로 직접 수집 · 2026-10-08 · 같은 내용의 마크다운: 연세항정외과 반경5km(2026-10-08).md</footer>
+</div>
+
+<script>
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// rg: 분야, sp: 전문의 수, n: 표본, tagged: 대기 태그 수, fast/long: %, neg: 표본 중 부정 수
+const CLINICS = [
+  {id:'12051572',name:'연세항정외과의원',base:true,rg:'항문',area:'일산동구 중산동',d:0,sp:1,vr:270,n:60,per:'23.05~26.08 (최근 60)',tagged:36,fast:92,long:0,neg:1,hours:'둘째·넷째 주 수요일 휴무 · 토 ~13',
+   good:'치질 당일 퇴원, 무통주사, 원장 설명·친절, 다른 병원에서 못 고친 치루 수술 성공',bad:'진찰·설명 부족, 수술 권유, 시술 통증 → 3장 분석. 리뷰의 62.5%가 다섯 글자 이하'},
+  {id:'13237332',name:'아이산외과의원',rg:'일반',area:'일산서구 덕이동',d:1.89,sp:1,vr:318,n:50,per:'23.06~26.09',tagged:22,fast:64,long:5,neg:3,hours:'수 오전만',
+   good:'오래 다닌 단골이 많음',bad:'"성의 없이 대충", 베드 고정 안 함(낙상 우려), 불쾌(3건)'},
+  {id:'11540638',name:'연세항맥병원',rg:'항문',area:'일산서구 주엽동',d:1.98,sp:3,vr:1050,n:45,per:'26.03~26.10',tagged:39,fast:85,long:3,neg:0,hours:'토 ~13',
+   good:'여의사, 검진·내시경·유방·정맥까지 한 번에, 2박3일 입원 치질 수술, 리모델링',bad:'표본에서 부정 없음'},
+  {id:'13237087',name:'한솔학문외과의원',rg:'항문',area:'일산서구 주엽동',d:1.98,sp:1,vr:664,n:60,per:'25.12~26.09',tagged:51,fast:98,long:0,neg:3,hours:'수 ~20시 · 토 ~12',
+   good:'수술 후기가 많음(30/60), 미추마취, "과잉진료 없음", 키오스크, 병원 밥',bad:'간호사가 증상을 큰 소리로 말함, 원장의 비웃는 듯한 태도, "성의 없음", "불친절 최악"(3건)'},
+  {id:'13237075',name:'박세호여성외과의원',rg:'유방·갑상선',area:'일산서구 주엽동',d:2.00,sp:1,vr:402,n:47,per:'23.12~26.02',tagged:32,fast:13,long:59,neg:6,hours:'평일 ~19 · 토 ~16',
+   good:'원장 실력·설명',bad:'대기 1~3시간이 일상(1시간+ 59%), 맘모톰 권유가 과하다는 의견, 데스크 불친절'},
+  {id:'11541752',name:'플라워여성외과의원',rg:'유방·갑상선',area:'일산서구 주엽동',d:2.05,sp:6,vr:512,n:60,per:'25.04~26.09',tagged:54,fast:83,long:0,neg:7,hours:'토 ~14:30',
+   good:'전문의 6명, 3D 유방촬영, 맘모톰 설명',bad:'데스크 미숙(타인 서류 전달), 예약 변경, 원치 않는 검사, 짧은 진료'},
+  {id:'35734774',name:'푸른맥외과의원 일산점',rg:'하지정맥',area:'일산동구 장항동',d:2.76,sp:1,vr:157,n:40,per:'23.01~26.09',tagged:27,fast:96,long:4,neg:3,hours:'평일 ~16:40 (짧음)',
+   good:'"과잉진료 없음", 시술을 말린 사례, 초음파 비용 합리적, 답글 75%',bad:'2시간 대기 후 짧은 진료, 질문 무시(3건)'},
+  {id:'11549637',name:'유앤미여성외과의원',rg:'유방·갑상선',area:'일산동구 장항동',d:2.78,sp:1,vr:534,n:50,per:'24.03~26.09',tagged:28,fast:68,long:0,neg:2,hours:'평일 ~19 · 예약제',
+   good:'암센터 출신, "과잉진료 안 함", 오래 다니는 단골',bad:'예약이 1년 가까이 걸림, 간호사가 사무적'},
+  {id:'2006667216',name:'일산도담외과의원',rg:'일반',area:'일산서구 대화동',d:2.85,sp:1,vr:17,n:17,per:'26.05~26.09',tagged:17,fast:100,long:0,neg:0,hours:'08:00 개원 · 주말 응급',
+   good:'대기 없음, 친절, 투석혈관 점검, 답글 94%',bad:'리뷰 17건으로 적음'},
+  {id:'1325001361',name:'서울아산맥외과의원 일산',rg:'하지정맥',area:'일산동구 장항동',d:2.95,sp:1,vr:128,n:50,per:'25.07~26.09',tagged:49,fast:98,long:0,neg:0,hours:'07:30 개원',
+   good:'화면으로 설명, 투석혈관·케모포트, 답글 100%',bad:'표본에서 부정 없음'},
+  {id:'35047894',name:'새봄외과의원',rg:'일반',area:'일산동구 장항동',d:2.97,sp:1,vr:757,n:49,per:'25.02~26.06',tagged:43,fast:81,long:0,neg:1,hours:'–',
+   good:'낭종·지방종 당일 제거, "과잉진료 1도 없음"',bad:'받은 기억이 없는 초음파 10만 원이 청구됐다는 주장(1건)'},
+  {id:'20698015',name:'연세청담항외과의원',rg:'항문',area:'일산동구 장항동',d:3.34,sp:1,vr:307,n:60,per:'25.03~26.10',tagged:53,fast:94,long:0,neg:1,hours:'토 ~14',
+   good:'친절(48/60), 수술 설명(33/60), 1인실 입원, 하지정맥도 진료',bad:'치루 진단 중 "찢어짐", 설명 회피·면박(1건). 블로그 리뷰 2,404건'},
+  {id:'13236936',name:'연세진외과의원',rg:'일반',area:'일산동구 장항동',d:3.57,sp:2,vr:149,n:50,per:'23.06~26.08',tagged:31,fast:81,long:0,neg:1,hours:'둘째·넷째 주 월 휴진',
+   good:'상처·화상 처치, 원장이 직접 드레싱',bad:'실밥을 남긴 채 방치했다는 주장(1건)'},
+  {id:'1871935415',name:'운정문항외과의원',rg:'항문',area:'파주 야당동',d:3.88,sp:1,vr:404,n:40,per:'25.01~26.08',tagged:33,fast:30,long:21,neg:4,hours:'–',
+   good:'임산부 혈전성 외치핵, 치루 수술, "과잉진료 없음"',bad:'대기가 김(1시간+ 21%), 데스크 간호사 불친절'},
+  {id:'13335692',name:'일산수외과의원',rg:'하지정맥',area:'일산동구 백석동',d:4.20,sp:1,vr:185,n:50,per:'23.10~26.10',tagged:35,fast:97,long:0,neg:0,hours:'수 오전만',
+   good:'하지정맥 수술 후 1주·1달·3개월 관리',bad:'표본에서 부정 없음'},
+  {id:'2090258552',name:'닥터길의원',rg:'유방·갑상선',area:'파주 동패동',d:4.77,sp:2,vr:125,n:48,per:'26.05~26.09',tagged:47,fast:89,long:0,neg:1,hours:'평일 ~19~20시',
+   good:'2026년 개원, 대학병원 교수 출신, 유방 조직검사·통증치료',bad:'데스크 안내 부족(1건)'},
+];
+CLINICS.forEach(c => c.negP = Math.round(c.neg / c.n * 1000) / 10);
+
+function chips(el, opts, state, key, onChange){
+  const box = document.getElementById(el);
+  opts.forEach(([v, label]) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.textContent = label;
+    b.setAttribute('aria-pressed', String(state[key] === v));
+    b.addEventListener('click', () => {
+      state[key] = v;
+      box.querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', 'false'));
+      b.setAttribute('aria-pressed', 'true');
+      onChange();
+    });
+    box.appendChild(b);
+  });
+}
+const pct = (v, cls) => `<div class="mini">${v}%<div class="track"><div class="fill ${cls}" style="width:${Math.min(v, 100)}%"></div></div></div>`;
+
+const cs = {rg:'all', k:'d', dir:1};
+const maxVr = Math.max(...CLINICS.map(c => c.vr));
+const filtered = () => CLINICS.filter(c => cs.rg === 'all' || c.rg === cs.rg);
+function renderClinics(){
+  const key = cs.k === 'neg' ? 'negP' : cs.k;
+  const list = filtered().sort((a, b) => (a[key] > b[key] ? 1 : a[key] < b[key] ? -1 : 0) * cs.dir);
+  document.getElementById('clCount').textContent = `${list.length}곳 표시 / 전체 ${CLINICS.length}곳`;
+  document.getElementById('clinics').innerHTML = list.map(c => `
+    <tr class="${c.base ? 'base' : ''}">
+      <td class="num">${c.d.toFixed(2)} km</td>
+      <td class="name"><a href="https://pcmap.place.naver.com/hospital/${esc(c.id)}/review/visitor?reviewSort=recent" target="_blank" rel="noopener">${esc(c.name)}</a><div class="small">${esc(c.rg)} · ${esc(c.area)}</div></td>
+      <td class="num">${c.sp}명</td>
+      <td class="num">${c.vr.toLocaleString()}<div class="track"><div class="fill" style="width:${c.vr / maxVr * 100}%"></div></div></td>
+      <td>${pct(c.fast, 'good')}</td>
+      <td>${pct(c.long, 'warn')}</td>
+      <td>${pct(c.negP, 'bad')}<div class="small" style="text-align:right">${c.neg}/${c.n}</div></td>
+      <td>${esc(c.hours)}</td>
+    </tr>`).join('');
+  document.getElementById('details').innerHTML = filtered().map(c => `
+    <details class="clinic">
+      <summary><b>${esc(c.name)}</b><span class="small">${esc(c.rg)} · ${esc(c.area)} · ${c.d.toFixed(2)}km · 전문의 ${c.sp}명</span>
+        ${c.negP >= 10 ? '<span class="tag bad">부정 많음</span>' : ''}${c.long >= 10 ? '<span class="tag warn">대기 김</span>' : ''}${c.base ? '<span class="tag src">분석 대상</span>' : ''}</summary>
+      <div class="body">
+        <div class="pt good"><b>👍 리뷰에서 자주 나온 강점</b>${esc(c.good)}</div>
+        <div class="pt bad"><b>👎 리뷰에서 나온 약점</b>${esc(c.bad)}</div>
+        <div class="pt info" style="grid-column:1/-1"><b>근거</b>네이버 방문자 리뷰 최신 ${c.n}건 (${esc(c.per)}) · 진료시간: ${esc(c.hours)}</div>
+      </div>
+    </details>`).join('');
+}
+chips('fRegion', [['all','전체'], ['항문','항문'], ['하지정맥','하지정맥'], ['유방·갑상선','유방·갑상선'], ['일반','일반 외과']], cs, 'rg', renderClinics);
+document.querySelectorAll('th.sortable').forEach(th => th.addEventListener('click', () => {
+  const k = th.dataset.k;
+  cs.dir = cs.k === k ? -cs.dir : (['vr','sp','fast','long','neg'].includes(k) ? -1 : 1);
+  cs.k = k; renderClinics();
+}));
+renderClinics();
+
+const CATS = [
+  {k:'doc',  label:'🩺 진찰·설명 부족', n:4, ex:'"병명도 못 들었다", "설명이 미흡", "비보험약인지 설명하고 처방하라", "대장·항문은 제로"'},
+  {k:'cost', label:'💸 수술·비용 권유', n:2, ex:'"바로 수술하자고… 약 먹고 좌욕하니 좋아짐", 비보험약 처방'},
+  {k:'pain', label:'💉 시술 통증·마취', n:1, ex:'"마취가 다 안 됐는데 시술을 하는 경향"'},
+  {k:'staff',label:'🙍 불친절', n:1, ex:'"별로예요, 너무 불친절해요"'},
+  {k:'fac',  label:'🅿️ 주차', n:1, ex:'"주차장이 매우 좁음"'},
+];
+const REVIEWS = [
+  {d:'2025-09-26',src:'네이버',kind:'strong',t:['doc'],reply:'"설명이 부실해서 죄송합니다… 혈액검사 결과 보고 치료 안내해 드릴게요. 월요일 뵙겠습니다" (당일 답글)',txt:'"진짜 아파서 갔는데 다음 수술 있다고 진찰 제대로 안 봐주시는데", "아직도 왜 아픈지 듣지도 못했고 병명도 모르겠네요" (예약 없이, 바로 입장)'},
+  {d:'2025-08-05',src:'카카오 ★1',kind:'strong',t:['doc','cost'],reply:null,txt:'"처방전에 비보험약인지 설명하고 처방해라"'},
+  {d:'2023-03-27',src:'네이버',kind:'strong',t:['cost'],reply:false,txt:'"바로 좋아지지 않으니 수술하자고 해서… 엄청 걱정하다 집에 와서 유튜브 폭풍 검색", "결과적으로 약 먹으며 좌욕하고 완전 좋아짐, 의사 정말 나빠요"'},
+  {d:'2020-12-04',src:'네이버 ★3',kind:'mixed',t:['fac'],reply:false,txt:'"주차장이 매우 좁음"'},
+  {d:'2020-08-28',src:'네이버 ★0.5',kind:'strong',t:['pain','doc'],reply:false,txt:'"마취가 다 안 됐는데 시술을 하는 경향이 있고 설명하는 데 있어 미흡하고 전체적으로 찝찝한 병원", "장항동 쪽 깔끔한 곳이나 대학병원 가시길"'},
+  {d:'2020-02-13',src:'네이버 ★1.5',kind:'strong',t:['staff'],reply:false,txt:'"별로예요, 너무 불친절해요"'},
+  {d:'2019-08-10',src:'카카오 ★1',kind:'strong',t:['doc'],reply:null,txt:'"대장·항문은 완전 제로입니다. 정형외과 일도 같이 보더군요. 변비 환자에게 관장도 안 해주고 좌약 하나…" (카카오에 앞부분만 보여 이하 확인 못 함)'},
+];
+const maxCat = Math.max(...CATS.map(c => c.n));
+document.getElementById('cats').innerHTML = CATS.map(c => `
+  <div class="cat"><div>${esc(c.label)}</div>
+  <div class="track"><div class="fill bad" style="width:${c.n / maxCat * 100}%"></div></div>
+  <div class="n">${c.n}</div><div class="ex">${esc(c.ex)}</div></div>`).join('');
+
+const rs = {type:'all', src:'all'};
+const catLabel = Object.fromEntries(CATS.map(c => [c.k, c.label]));
+function renderReviews(){
+  const list = REVIEWS.filter(r => (rs.type === 'all' || r.t.includes(rs.type)) && (rs.src === 'all' || r.src.startsWith(rs.src)));
+  document.getElementById('rvCount').textContent = `${list.length}건 표시 / 전체 ${REVIEWS.length}건`;
+  document.getElementById('reviews').innerHTML = list.map(r => `
+    <div class="rv ${r.kind === 'mixed' ? 'mixed' : ''}">
+      <div class="head"><b>${esc(r.d)}</b>
+        <span class="tag src">${esc(r.src)}</span>
+        <span class="tag ${r.kind === 'strong' ? 'bad' : 'warn'}">${r.kind === 'strong' ? '뚜렷한 부정' : '불만 섞인 긍정'}</span>
+        ${r.t.map(k => `<span class="tag">${esc(catLabel[k])}</span>`).join('')}
+        ${typeof r.reply === 'string' ? '<span class="tag ok">병원 답글 있음</span>' : r.reply === false ? '<span class="tag">답글 없음</span>' : ''}
+      </div>
+      <p>${esc(r.txt)}</p>
+      ${typeof r.reply === 'string' ? `<div class="good">병원 답글: ${esc(r.reply)}</div>` : ''}
+    </div>`).join('') || '<div class="count">조건에 맞는 리뷰가 없습니다.</div>';
+}
+chips('fType', [['all','전체'], ...CATS.map(c => [c.k, c.label])], rs, 'type', renderReviews);
+chips('fSrc', [['all','전체'], ['네이버','네이버'], ['카카오','카카오맵']], rs, 'src', renderReviews);
+renderReviews();
+
+const root = document.documentElement;
+try { const t = localStorage.getItem('theme'); if (t) root.dataset.theme = t; } catch (e) {}
+document.getElementById('themeBtn').addEventListener('click', () => {
+  const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  root.dataset.theme = dark ? 'light' : 'dark';
+  try { localStorage.setItem('theme', root.dataset.theme); } catch (e) {}
+});
+</script>
+</body>
+</html>

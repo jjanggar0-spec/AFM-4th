@@ -1,0 +1,23 @@
+{
+  "checkedAt": "2026-10-09",
+  "events": [
+    {
+      "name": "FOMC 금리 결정 발표 (회의 10/27~28)",
+      "kst": "2026-10-29T03:00:00+09:00",
+      "note": "미 동부 10/28 14:00 (EDT, 서머타임 11/1 종료 전) → 한국 10/29 03:00 → 10/28·10/29 매수 금지",
+      "source": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+    }
+  ],
+  "watch": [
+    {
+      "name": "美 상원 클래리티법 재표결",
+      "status": "일정 없음 — 9/15(미국) 토론종결 표결 49:50 부결, 중간선거 전 휴회. 레임덕 회기(선거 후) 처리 '기대' 발언만 있음",
+      "why_not_blocking": "예정된 표결이 아니라 가능성 언급이므로 금지 이벤트로 넣지 않음. 표결 날짜·'이번 주' 같은 예고가 나오면 events 로 옮긴다",
+      "sources": [
+        "https://www.tokenpost.kr/news/policy/420090",
+        "https://www.tgdaily.co.kr/news/articleView.html?idxno=407270",
+        "https://www.mk.co.kr/article/12171505"
+      ]
+    }
+  ]
+}

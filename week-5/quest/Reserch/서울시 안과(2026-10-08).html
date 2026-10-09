@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>서울 안과 리서치</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f7f9; --surface:#ffffff; --surface-2:#f0f2f5; --text:#1b1f24; --muted:#5b6470;
+  --border:#e1e5ea; --accent:#2563eb; --good:#15803d; --good-soft:#e6f4ea;
+  --bad:#b42318; --bad-soft:#fdecea; --warn:#9a6700; --warn-soft:#fff4d6; --mid:#6b4fbb; --mid-soft:#efeafb;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1216; --surface:#171b21; --surface-2:#1f242c; --text:#e6e9ee; --muted:#9aa3ae;
+    --border:#2a3039; --accent:#7aa2ff; --good:#5cc983; --good-soft:#15291d;
+    --bad:#ff8a80; --bad-soft:#3a1d1b; --warn:#e8c063; --warn-soft:#352a12; --mid:#b9a4f5; --mid-soft:#2a2340;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1216; --surface:#171b21; --surface-2:#1f242c; --text:#e6e9ee; --muted:#9aa3ae;
+  --border:#2a3039; --accent:#7aa2ff; --good:#5cc983; --good-soft:#15291d;
+  --bad:#ff8a80; --bad-soft:#3a1d1b; --warn:#e8c063; --warn-soft:#352a12; --mid:#b9a4f5; --mid-soft:#2a2340;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Noto Sans KR",system-ui,sans-serif;line-height:1.6;font-size:15px}
+a{color:var(--accent)}
+.wrap{max-width:1120px;margin:0 auto;padding:32px 16px 64px}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+h1{font-size:26px;margin:0 0 6px;letter-spacing:-.02em}
+h2{font-size:21px;margin:48px 0 6px;letter-spacing:-.01em;padding-top:12px;border-top:2px solid var(--border)}
+h3{font-size:17px;margin:28px 0 10px}
+.lead{color:var(--muted);font-size:14px;margin:0 0 14px}
+.meta{color:var(--muted);font-size:14px}
+nav.toc{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 0}
+nav.toc a{font-size:13px;text-decoration:none;border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:4px 12px;color:var(--text)}
+.note{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:12px 14px;font-size:14px;margin:18px 0 8px}
+.note ul{margin:4px 0 0;padding-left:18px}
+.themebtn{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:8px;padding:5px 10px;font-size:13px;cursor:pointer;font-family:inherit}
+.qa{display:grid;gap:8px}
+.qa div{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:grid;grid-template-columns:200px 1fr;gap:12px}
+.qa b{font-weight:500;color:var(--muted);font-size:14px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:16px}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.tile .k{font-size:13px;color:var(--muted)} .tile .v{font-size:22px;font-weight:700;margin-top:2px} .tile .s{font-size:13px;color:var(--muted)}
+.regions{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.region{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.region h4{margin:0;font-size:15px} .region .d{font-size:12px;color:var(--muted)}
+.region .list{font-size:13px;margin:6px 0} .region p{margin:0;font-size:13px;color:var(--muted)}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.filters .label{font-size:13px;color:var(--muted);align-self:center;margin-right:4px;min-width:36px}
+.chip{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer;font-family:inherit}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+th{background:var(--surface-2);font-weight:500;color:var(--muted);white-space:nowrap;font-size:13px}
+th.sortable{cursor:pointer;user-select:none} th.sortable:hover{color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr.base td{background:var(--mid-soft)}
+.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.name{font-weight:500;white-space:nowrap}
+.small{font-size:12px;color:var(--muted)}
+.mini{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+.mini .track{width:60px;flex:none;margin:0}
+.track{background:var(--surface-2);border-radius:4px;height:8px;margin-top:4px}
+.fill{background:var(--accent);border-radius:4px;height:8px}
+.fill.bad{background:var(--bad)} .fill.good{background:var(--good)} .fill.warn{background:var(--warn)}
+.count{font-size:13px;color:var(--muted);margin:6px 2px}
+.tag{display:inline-block;font-size:11px;padding:1px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);white-space:nowrap;margin:1px 2px 1px 0}
+.tag.bad{background:var(--bad-soft);color:var(--bad)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.tag.ok{background:var(--good-soft);color:var(--good)}
+.tag.src{background:var(--mid-soft);color:var(--mid)}
+.clinics{display:grid;gap:8px}
+details.clinic{background:var(--surface);border:1px solid var(--border);border-radius:10px}
+details.clinic summary{cursor:pointer;padding:10px 14px;list-style:none;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+details.clinic summary::-webkit-details-marker{display:none}
+details.clinic summary::before{content:"▸";color:var(--muted);transition:transform .15s}
+details.clinic[open] summary::before{transform:rotate(90deg)}
+details.clinic summary b{font-size:15px}
+.clinic .body{padding:0 14px 14px 30px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pt{border-radius:8px;padding:10px 12px;font-size:14px}
+.pt b{display:block;font-size:12px;margin-bottom:2px}
+.pt.good{background:var(--good-soft)} .pt.good b{color:var(--good)}
+.pt.bad{background:var(--bad-soft)} .pt.bad b{color:var(--bad)}
+.pt.info{background:var(--surface-2)} .pt.info b{color:var(--muted)}
+.patterns{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.patterns .p{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;font-size:14px}
+.patterns .p h4{margin:0 0 4px;font-size:15px}
+.cats{display:grid;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px}
+.cat{display:grid;grid-template-columns:minmax(150px,220px) 1fr 36px;gap:10px;align-items:center}
+.cat .n{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.cat .track{height:12px;margin:0} .cat .fill{height:12px}
+.cat .ex{grid-column:1/-1;font-size:13px;color:var(--muted);margin-top:-6px}
+.reviews{display:grid;gap:10px}
+.rv{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--bad);border-radius:10px;padding:12px 14px}
+.rv.mixed{border-left-color:var(--warn)}
+.rv .head{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px;color:var(--muted)}
+.rv .head b{color:var(--text)}
+.rv p{margin:6px 0 0}
+.rv .good{margin-top:6px;font-size:13px;color:var(--good)}
+.analysis{display:grid;gap:12px}
+.an{min-width:0;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px}
+.an h4{margin:0 0 6px;font-size:16px}
+.an ul{margin:4px 0 0;padding-left:18px} .an li{margin:3px 0}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.timeline{position:relative;margin:6px 0 0;padding-left:20px;list-style:none}
+.timeline::before{content:"";position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:var(--border)}
+.timeline li{position:relative;margin:0 0 12px}
+.timeline li::before{content:"";position:absolute;left:-19px;top:7px;width:10px;height:10px;border-radius:50%;background:var(--mid)}
+.timeline .when{font-size:12px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.grid .p{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.grid h4{font-size:15px;margin:0 0 6px}
+.grid .why{font-size:13px;color:var(--muted);margin-top:4px}
+.sources{font-size:14px} .sources li{margin-bottom:4px}
+footer{margin-top:48px;color:var(--muted);font-size:13px}
+@media (max-width:640px){
+  h1{font-size:22px}
+  .qa div{grid-template-columns:1fr;gap:2px}
+  .clinic .body{grid-template-columns:1fr;padding-left:14px}
+  .vs{grid-template-columns:1fr}
+  .cat{grid-template-columns:1fr 36px}
+  .cat .track{grid-column:1/-1;grid-row:2}
+}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid2>div{min-width:0}
+h4.sub{font-size:14px;margin:0 0 8px;font-weight:500}
+@media (max-width:640px){.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="toolbar">
+    <span class="meta">조사일 2026-10-08 · 네이버 플레이스 · 카카오맵</span>
+    <button class="themebtn" id="themeBtn" type="button">테마 전환</button>
+  </div>
+  <h1>서울시 안과 리서치 · 네이버 리뷰 상위 10곳 부정 리뷰 분석</h1>
+  <div class="meta">서울 안과 497곳 목록 · 상위 10곳 네이버 최신 리뷰 1,509건 · 카카오 후기 전체 3,668건(7곳)</div>
+  <nav class="toc">
+    <a href="#summary">1. 한눈에 보기</a><a href="#area">2. 서울 안과 요약</a><a href="#neg">3. 상위 10곳 부정 리뷰 분석</a><a href="#conclusion">4. 결론</a><a href="#sources">출처</a>
+  </nav>
+
+  <div class="note">
+    <b>읽기 전에</b>
+    <ul>
+      <li>수치는 2026-10-08 기준입니다. 리뷰가 적은 작은 의원은 목록에서 빠졌을 수 있습니다(검색어 171개를 더 돌려도 15곳만 늘었습니다).</li>
+      <li>상위 10곳은 리뷰가 수천 건이라 네이버는 <b>최근 35~294일 표본</b>만 봤습니다.</li>
+      <li>네이버 병원 리뷰에는 별점이 없어 카카오 별점을 함께 썼습니다. <b>비앤빛·서울신세계·누네는 카카오에서 후기를 받지 않습니다.</b></li>
+      <li>"리뷰 조작 의심"은 숫자 패턴과 리뷰어 의견일 뿐, 실제로 그런지는 확인하지 못했습니다. 실명은 뺐습니다.</li>
+    </ul>
+  </div>
+
+  <h2 id="summary">1. 한눈에 보기</h2>
+  <div class="tiles">
+    <div class="tile"><div class="k">서울 안과</div><div class="v">497곳</div><div class="s">강남 80 · 서초 51 · 송파 32</div></div>
+    <div class="tile"><div class="k">강남·서초 리뷰 비중</div><div class="v">35.6%</div><div class="s">안과 수 비중은 26.4%</div></div>
+    <div class="tile"><div class="k">네이버 최근 부정</div><div class="v">34 / 1,509</div><div class="s">2.3% · 그중 16건이 누네</div></div>
+    <div class="tile"><div class="k">카카오 1~2점</div><div class="v">152 / 3,668</div><div class="s">4.1% · 밝음나눔 20%</div></div>
+  </div>
+  <div class="qa" style="margin-top:14px">
+    <div><b>상위 10곳</b><span>서울밝은세상 · 비앤빛 · 수연세 · 서울신세계(강북) · 누네 · 서울글로우(노원) · 밝음나눔 강남 · 하늘 · 강남조은눈 · 밝은성모. 8곳이 강남·서초이고, 7곳이 시력교정 중심입니다.</span></div>
+    <div><b>흔한 불만</b><span>① 수술 후 시력 회귀·건조증과 사후 관리 ② 짧고 무성의한 진료·고압적 태도 ③ 데스크·전화 응대 ④ 예약해도 1~3시간 대기 ⑤ 검사비 청구·옵션 유도 ⑥ 일반 진료 홀대</span></div>
+    <div><b>플랫폼 차이</b><span>네이버 최근 리뷰는 수술 직후 만족 후기가 대부분입니다. 장기 결과 불만은 카카오 저평점에 주로 있습니다.</span></div>
+    <div><b>리뷰 신뢰성</b><span>카카오 5점의 58~90%가 후기 1~2개 계정이고, 하루 수십 건이 몰린 날도 있습니다(부탁받았는지는 확인 못 함).</span></div>
+  </div>
+
+  <h2 id="area">2. 서울 안과 리서치 요약 (497곳)</h2>
+  <p class="lead">네이버 플레이스 업종 "안과" · 주소가 서울인 곳만 · 방문자 리뷰 수 기준</p>
+
+  <h3>2-1. 구별 분포</h3>
+  <div class="card"><div class="tablewrap">
+    <table>
+      <thead><tr>
+        <th class="sortable gsort" data-k="gu">구 ↕</th>
+        <th class="sortable gsort" data-k="n">안과 수 ↕</th>
+        <th class="sortable gsort" data-k="vr">방문자 리뷰 합 ↕</th>
+        <th class="sortable gsort" data-k="avg">곳당 평균 ↕</th>
+        <th class="sortable gsort" data-k="big">리뷰 1,000+ ↕</th>
+        <th>리뷰 1위</th>
+      </tr></thead>
+      <tbody id="gu"></tbody>
+    </table>
+  </div></div>
+  <p class="small">리뷰 수 분포: 0~99건 36곳 · 100~499건 212곳 · 500~999건 151곳 · 1,000~2,999건 87곳 · 3,000건+ 11곳 · 중앙값 505건 · 상위 10% 1,522건 이상</p>
+
+  <h3>2-2. 네이버 방문자 리뷰 상위 30곳</h3>
+  <div class="filters" id="fTop"><span class="label">지역</span></div>
+  <div class="count" id="topCount"></div>
+  <div class="card"><div class="tablewrap">
+    <table>
+      <thead><tr><th>순위</th><th>안과</th><th>구·동</th><th class="barcell">방문자 리뷰</th><th>블로그 리뷰</th></tr></thead>
+      <tbody id="top"></tbody>
+    </table>
+  </div></div>
+
+  <h3>2-3. 상위 10곳 요약 <span class="small">눌러서 펼치기</span></h3>
+  <div class="clinics" id="details"></div>
+
+  <h3>2-4. 서울 전체에서 보이는 패턴</h3>
+  <div class="patterns">
+    <div class="p"><h4>① 강남·서초 중심</h4>안과 26%, 리뷰 36%, 리뷰 1,000건+ 병원 38%가 강남·서초에 있습니다. 강남역~신논현역 1km 안에 상위 10곳 중 6곳이 있습니다.</div>
+    <div class="p"><h4>② 강북권 대형 거점</h4>서울신세계(강북 미아), 서울글로우·퍼스트성모(노원 상계)가 강남급 리뷰 규모입니다.</div>
+    <div class="p"><h4>③ 상위권 = 시력교정</h4>상위 10곳 중 7곳 리뷰에 라식·라섹·스마일·렌즈삽입이 가장 많습니다. 누네(질환)·서울글로우(지역 종합)·서울신세계(혼합)만 다릅니다.</div>
+    <div class="p"><h4>④ 매우 빠른 리뷰 속도</h4>서울신세계는 35일에 150건(하루 4.3건)입니다. 서울밝은세상·비앤빛·강남조은눈·서울글로우는 하루 약 2건, 누네·하늘은 0.5~0.6건입니다.</div>
+    <div class="p"><h4>⑤ 답글 정책 양분</h4>네이버 답글 92~100%: 서울밝은세상·비앤빛·서울신세계·밝음나눔·밝은성모 / 0%: 수연세·누네·하늘·강남조은눈·서울글로우</div>
+  </div>
+
+  <h2 id="neg">3. 상위 10곳 부정 리뷰 정리·분석</h2>
+
+  <h3>3-1. 부정 리뷰 규모</h3>
+  <div class="filters" id="fScope"><span class="label">정렬</span></div>
+  <div class="card"><div class="tablewrap">
+    <table>
+      <thead><tr><th>안과</th><th>네이버 표본 (기간)</th><th>네이버 부정</th><th>카카오 별점</th><th>카카오 1~2점</th><th>2025년 이후 저평점</th><th>네이버 답글</th></tr></thead>
+      <tbody id="scope"></tbody>
+    </table>
+  </div></div>
+
+  <h3>3-2. 유형별 집계</h3>
+  <div class="grid2">
+    <div><h4 class="sub">네이버 최근 표본 34건 <span class="small">(직접 분류, 중복 허용)</span></h4><div class="cats" id="catsN"></div></div>
+    <div><h4 class="sub">카카오 1~2점 152건 <span class="small">(키워드 기준 대략, 중복 허용)</span></h4><div class="cats" id="catsK"></div></div>
+  </div>
+
+  <h3>3-3. 분석</h3>
+  <div class="analysis">
+    <div class="an"><h4>① 네이버와 카카오가 다른 모습을 보여 줍니다</h4>
+      <div class="vs">
+        <div class="pt good"><b>네이버 최근 리뷰 (부정 2.3%)</b>대부분 수술 당일~며칠 뒤의 만족 후기입니다("10초면 끝", "부작용 없음", "당일 검사·수술").</div>
+        <div class="pt bad"><b>카카오 저평점 (4.1%)</b>몇 달~몇 년 뒤의 결과(시력 회귀, 건조증, 야맹증)와 사후 진료 경험이 많습니다.</div>
+      </div>
+      <ul><li>수술 직후 만족도와 장기 결과는 <b>따로 봐야</b> 합니다.</li></ul>
+    </div>
+    <div class="an"><h4>② 불만은 "수술 전후 대우의 차이"로 모입니다</h4>
+      <ul>
+        <li>수술 상담 때는 친절하고 빠르다는 칭찬이 많습니다.</li>
+        <li>반면 수술 후 재방문, 일반 진료, 비수술 환자는 "5분 진료", "다른 의사", "검사비 청구", "라식 안 할 거면 예약 불가"를 겪었다는 불만이 반복됩니다(서울밝은세상·밝은성모·하늘·수연세).</li>
+        <li>저평점의 "공장형"이라는 부정적 표현은 10곳 중 5곳에서 나옵니다.</li>
+      </ul>
+    </div>
+    <div class="an"><h4>③ 누네안과병원은 성격이 다릅니다</h4>
+      <ul>
+        <li>전문의 26명(안과 24 + 내과 2)의 질환 중심 병원입니다. 부정 16건(10.7%) 중 <b>직원 응대 7</b> · 의사 태도 4 · 대기 4건입니다.</li>
+        <li>불만은 진료 실력보다 응대·동선·대기에 몰려 있고, "진료는 만족"을 덧붙인 경우가 많습니다.</li>
+      </ul>
+    </div>
+    <div class="an"><h4>④ 밝음나눔 강남: 카카오 저평점이 가장 높고, 최근 늘고 있음</h4>
+      <ul>
+        <li>카카오 1~2점이 20.2%이고, <b>2025년 이후 39건 중 13건(33%)</b>입니다. 주제는 안구건조 클리닉입니다: 의사 태도, 1시간 대기, IPL·레이저 유도, 검사비.</li>
+        <li>네이버 최근 표본 부정은 1.9%뿐이라 <b>두 플랫폼 차이가 가장 큰 곳</b>입니다. 카카오 저평점 절반에는 답글을 달았습니다.</li>
+      </ul>
+    </div>
+    <div class="an"><h4>⑤ 리뷰 신뢰성 신호 <span class="small">(부탁받았는지는 확인 못 함)</span></h4>
+      <div class="tablewrap"><table>
+        <thead><tr><th>신호</th><th>수치</th></tr></thead>
+        <tbody>
+          <tr><td>카카오 5점 중 "후기 1~2개 계정" 비율</td><td>서울밝은세상 <b>90%</b> · 하늘 84% · 수연세 <b>83%</b> · 밝은성모 73% · 밝음나눔 58% · 강남조은눈 50%</td></tr>
+          <tr><td>카카오 후기가 갑자기 늘어난 시기</td><td>서울밝은세상: 연 20~34건 → 2024년 412건, 2025년 511건 / 수연세: 2023-09-25~27 사흘간 47건</td></tr>
+          <tr><td>네이버 리뷰 속도·형식</td><td>서울신세계 35일 150건(전부 답글) · 서울글로우 150건 중 67%가 방문 태그 없는 서술형</td></tr>
+          <tr><td>저평점 작성자의 지적</td><td>카카오 1~2점 중 약 20건이 "알바·조작·5점이 주르륵" 언급</td></tr>
+          <tr><td>카카오 후기 미제공</td><td>비앤빛 · 서울신세계 · 누네</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="an"><h4>⑥ 병원 대응</h4>
+      <ul>
+        <li>네이버에 답글을 거의 다 다는 곳도 <b>카카오 저평점에는 대부분 답글이 없습니다</b>(밝음나눔만 13/26건 답글).</li>
+        <li>답글 0%인 곳은 부정 리뷰에 대한 공식 대응을 확인하지 못했습니다.</li>
+      </ul>
+    </div>
+    <div class="an"><h4>반대 의견 (균형을 위해)</h4>
+      <ul>
+        <li>"렌즈삽입술 생각하고 갔는데 공간이 좁아 부작용 가능성이 있어 비추천"(서울밝은세상, 2026-09)</li>
+        <li>"다른 두 곳은 무리해서라도 수술 가능하다 했지만, 비앤빛은 렌즈삽입술만 가능하다고 솔직하게"(비앤빛, 2026-08)</li>
+        <li>"라식 재수술은 오히려 하지 않는 게 낫다는 솔직한 진료"(밝은성모, 2026-09)</li>
+        <li>"지형도가 치우쳐 있어 라섹을 권함… 보수적으로 접근해 신뢰"(수연세, 2026-08)</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>3-4. 곳별 대표 부정 리뷰</h3>
+  <div class="filters" id="fClinic"><span class="label">안과</span></div>
+  <div class="filters" id="fSrc"><span class="label">출처</span></div>
+  <div class="count" id="rvCount"></div>
+  <div class="reviews" id="reviews"></div>
+
+  <h2 id="conclusion">4. 결론 <span class="small">리뷰를 바탕으로 정리했으며 단정하지 않습니다</span></h2>
+  <div class="grid">
+    <div class="p"><h4>시력교정 병원 고르기</h4>네이버 최신 후기는 대부분 수술 직후 만족입니다. 카카오 1~2점(장기 결과·사후 관리)을 함께 보고, 2곳 이상에서 검사받아 권하는 수술이 같은지 비교하세요.<div class="why">근거: 분석 ①②</div></div>
+    <div class="p"><h4>사후 관리가 걱정될 때</h4>재방문 때 수술한 원장에게 진료받는지, 검사비가 따로 드는지 미리 물어보세요.<div class="why">근거: 서울밝은세상·하늘·밝은성모 저평점</div></div>
+    <div class="p"><h4>질환(망막·백내장) 진료</h4>전문의가 많은 곳은 진료 폭이 넓지만 대기·응대 불만이 많습니다. 일정을 여유 있게 잡으세요.<div class="why">근거: 분석 ③</div></div>
+    <div class="p"><h4>안구건조증 치료</h4>IPL·레이저 같은 비급여 치료를 권하면 비용과 필요성을 확인하세요.<div class="why">근거: 밝음나눔·서울밝은세상 저평점</div></div>
+    <div class="p"><h4>강북·노원 거주</h4>서울신세계(평일 19시), 서울글로우, 퍼스트성모가 대형 대안입니다. 서울글로우는 카카오 2.9점(13건)도 함께 보세요.<div class="why">근거: 2-1 · 3-1</div></div>
+    <div class="p"><h4>리뷰 해석</h4>별점 4.9여도 5점의 80~90%가 후기 1~2개 계정인 곳이 있습니다. 리뷰어의 다른 후기 수와 저평점 내용을 확인하세요.<div class="why">근거: 분석 ⑤</div></div>
+  </div>
+
+  <h2 id="sources">출처</h2>
+  <ul class="sources">
+    <li>네이버 플레이스 병원 목록 검색 (구 25개 × 4 + 역·동 171개 검색어)</li>
+    <li>네이버 플레이스 상위 10곳 홈·방문자 리뷰 최신순 (위 표의 이름을 누르면 해당 페이지로 이동)</li>
+    <li>카카오맵 후기 전체: 서울밝은세상 · 수연세 · 서울글로우 · 밝음나눔 강남 · 하늘 · 강남조은눈 · 밝은성모 (3-1 표에서 별점을 누르면 이동)</li>
+    <li class="small">네이버 블로그는 이번에 따로 분석하지 않았습니다(상위 병원 블로그 리뷰가 곳당 300~4,700건이고 광고성 비중이 높음).</li>
+  </ul>
+
+  <footer>Playwright 브라우저로 직접 수집 · 2026-10-08 · 같은 내용의 마크다운: 서울시 안과(2026-10-08).md</footer>
+</div>
+
+<script>
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const GU = [{"gu":"강남구","n":80,"vr":73355,"avg":917,"big":20,"top":"서울밝은세상안과의원","topVr":9912},{"gu":"서초구","n":51,"vr":57144,"avg":1120,"big":17,"top":"비앤빛안과의원","topVr":6344},{"gu":"송파구","n":32,"vr":16311,"avg":510,"big":2,"top":"밝은눈안과의원 잠실롯데타워","topVr":2656},{"gu":"강서구","n":25,"vr":17060,"avg":682,"big":5,"top":"잘보는성모안과의원","topVr":2917},{"gu":"강동구","n":24,"vr":15315,"avg":638,"big":7,"top":"예성정안과의원","topVr":1343},{"gu":"노원구","n":23,"vr":24841,"avg":1080,"big":8,"top":"서울글로우안과의원","topVr":4308},{"gu":"은평구","n":19,"vr":12341,"avg":650,"big":3,"top":"밝은내일안과의원","topVr":1522},{"gu":"구로구","n":19,"vr":12483,"avg":657,"big":4,"top":"이안과의원","topVr":1524},{"gu":"영등포구","n":18,"vr":11701,"avg":650,"big":1,"top":"제이씨빛소망안과의원","topVr":2863},{"gu":"동대문구","n":18,"vr":8203,"avg":456,"big":1,"top":"서울베스트안과의원","topVr":1274},{"gu":"마포구","n":16,"vr":9007,"avg":563,"big":3,"top":"공덕안과의원","topVr":1361},{"gu":"광진구","n":16,"vr":9167,"avg":573,"big":2,"top":"서울삼성안과의원","topVr":1901},{"gu":"관악구","n":16,"vr":10781,"avg":674,"big":3,"top":"365밝은안과의원","topVr":2432},{"gu":"중랑구","n":15,"vr":9633,"avg":642,"big":4,"top":"밝은희망안과의원","topVr":1175},{"gu":"성북구","n":15,"vr":6696,"avg":446,"big":0,"top":"김앤김안과의원","topVr":769},{"gu":"동작구","n":15,"vr":6727,"avg":448,"big":1,"top":"상도밝은안과의원","topVr":1080},{"gu":"강북구","n":14,"vr":13793,"avg":985,"big":3,"top":"서울신세계안과의원","topVr":5446},{"gu":"서대문구","n":14,"vr":9458,"avg":676,"big":4,"top":"빛사랑안과의원","topVr":1391},{"gu":"양천구","n":13,"vr":10073,"avg":775,"big":2,"top":"예스안과의원","topVr":2290},{"gu":"성동구","n":11,"vr":6258,"avg":569,"big":0,"top":"아이숲안과의원","topVr":841},{"gu":"종로구","n":10,"vr":6389,"avg":639,"big":2,"top":"예본안과의원","topVr":1630},{"gu":"중구","n":10,"vr":6404,"avg":640,"big":2,"top":"명동성모안과의원","topVr":1526},{"gu":"금천구","n":9,"vr":5125,"avg":569,"big":1,"top":"가산안과의원","topVr":1034},{"gu":"용산구","n":7,"vr":3776,"avg":539,"big":1,"top":"센트럴서울안과의원","topVr":1275},{"gu":"도봉구","n":7,"vr":4567,"avg":652,"big":2,"top":"성모안과의원","topVr":1233}];
+const TOP = [{"r":1,"id":"11524347","name":"서울밝은세상안과의원","gu":"강남구","dong":"신사동","vr":9912,"br":628},{"r":2,"id":"11538152","name":"비앤빛안과의원","gu":"서초구","dong":"서초동","vr":6344,"br":330},{"r":3,"id":"20590266","name":"수연세안과의원","gu":"서초구","dong":"서초동","vr":6074,"br":2529},{"r":4,"id":"1085952380","name":"서울신세계안과의원","gu":"강북구","dong":"미아동","vr":5446,"br":938},{"r":5,"id":"13442483","name":"누네안과병원","gu":"강남구","dong":"대치동","vr":4533,"br":2581},{"r":6,"id":"1824549586","name":"서울글로우안과의원","gu":"노원구","dong":"상계동","vr":4308,"br":338},{"r":7,"id":"1229281347","name":"밝음나눔안과의원 강남","gu":"서초구","dong":"서초동","vr":4129,"br":4701},{"r":8,"id":"12011099","name":"하늘안과의원","gu":"서초구","dong":"반포동","vr":3713,"br":1194},{"r":9,"id":"12934919","name":"강남조은눈안과의원","gu":"강남구","dong":"역삼동","vr":3424,"br":286},{"r":10,"id":"12902083","name":"밝은성모안과의원","gu":"강남구","dong":"역삼동","vr":3251,"br":3691},{"r":11,"id":"1912557081","name":"퍼스트성모안과의원","gu":"노원구","dong":"상계동","vr":3073,"br":1516},{"r":12,"id":"1715372793","name":"강남브랜드안과의원 강남점","gu":"서초구","dong":"반포동","vr":2951,"br":538},{"r":13,"id":"37035925","name":"잘보는성모안과의원","gu":"강서구","dong":"화곡동","vr":2917,"br":479},{"r":14,"id":"11559082","name":"제이씨빛소망안과의원","gu":"영등포구","dong":"여의도동","vr":2863,"br":1225},{"r":15,"id":"13137909","name":"밝은눈안과의원 강남","gu":"서초구","dong":"반포동","vr":2791,"br":770},{"r":16,"id":"11872339","name":"수안과의원","gu":"강북구","dong":"미아동","vr":2738,"br":16},{"r":17,"id":"1217790716","name":"힐링안과의원","gu":"강남구","dong":"역삼동","vr":2700,"br":3297},{"r":18,"id":"1598160859","name":"하이안과의원","gu":"강남구","dong":"신사동","vr":2684,"br":569},{"r":19,"id":"1285266617","name":"밝은눈안과의원 잠실롯데타워","gu":"송파구","dong":"신천동","vr":2656,"br":1886},{"r":20,"id":"20264074","name":"아이리움안과의원","gu":"강남구","dong":"역삼동","vr":2620,"br":1904},{"r":21,"id":"32269713","name":"365밝은안과의원","gu":"관악구","dong":"신림동","vr":2432,"br":657},{"r":22,"id":"12058513","name":"강남이오스안과의원","gu":"서초구","dong":"서초동","vr":2323,"br":3300},{"r":23,"id":"11531079","name":"눈에미소안과의원","gu":"강남구","dong":"역삼동","vr":2316,"br":2387},{"r":24,"id":"1274115442","name":"예스안과의원","gu":"양천구","dong":"목동","vr":2290,"br":408},{"r":25,"id":"1225895818","name":"SNU청안과의원","gu":"관악구","dong":"봉천동","vr":2192,"br":5152},{"r":26,"id":"1162617936","name":"강남센트럴안과의원","gu":"강남구","dong":"역삼동","vr":2150,"br":1551},{"r":27,"id":"13334112","name":"지에스안과의원","gu":"강남구","dong":"역삼동","vr":2102,"br":8142},{"r":28,"id":"38303589","name":"태릉밝은안과의원","gu":"노원구","dong":"공릉동","vr":1969,"br":1227},{"r":29,"id":"1184704462","name":"서울삼성안과의원","gu":"광진구","dong":"구의동","vr":1901,"br":215},{"r":30,"id":"13164576","name":"드림성모안과의원","gu":"강남구","dong":"역삼동","vr":1896,"br":1024}];
+const TEN = [
+  {short:'서울밝은세상',name:'서울밝은세상안과의원',loc:'강남 신사동',vr:9912,sp:'안과 7',n:150,per:'26.07~10, 80일',nStrong:0,nMixed:0,kid:'9493762',kAvg:4.9,kN:1288,kLow:36,k2025:6,reply:92,
+   type:'시력교정(ICL·스마일프로)·백내장, 줄기세포 프로그램',hours:'수요일 휴무 · 토 ~16',good:'렌즈삽입술 경험, 수술이 안 되는 눈은 말림, 라운지',bad:'수술 후 시력 회귀·건조증, 하지 않은 검사까지 청구(2026), 일반 진료 홀대, 데스크·전화 응대'},
+  {short:'비앤빛',name:'비앤빛안과의원',loc:'서초 서초동(강남역)',vr:6344,sp:'안과 10',n:130,per:'26.08~10, 65일',nStrong:0,nMixed:2,kid:null,kAvg:null,kN:null,kLow:null,k2025:null,reply:98,
+   type:'대형 시력교정',hours:'토 ~17',good:'시설·규모, 수술 가능 여부를 솔직하게 판단',bad:'대기, 술후 건조증 (카카오 후기 미제공)'},
+  {short:'수연세',name:'수연세안과의원',loc:'서초 서초동(신논현)',vr:6074,sp:'안과 6',n:120,per:'26.06~10, 100일',nStrong:1,nMixed:1,kid:'24018052',kAvg:4.9,kN:1659,kLow:24,k2025:4,reply:0,
+   type:'시력교정, "보수적 판단"',hours:'토 ~15',good:'원장 1명이 상담~수술~사후까지, 원추각막 검사',bad:'대표원장 예약 1~2년, 예약해도 2~3시간 대기, 데스크 불친절, 라섹 후 시력 회귀'},
+  {short:'서울신세계',name:'서울신세계안과의원',loc:'강북 미아동(미아사거리)',vr:5446,sp:'안과 9',n:150,per:'26.09~10, 35일',nStrong:1,nMixed:2,kid:null,kAvg:null,kN:null,kLow:null,k2025:null,reply:100,
+   type:'강북 대형(시력교정·백내장·소아)',hours:'평일 ~19시 · 조기마감 가능',good:'친절, 강북 접근성, 소아안과',bad:'대기·쫓기는 진료, "공장형·기계적" (카카오 후기 미제공)'},
+  {short:'누네',name:'누네안과병원',loc:'강남 대치동(선릉)',vr:4533,sp:'안과 24 + 내과 2',n:149,per:'25.11~26.09, 294일',nStrong:12,nMixed:4,kid:null,kAvg:null,kN:null,kLow:null,k2025:null,reply:0,
+   type:'질환 중심 대형병원(망막·포도막·백내장)',hours:'토 ~13',good:'질환 진료 폭, 유명 원장, 검사실 친절 사례',bad:'직원(콜센터·데스크·OCT) 응대, 의사 고압·성의 없음, 검사 대기 2시간·좌석 부족 (카카오 후기 미제공)'},
+  {short:'서울글로우',name:'서울글로우안과의원',loc:'노원 상계동(노원역)',vr:4308,sp:'미표기',n:150,per:'26.07~10, 72일',nStrong:0,nMixed:0,kid:'1911294281',kAvg:2.9,kN:13,kLow:6,k2025:3,reply:0,
+   type:'노원 지역 종합(건조증·백내장·드림렌즈)',hours:'토 ~14',good:'설명, 지역 접근성, 아이 드림렌즈',bad:'카카오 2.9점: 접수·대기 운영, 비꼬는 응대. 네이버 리뷰 67%가 방문 태그 없는 서술형'},
+  {short:'밝음나눔 강남',name:'밝음나눔안과의원 강남',loc:'서초 서초동(강남역)',vr:4129,sp:'안과 5',n:160,per:'26.03~10, 196일',nStrong:2,nMixed:1,kid:'115374219',kAvg:4.1,kN:129,kLow:26,k2025:13,reply:99,
+   type:'시력교정 + 안구건조 클리닉',hours:'토 ~16',good:'그림으로 설명, 옵션 강요 없음',bad:'카카오 1~2점 20%: 의사 고압·구박, 1시간 대기, IPL·레이저 유도'},
+  {short:'하늘',name:'하늘안과의원',loc:'서초 반포동(논현·신논현)',vr:3713,sp:'안과 10',n:140,per:'26.02~10, 220일',nStrong:2,nMixed:1,kid:'8671063',kAvg:4.6,kN:368,kLow:34,k2025:6,reply:0,
+   type:'대형 시력교정 + 망막센터',hours:'평일 ~16:30(짧음)',good:'당일 검사·수술, 영상 설명, 카톡 사후 상담',bad:'2~3.5시간 대기, 공장형·사후 관리, 검사비 비쌈, 광고 메일'},
+  {short:'강남조은눈',name:'강남조은눈안과의원',loc:'강남 역삼동(강남역)',vr:3424,sp:'안과 3',n:180,per:'26.07~10, 89일',nStrong:0,nMixed:2,kid:'8152400',kAvg:4.4,kN:48,kLow:6,k2025:1,reply:0,
+   type:'시력교정(스마일프로·실크)',hours:'목요일 휴무 · 토 ~16',good:'옵션 과잉 권유 없음, 당일 수술',bad:'대기 김(2시간+ 2건), 과거 라섹 부작용 분쟁(2018)'},
+  {short:'밝은성모',name:'밝은성모안과의원',loc:'강남 역삼동(강남역)',vr:3251,sp:'안과 7',n:180,per:'26.05~10, 139일',nStrong:2,nMixed:1,kid:'12508362',kAvg:4.4,kN:163,kLow:20,k2025:2,reply:99,
+   type:'시력교정(스마트노바)',hours:'수요일 휴무',good:'재수술을 말리는 솔직한 진료',bad:'검사비 사후 청구, 수술 직전 직원 응대, 과거 시력 회귀·의사 태도'},
+];
+const CATS_N = [
+  {label:'⏱ 대기·예약 무의미', n:13, ex:'누네 4, 하늘 3, 강남조은눈 2, 서울신세계 2'},
+  {label:'🙍 직원 응대', n:11, ex:'누네 7(콜센터·데스크·OCT), 수연세·밝은성모·밝음나눔·서울신세계'},
+  {label:'🩺 의사 태도·짧은 진료', n:7, ex:'누네 4, 하늘·서울신세계·밝음나눔'},
+  {label:'👁 수술·치료 결과', n:4, ex:'라섹 후 다시 안경, 백내장 후 고열·재수술, 건조증 악화'},
+  {label:'💸 검사비·비용', n:3, ex:'예약 변경 후 검사비, 사후 검사비 청구'},
+  {label:'🅿️ 시설·주차·좌석', n:2, ex:'검사실 좌석 부족, 주차'},
+];
+const CATS_K = [
+  {label:'💸 상술·옵션·비용', n:60, show:'~60', ex:'"비싼 레이저만 하라고", "IPL 유도", "안 한 검사까지 청구"'},
+  {label:'🩺 의사 태도·짧은 진료', n:60, show:'~60', ex:'"진료 1분", "비웃으며", "반말", "구박"'},
+  {label:'🙍 직원·전화 응대', n:55, show:'~55', ex:'"전화 받는 직원", "검안사들끼리 떠드는 동안 30분 방치"'},
+  {label:'⏱ 대기·예약', n:50, show:'~50', ex:'"예약해도 기본 1시간", "대표원장 예약 1~2년"'},
+  {label:'👁 수술 결과·사후 관리', n:40, show:'~40', ex:'"1년도 안 돼 0.5", "야맹증", "빛번짐"'},
+  {label:'🕵 리뷰 조작 의심', n:20, show:'~20', ex:'"후기 1~2개 계정이 5점", "같은 날 5점이 주르륵"'},
+  {label:'🚫 일반 진료 홀대', n:11, show:'~11', ex:'"돈 되는 라식·라섹 환자만", "라식 안 할 거면 예약 불가"'},
+  {label:'📧 광고 스팸', n:5, show:'~5', ex:'"차단해도 오는 광고 메일"'},
+];
+const REVIEWS = [
+  {c:'서울밝은세상',d:'2026-05',src:'카카오 ★2',t:'비용 청구',txt:'"진료비 내역 받아보니 실제 진행하지 않은 검사 항목까지 청구… 제외하고 재결제"'},
+  {c:'서울밝은세상',d:'2026-03',src:'카카오 ★1',t:'사후 진료',txt:'"재방문 때 수술한 의사에게 진료 못 받고 5분도 안 봐줌… 레이저 1회 10만 원, 여유 있냐 물어봄"'},
+  {c:'서울밝은세상',d:'2024-02',src:'카카오 ★1',t:'수술 결과',txt:'"스마일라식 0.4~0.5에서 안 올라옴, 건조증 때문이라고 실패 인정 안 함"'},
+  {c:'비앤빛',d:'2026-08',src:'네이버',t:'수술 결과',txt:'"술 후 건조증 관리가 안 되고 있는데…" (전체적으로는 만족)'},
+  {c:'비앤빛',d:'2026-09',src:'네이버',t:'대기',txt:'"대기가 좀 길어요." (검사는 꼼꼼·친절)'},
+  {c:'수연세',d:'2026-08',src:'네이버',t:'수술 결과',txt:'"라섹 수술한 지 8개월 만에 다시 안경을 쓰게 됐네요"'},
+  {c:'수연세',d:'2026-05',src:'카카오 ★1',t:'예약·대기',txt:'"예약 1~2년씩 기다리지 마세요… 1년 반 기다려 왔더니 3년 뒤에나 가능하다고"'},
+  {c:'수연세',d:'2025-07',src:'카카오 ★1',t:'수술 결과·조작 의심',txt:'"엄청난 가짜 후기작업… 링삽입술 하고 빛번짐 때문에 고생 중"'},
+  {c:'서울신세계',d:'2026-09',src:'네이버',t:'대기·짧은 진료',txt:'"예약하고 갔는데 대기도 엄청 길고 진료도 시간에 쫓기듯… 예약을 왜 받는지"'},
+  {c:'누네',d:'2026-05',src:'네이버',t:'의사 태도',txt:'망막 검사 중 의사가 "정신차려요 정신"이라고 큰 소리로 말하고 검사 도구로 머리를 툭툭 건드림(보호자 목격)'},
+  {c:'누네',d:'2026-08',src:'네이버',t:'직원 응대',txt:'"콜센터랑 데스크 여직원들이 너무 불친절… CS 교육 필수" (진료는 만족)'},
+  {c:'누네',d:'2026-03',src:'네이버',t:'대기·의사 태도',txt:'"수개월 기다린 진료… 2시간 대기, 상대를 깔보는 듯한 표정과 설명 없는 진료"'},
+  {c:'누네',d:'2026-07',src:'네이버',t:'비용',txt:'"병원 사정으로 예약을 바꿨는데 3개월이 지났다며 검사비를 내라고"'},
+  {c:'서울글로우',d:'2026-08',src:'카카오 ★1',t:'의사 태도',txt:'"질문할 때마다 유난이라는 듯이 비꼬아 대답"'},
+  {c:'서울글로우',d:'2025-05',src:'카카오 ★1',t:'대기',txt:'"예약해도 최소 1시간 이상… 의사쌤이랑은 1분"'},
+  {c:'밝음나눔 강남',d:'2026-04',src:'네이버',t:'치료 결과·설명',txt:'"치료받고 안구건조증과 통증이 극도로 심해짐… 극히 드문 증상이라고 이상한 사람 취급"'},
+  {c:'밝음나눔 강남',d:'2026-03',src:'카카오 ★1',t:'대기·유도',txt:'"예약해도 대기는 기본 1시간… IPL 치료를 꼭 하게 유도, 실비 처리 유도"'},
+  {c:'밝음나눔 강남',d:'2026-05',src:'카카오 ★1',t:'의사 태도',txt:'"속눈썹 찔린다고 하니 안 찔린다고 몇 번 말하냐고 구박… 다른 원장님은 뽑아 주심"'},
+  {c:'하늘',d:'2026-04',src:'네이버',t:'대기·성의',txt:'"3시간 반 대기했으나 검사도 다 못함… 진료실 두 개 왔다 갔다 하며 성의 없음"'},
+  {c:'하늘',d:'2026-01',src:'카카오 ★1',t:'비용',txt:'"보통 6,000원 하는 검사를 30,000원… 3번째 갔는데도 초진비 2만 원"'},
+  {c:'강남조은눈',d:'2018-04',src:'카카오 ★1',t:'부작용 분쟁',txt:'"라섹 후 시력 저하·심한 건조증, 항의하자 책임 못 진다며 경찰을 부름"'},
+  {c:'강남조은눈',d:'2026-08',src:'네이버',t:'대기',txt:'"대기 시간은 좀 많이 길지만 합리적인 가격" (2시간 이상 태그)'},
+  {c:'밝은성모',d:'2026-09',src:'네이버',t:'비용 청구',txt:'"초진 때 무료 검사… 재방문 때 이전 검사비가 청구됨"'},
+  {c:'밝은성모',d:'2026-06',src:'네이버',t:'직원 응대',txt:'"수술실 입실 직전 직원이 동의 없이 마스크를 내림"'},
+  {c:'밝은성모',d:'2026-04',src:'카카오 ★1',t:'일반 진료 홀대',txt:'"라식 안 할 거면 예약 불가능하다고 강하게 말함"'},
+];
+
+
+function chips(el, opts, state, key, onChange){
+  const box = document.getElementById(el);
+  opts.forEach(([v, label]) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.textContent = label;
+    b.setAttribute('aria-pressed', String(state[key] === v));
+    b.addEventListener('click', () => {
+      state[key] = v;
+      box.querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', 'false'));
+      b.setAttribute('aria-pressed', 'true');
+      onChange();
+    });
+    box.appendChild(b);
+  });
+}
+
+// 구별 표
+const gs = {k:'n', dir:-1};
+const maxGuVr = Math.max(...GU.map(g => g.vr));
+function renderGu(){
+  const list = [...GU].sort((a, b) => (a[gs.k] > b[gs.k] ? 1 : a[gs.k] < b[gs.k] ? -1 : 0) * gs.dir);
+  document.getElementById('gu').innerHTML = list.map(g => `
+    <tr class="${['강남구','서초구'].includes(g.gu) ? 'base' : ''}">
+      <td class="name">${esc(g.gu)}</td><td class="num">${g.n}</td>
+      <td class="barcell">${g.vr.toLocaleString()}<div class="track"><div class="fill" style="width:${g.vr / maxGuVr * 100}%"></div></div></td>
+      <td class="num">${g.avg.toLocaleString()}</td><td class="num">${g.big}</td>
+      <td>${esc(g.top)} <span class="small">(${g.topVr.toLocaleString()})</span></td>
+    </tr>`).join('') + `<tr><td class="name">합계</td><td class="num">${GU.reduce((a,g)=>a+g.n,0)}</td><td class="num">${GU.reduce((a,g)=>a+g.vr,0).toLocaleString()}</td><td></td><td class="num">${GU.reduce((a,g)=>a+g.big,0)}</td><td></td></tr>`;
+}
+document.querySelectorAll('th.gsort').forEach(th => th.addEventListener('click', () => {
+  const k = th.dataset.k; gs.dir = gs.k === k ? -gs.dir : (k === 'gu' ? 1 : -1); gs.k = k; renderGu();
+}));
+renderGu();
+
+// 상위 30
+const ts = {rg:'all'};
+const maxTop = TOP[0].vr;
+function renderTop(){
+  const list = TOP.filter(t => ts.rg === 'all' || (ts.rg === 'gs' ? ['강남구','서초구'].includes(t.gu) : !['강남구','서초구'].includes(t.gu)));
+  document.getElementById('topCount').textContent = `${list.length}곳 표시 / 상위 ${TOP.length}곳`;
+  document.getElementById('top').innerHTML = list.map(t => `
+    <tr class="${t.r <= 10 ? 'base' : ''}"><td class="num">${t.r}</td>
+      <td class="name"><a href="https://pcmap.place.naver.com/hospital/${esc(t.id)}/review/visitor?reviewSort=recent" target="_blank" rel="noopener">${esc(t.name)}</a></td>
+      <td>${esc(t.gu)} ${esc(t.dong)}</td>
+      <td class="barcell">${t.vr.toLocaleString()}<div class="track"><div class="fill" style="width:${t.vr / maxTop * 100}%"></div></div></td>
+      <td class="num">${t.br.toLocaleString()}</td></tr>`).join('');
+}
+chips('fTop', [['all','전체'], ['gs','강남·서초'], ['etc','그 외 구']], ts, 'rg', renderTop);
+renderTop();
+
+// 상위 10 상세
+document.getElementById('details').innerHTML = TEN.map(c => `
+  <details class="clinic">
+    <summary><b>${esc(c.name)}</b><span class="small">${esc(c.loc)} · 네이버 ${c.vr.toLocaleString()} · 전문의 ${esc(c.sp)}</span>
+      ${(c.nStrong + c.nMixed) / c.n >= 0.05 ? '<span class="tag bad">네이버 부정 많음</span>' : ''}${c.kLow !== null && c.kLow / c.kN >= 0.15 ? '<span class="tag bad">카카오 저평점 많음</span>' : ''}${c.kN === null ? '<span class="tag">카카오 후기 미제공</span>' : ''}</summary>
+    <div class="body">
+      <div class="pt good"><b>👍 리뷰에서 자주 나온 강점</b>${esc(c.good)}</div>
+      <div class="pt bad"><b>👎 리뷰에서 나온 약점</b>${esc(c.bad)}</div>
+      <div class="pt info" style="grid-column:1/-1"><b>성격 · 진료시간</b>${esc(c.type)} · ${esc(c.hours)}</div>
+    </div>
+  </details>`).join('');
+
+// 부정 규모 표
+const ss = {k:'name'};
+function renderScope(){
+  const key = {name:null, nNeg:c => (c.nStrong + c.nMixed) / c.n, kLow:c => c.kN ? c.kLow / c.kN : -1}[ss.k];
+  const list = key ? [...TEN].sort((a, b) => key(b) - key(a)) : TEN;
+  document.getElementById('scope').innerHTML = list.map(c => {
+    const np = Math.round((c.nStrong + c.nMixed) / c.n * 1000) / 10, kp = c.kN ? Math.round(c.kLow / c.kN * 1000) / 10 : null;
+    return `<tr><td class="name">${esc(c.short)}</td><td>${c.n} <span class="small">(${esc(c.per)})</span></td>
+      <td><div class="mini">${c.nStrong}+${c.nMixed} · ${np}%<div class="track"><div class="fill bad" style="width:${Math.min(np * 5, 100)}%"></div></div></div></td>
+      <td>${c.kN ? `<a href="https://place.map.kakao.com/${esc(c.kid)}" target="_blank" rel="noopener">${c.kAvg} (${c.kN.toLocaleString()})</a>` : '<span class="small">후기 미제공</span>'}</td>
+      <td>${kp === null ? '–' : `<div class="mini">${c.kLow} · ${kp}%<div class="track"><div class="fill warn" style="width:${Math.min(kp * 2, 100)}%"></div></div></div>`}</td>
+      <td class="num">${c.k2025 ?? '–'}</td><td class="num">${c.reply}%</td></tr>`;
+  }).join('');
+}
+chips('fScope', [['name','리뷰 순위순'], ['nNeg','네이버 부정 비율순'], ['kLow','카카오 저평점 비율순']], ss, 'k', renderScope);
+renderScope();
+
+function bars(el, cats){
+  const max = Math.max(...cats.map(c => c.n));
+  document.getElementById(el).innerHTML = cats.map(c => `
+    <div class="cat"><div>${esc(c.label)}</div>
+    <div class="track"><div class="fill bad" style="width:${c.n / max * 100}%"></div></div>
+    <div class="n">${esc(c.show ?? c.n)}</div><div class="ex">${esc(c.ex)}</div></div>`).join('');
+}
+bars('catsN', CATS_N); bars('catsK', CATS_K);
+
+// 대표 부정 리뷰
+const rs = {c:'all', src:'all'};
+function renderReviews(){
+  const list = REVIEWS.filter(r => (rs.c === 'all' || r.c === rs.c) && (rs.src === 'all' || r.src.startsWith(rs.src)));
+  document.getElementById('rvCount').textContent = `${list.length}건 표시 / 전체 ${REVIEWS.length}건`;
+  document.getElementById('reviews').innerHTML = list.map(r => `
+    <div class="rv"><div class="head"><b>${esc(r.d)}</b><span class="tag src">${esc(r.src)}</span><span class="tag">${esc(r.c)}</span><span class="tag bad">${esc(r.t)}</span></div>
+    <p>${esc(r.txt)}</p></div>`).join('') || '<div class="count">조건에 맞는 리뷰가 없습니다.</div>';
+}
+chips('fClinic', [['all','전체'], ...[...new Set(REVIEWS.map(r => r.c))].map(c => [c, c])], rs, 'c', renderReviews);
+chips('fSrc', [['all','전체'], ['네이버','네이버'], ['카카오','카카오']], rs, 'src', renderReviews);
+renderReviews();
+
+const root = document.documentElement;
+try { const t = localStorage.getItem('theme'); if (t) root.dataset.theme = t; } catch (e) {}
+document.getElementById('themeBtn').addEventListener('click', () => {
+  const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  root.dataset.theme = dark ? 'light' : 'dark';
+  try { localStorage.setItem('theme', root.dataset.theme); } catch (e) {}
+});
+</script>
+</body>
+</html>

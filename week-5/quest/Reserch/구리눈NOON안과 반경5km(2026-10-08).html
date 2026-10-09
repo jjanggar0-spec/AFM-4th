@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>구리 안과 리서치</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f7f9; --surface:#ffffff; --surface-2:#f0f2f5; --text:#1b1f24; --muted:#5b6470;
+  --border:#e1e5ea; --accent:#2563eb; --good:#15803d; --good-soft:#e6f4ea;
+  --bad:#b42318; --bad-soft:#fdecea; --warn:#9a6700; --warn-soft:#fff4d6; --mid:#6b4fbb; --mid-soft:#efeafb;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1216; --surface:#171b21; --surface-2:#1f242c; --text:#e6e9ee; --muted:#9aa3ae;
+    --border:#2a3039; --accent:#7aa2ff; --good:#5cc983; --good-soft:#15291d;
+    --bad:#ff8a80; --bad-soft:#3a1d1b; --warn:#e8c063; --warn-soft:#352a12; --mid:#b9a4f5; --mid-soft:#2a2340;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1216; --surface:#171b21; --surface-2:#1f242c; --text:#e6e9ee; --muted:#9aa3ae;
+  --border:#2a3039; --accent:#7aa2ff; --good:#5cc983; --good-soft:#15291d;
+  --bad:#ff8a80; --bad-soft:#3a1d1b; --warn:#e8c063; --warn-soft:#352a12; --mid:#b9a4f5; --mid-soft:#2a2340;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Noto Sans KR",system-ui,sans-serif;line-height:1.6;font-size:15px}
+a{color:var(--accent)}
+.wrap{max-width:1120px;margin:0 auto;padding:32px 16px 64px}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+h1{font-size:26px;margin:0 0 6px;letter-spacing:-.02em}
+h2{font-size:21px;margin:48px 0 6px;letter-spacing:-.01em;padding-top:12px;border-top:2px solid var(--border)}
+h3{font-size:17px;margin:28px 0 10px}
+.lead{color:var(--muted);font-size:14px;margin:0 0 14px}
+.meta{color:var(--muted);font-size:14px}
+nav.toc{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 0}
+nav.toc a{font-size:13px;text-decoration:none;border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:4px 12px;color:var(--text)}
+.note{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:12px 14px;font-size:14px;margin:18px 0 8px}
+.note ul{margin:4px 0 0;padding-left:18px}
+.themebtn{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:8px;padding:5px 10px;font-size:13px;cursor:pointer;font-family:inherit}
+.qa{display:grid;gap:8px}
+.qa div{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:grid;grid-template-columns:200px 1fr;gap:12px}
+.qa b{font-weight:500;color:var(--muted);font-size:14px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:16px}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.tile .k{font-size:13px;color:var(--muted)} .tile .v{font-size:22px;font-weight:700;margin-top:2px} .tile .s{font-size:13px;color:var(--muted)}
+.regions{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.region{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.region h4{margin:0;font-size:15px} .region .d{font-size:12px;color:var(--muted)}
+.region .list{font-size:13px;margin:6px 0} .region p{margin:0;font-size:13px;color:var(--muted)}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.filters .label{font-size:13px;color:var(--muted);align-self:center;margin-right:4px;min-width:36px}
+.chip{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer;font-family:inherit}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+th{background:var(--surface-2);font-weight:500;color:var(--muted);white-space:nowrap;font-size:13px}
+th.sortable{cursor:pointer;user-select:none} th.sortable:hover{color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr.base td{background:var(--mid-soft)}
+.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.name{font-weight:500;white-space:nowrap}
+.small{font-size:12px;color:var(--muted)}
+.mini{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+.mini .track{width:60px;flex:none;margin:0}
+.track{background:var(--surface-2);border-radius:4px;height:8px;margin-top:4px}
+.fill{background:var(--accent);border-radius:4px;height:8px}
+.fill.bad{background:var(--bad)} .fill.good{background:var(--good)} .fill.warn{background:var(--warn)}
+.count{font-size:13px;color:var(--muted);margin:6px 2px}
+.tag{display:inline-block;font-size:11px;padding:1px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);white-space:nowrap;margin:1px 2px 1px 0}
+.tag.bad{background:var(--bad-soft);color:var(--bad)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.tag.ok{background:var(--good-soft);color:var(--good)}
+.tag.src{background:var(--mid-soft);color:var(--mid)}
+.clinics{display:grid;gap:8px}
+details.clinic{background:var(--surface);border:1px solid var(--border);border-radius:10px}
+details.clinic summary{cursor:pointer;padding:10px 14px;list-style:none;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+details.clinic summary::-webkit-details-marker{display:none}
+details.clinic summary::before{content:"▸";color:var(--muted);transition:transform .15s}
+details.clinic[open] summary::before{transform:rotate(90deg)}
+details.clinic summary b{font-size:15px}
+.clinic .body{padding:0 14px 14px 30px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pt{border-radius:8px;padding:10px 12px;font-size:14px}
+.pt b{display:block;font-size:12px;margin-bottom:2px}
+.pt.good{background:var(--good-soft)} .pt.good b{color:var(--good)}
+.pt.bad{background:var(--bad-soft)} .pt.bad b{color:var(--bad)}
+.pt.info{background:var(--surface-2)} .pt.info b{color:var(--muted)}
+.patterns{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.patterns .p{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;font-size:14px}
+.patterns .p h4{margin:0 0 4px;font-size:15px}
+.cats{display:grid;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px}
+.cat{display:grid;grid-template-columns:minmax(150px,220px) 1fr 36px;gap:10px;align-items:center}
+.cat .n{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.cat .track{height:12px;margin:0} .cat .fill{height:12px}
+.cat .ex{grid-column:1/-1;font-size:13px;color:var(--muted);margin-top:-6px}
+.reviews{display:grid;gap:10px}
+.rv{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--bad);border-radius:10px;padding:12px 14px}
+.rv.mixed{border-left-color:var(--warn)}
+.rv .head{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px;color:var(--muted)}
+.rv .head b{color:var(--text)}
+.rv p{margin:6px 0 0}
+.rv .good{margin-top:6px;font-size:13px;color:var(--good)}
+.analysis{display:grid;gap:12px}
+.an{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px}
+.an h4{margin:0 0 6px;font-size:16px}
+.an ul{margin:4px 0 0;padding-left:18px} .an li{margin:3px 0}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.timeline{position:relative;margin:6px 0 0;padding-left:20px;list-style:none}
+.timeline::before{content:"";position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:var(--border)}
+.timeline li{position:relative;margin:0 0 12px}
+.timeline li::before{content:"";position:absolute;left:-19px;top:7px;width:10px;height:10px;border-radius:50%;background:var(--mid)}
+.timeline .when{font-size:12px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.grid .p{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.grid h4{font-size:15px;margin:0 0 6px}
+.grid .why{font-size:13px;color:var(--muted);margin-top:4px}
+.sources{font-size:14px} .sources li{margin-bottom:4px}
+footer{margin-top:48px;color:var(--muted);font-size:13px}
+@media (max-width:640px){
+  h1{font-size:22px}
+  .qa div{grid-template-columns:1fr;gap:2px}
+  .clinic .body{grid-template-columns:1fr;padding-left:14px}
+  .vs{grid-template-columns:1fr}
+  .cat{grid-template-columns:1fr 36px}
+  .cat .track{grid-column:1/-1;grid-row:2}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="toolbar">
+    <span class="meta">조사일 2026-10-08 · 네이버 플레이스 · 네이버 블로그 · 카카오맵</span>
+    <button class="themebtn" id="themeBtn" type="button">테마 전환</button>
+  </div>
+  <h1>구리 눈NOON안과 반경 5km 안과 리서치 · 눈NOON안과 부정 리뷰 분석</h1>
+  <div class="meta">기준: 눈NOON안과의원 (경기 구리시 경춘로 219) · 직선거리 5km 이내 안과 22곳 · 리뷰 표본 950건 + 눈NOON 전체 262건 + 카카오 30건</div>
+  <nav class="toc">
+    <a href="#summary">1. 한눈에 보기</a><a href="#area">2. Area 안과 요약</a><a href="#noon">3. 눈NOON 부정 리뷰 분석</a><a href="#conclusion">4. 결론</a><a href="#sources">출처</a>
+  </nav>
+
+  <div class="note">
+    <b>읽기 전에</b>
+    <ul>
+      <li>수치는 2026-10-08 기준이고, 거리는 직선거리입니다.</li>
+      <li>주변 안과는 <b>최신 리뷰 20~60건 표본</b>만 봤습니다. 안과마다 표본 기간이 달라(1개월~3년) 비율은 대략적인 비교용입니다.</li>
+      <li>부정 리뷰는 키워드로 1차 필터한 뒤 직접 읽어 분류했습니다. 개인 경험담이라 사실 여부는 확인할 수 없습니다.</li>
+      <li>의료진·직원 실명은 뺐습니다.</li>
+    </ul>
+  </div>
+
+  <h2 id="summary">1. 한눈에 보기</h2>
+  <div class="tiles">
+    <div class="tile"><div class="k">Area 안과</div><div class="v">22곳</div><div class="s">구리 8 · 다산 5 · 중랑 9 (기준 포함)</div></div>
+    <div class="tile"><div class="k">눈NOON 부정 리뷰</div><div class="v">24건 · 8.1%</div><div class="s">네이버 20 + 카카오 4 / 296건</div></div>
+    <div class="tile"><div class="k">최대 불만</div><div class="v">대기 15건</div><div class="s">그중 10건이 "예약했는데도"</div></div>
+    <div class="tile"><div class="k">Area 부정 비율 중앙값</div><div class="v">약 4%</div><div class="s">눈NOON 최근 5.0% · 범위 0~23%</div></div>
+  </div>
+  <div class="qa" style="margin-top:14px">
+    <div><b>큰 병원은?</b><span>전문의 기준으로 성모 구리점(7명), 눈NOON(5명), 삼성밝은 다산(4명)이 큽니다. 나머지는 대부분 1~3명입니다.</span></div>
+    <div><b>일요일·야간 진료</b><span>일요일: 서울라온 · 임안과 · 다산수 · 삼성밝은 다산 · 밝은희망(오전). 평일 19시 이후: 연세(구리) · 은하수 · 오아시스(월) · 다산수(수) · 삼성밝은 갈매(월)</span></div>
+    <div><b>주변 안과 주된 불만</b><span>큰 병원은 <b>대기시간</b>, 1인 의원은 <b>데스크 응대</b>와 <b>짧고 성의 없는 진료</b>가 많습니다.</span></div>
+    <div><b>눈NOON의 약점</b><span>예약해도 1시간 이상 기다림(15건). 그다음은 직원 응대(6), 의사 설명 방식(4), 과잉검사·비용(4)입니다.</span></div>
+    <div><b>눈NOON의 강점</b><span>대학병원 출신 전문의의 정밀검사·설명, 넓은 시설. 부정 리뷰 11건 중 10건에 사과 답글을 달았습니다.</span></div>
+  </div>
+
+  <h2 id="area">2. Area 안과 리서치 요약 (22곳)</h2>
+  <p class="lead">네이버 플레이스의 진료시간·전문의 정보와 곳별 최신 리뷰 표본을 바탕으로 정리했습니다.</p>
+
+  <h3>2-1. 지역별 분포</h3>
+  <div class="regions">
+    <div class="region"><h4>구리 인창·수택 (구리역 앞)</h4><div class="d">0~1km · 5곳</div><div class="list">눈NOON · 서울이 · 서울라온 · 성모 구리점 · 임안과</div><p>돌다리사거리 200m 안에 4곳이 모인 안과 밀집지입니다. 수술·정밀진료를 하는 중대형 병원이 많습니다.</p></div>
+    <div class="region"><h4>구리 교문·갈매</h4><div class="d">1.5~4km · 3곳</div><div class="list">연세(구리) · 구리강남밝은 · 삼성밝은 갈매</div><p>전문의 1명인 동네 의원 위주입니다.</p></div>
+    <div class="region"><h4>남양주 다산</h4><div class="d">1.6~3.1km · 5곳</div><div class="list">연세하늘 · 다산수 · 오아시스 · 은하수 · 삼성밝은 다산</div><p>신도시라 아이 시력·드림렌즈 리뷰가 많습니다. 주말·야간 진료도 많습니다.</p></div>
+    <div class="region"><h4>서울 중랑</h4><div class="d">3.5~5km · 9곳</div><div class="list">현안과 · 우리들 · 신내이 · 미래 · 서울퍼시픽 · 면목현 · 참밝은 · 밝은에스 · 밝은희망</div><p>오래된 동네 의원과 새로 연 의원(참밝은 2026-05)이 섞여 있습니다.</p></div>
+  </div>
+
+  <h3>2-2. 비교표</h3>
+  <div class="filters" id="fRegion"><span class="label">지역</span></div>
+  <div class="filters" id="fHours"><span class="label">진료</span></div>
+  <div class="count" id="clCount"></div>
+  <div class="card"><div class="tablewrap">
+    <table>
+      <thead><tr>
+        <th class="sortable" data-k="d">거리 ↕</th>
+        <th class="sortable" data-k="name">안과 ↕</th>
+        <th class="sortable" data-k="sp">전문의 ↕</th>
+        <th class="sortable" data-k="vr">리뷰 총계 ↕</th>
+        <th class="sortable" data-k="fast">빠른 입장 ↕</th>
+        <th class="sortable" data-k="long">1시간+ ↕</th>
+        <th class="sortable" data-k="neg">부정 ↕</th>
+        <th>진료시간 특이점</th>
+      </tr></thead>
+      <tbody id="clinics"></tbody>
+    </table>
+  </div></div>
+  <p class="small">빠른 입장 = 리뷰 대기 태그 중 "바로 입장 + 10분 이내" 비율 · 1시간+ = "1시간 이상 + 2시간 이상" 비율 · 부정 = 표본 중 부정 리뷰 비율. 표본 크기와 기간은 각 안과 상세에 있습니다.</p>
+
+  <h3>2-3. 곳별 요약 <span class="small">눌러서 펼치기 · 위 필터가 같이 적용됩니다</span></h3>
+  <div class="clinics" id="details"></div>
+
+  <h3>2-4. Area 전체에서 보이는 패턴</h3>
+  <div class="patterns">
+    <div class="p"><h4>① 규모에 따라 불만이 다름</h4>큰 병원(성모 구리점·눈NOON·밝은희망·서울퍼시픽)은 <b>대기시간</b>, 1인 의원(서울이·연세(구리)·우리들·신내이·미래)은 <b>데스크 응대·짧은 진료</b>가 주된 불만입니다.</div>
+    <div class="p"><h4>② "과잉진료 없음"이 최고의 칭찬</h4>다산수·서울퍼시픽·연세(구리)·현안과·임안과·은하수 등에서 반복됩니다. 거꾸로 "검사가 많다·비싸다"는 약점으로 나옵니다.</div>
+    <div class="p"><h4>③ 다산 = 아이·드림렌즈</h4>아이 관련 언급 비율: 은하수 77% · 연세하늘 50% · 오아시스 38% · 삼성밝은 다산 37%.</div>
+    <div class="p"><h4>④ 일요일·야간 대안이 많음</h4>일요일 5곳, 평일 19시 이후 5곳입니다. 눈NOON은 일요일 휴무이고 평일 17:30에 접수를 마감합니다.</div>
+    <div class="p"><h4>⑤ 리뷰가 몰린 곳</h4>삼성밝은 다산(열흘 38건) · 오아시스(한 달 40건) · 은하수(한 달 30건) · 밝은희망(두 달 50건). 표본이 짧아 부정 비율이 낮게 나올 수 있습니다. 리뷰 이벤트 여부는 확인하지 못했습니다.</div>
+    <div class="p"><h4>⑥ 답글을 다는 정도가 다름</h4>밝은희망 100% · 눈NOON 95% · 참밝은 95% · 서울라온 65% · 오아시스 43%. 나머지는 대부분 0%입니다.</div>
+  </div>
+
+  <h2 id="noon">3. 눈NOON안과의원 부정 리뷰 정리·분석</h2>
+  <p class="lead">경춘로 219 골든브릿지 5·6·11·12F · 전문의 5명 · 평일 09–18(접수마감 17:30), 토 08:30–13, 일 휴무 · 2026년 1월 400평으로 확장 · 예약·발렛파킹</p>
+
+  <div class="tiles">
+    <div class="tile"><div class="k">네이버 방문자 리뷰</div><div class="v">20 / 262</div><div class="s">뚜렷한 부정 11 + 불만 섞인 긍정 9 · 7.6%</div></div>
+    <div class="tile"><div class="k">카카오맵</div><div class="v">★1 4 / 30</div><div class="s">별점 4.5 · 5점 26건</div></div>
+    <div class="tile"><div class="k">블로그 후기 4편</div><div class="v">0</div><div class="s">"검사가 많다"는 언급은 긍정 맥락</div></div>
+    <div class="tile"><div class="k">대기 "1시간+" (전체)</div><div class="v">18 / 202</div><div class="s">8.9% · 대기 태그가 달린 리뷰 기준</div></div>
+  </div>
+
+  <h3>3-1. 유형별 집계 <span class="small">24건, 한 리뷰가 여러 유형에 걸칠 수 있음</span></h3>
+  <div class="cats" id="cats"></div>
+
+  <h3>3-2. 분석</h3>
+  <div class="analysis">
+    <div class="an"><h4>① 핵심 문제: "예약제가 기대만큼 작동하지 않는다"</h4>
+      <ul>
+        <li>대기 불만 15건 중 <b>10건이 "예약했는데도"</b>입니다.</li>
+        <li>병원 답글(2026-01-19)에 따르면 예약은 <b>"검사 시작 시간 기준"</b>입니다. 환자는 예약 시간을 <b>진료 시간</b>으로 받아들여, 이 차이가 "예약을 왜 받나"라는 불만이 됩니다.</li>
+        <li>진료 흐름이 "여러 검사 → 대기 → 진료"라서, 앞 환자가 길어지면 뒤 환자가 줄줄이 밀리는 구조로 보입니다.</li>
+      </ul>
+    </div>
+    <div class="an"><h4>② 같은 행동이 강점도 되고 약점도 됨</h4>
+      <div class="vs">
+        <div class="pt good"><b>긍정적으로 본 사람</b>"검사가 많다" → 정밀하다, 다른 병원이 못 잡은 질환을 잡았다 · "설명이 길다" → 충분히 물어볼 수 있다</div>
+        <div class="pt bad"><b>부정적으로 본 사람</b>"검사가 많다" → 이유 설명이 없다, 몇만 원 나온다 · "설명이 길다" → 혼내듯 길다, 그래서 대기가 길다</div>
+      </div>
+      <ul><li>부정 리뷰는 <b>가벼운 증상(결막염·다래끼·결석)</b>으로 온 사람에게 몰려 있습니다. "일반 눈병은 다른 병원이 빠를 듯", "가벼운 염증은 다른 병원 가세요". 녹내장·망막·백내장 환자는 대체로 만족합니다.</li></ul>
+    </div>
+    <div class="an"><h4>③ Area 다른 안과와 비교</h4>
+      <div class="tablewrap"><table>
+        <thead><tr><th>항목</th><th>눈NOON</th><th>Area 다른 안과</th><th>해석</th></tr></thead>
+        <tbody>
+          <tr><td>부정 비율 (최근 표본)</td><td class="num">5.0%</td><td>중앙값 약 4% (0~23%)</td><td>중간보다 조금 높음. 우리들(23%)·서울이(20%)보다는 훨씬 낮음</td></tr>
+          <tr><td>대기 "1시간+"</td><td class="num">7% / 전체 8.9%</td><td>성모 구리점 17% · 우리들 10% · 밝은에스 7% · 나머지 0~4%</td><td>큰 병원 공통 문제. 비슷한 규모의 성모 구리점보다는 낮음</td></tr>
+          <tr><td>빠른 입장</td><td class="num">53%</td><td>대부분 75~100%</td><td>1인 의원보다 확실히 느림</td></tr>
+          <tr><td>주된 불만</td><td>대기 &gt; 직원 &gt; 의사 설명</td><td>1인 의원: 데스크·짧은 진료</td><td>불만 유형이 다름</td></tr>
+          <tr><td>병원 답글</td><td>부정 11건 중 10건</td><td>대부분 0%</td><td>대응은 Area에서 가장 적극적인 편</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="an"><h4>④ 시기별 흐름</h4>
+      <ul class="timeline">
+        <li><div class="when">2024 (개원 초기)</div>대기 좌석 부족, 촘촘한 예약, 물품 판매 같은 운영 불만이 나왔습니다.</li>
+        <li><div class="when">2025년 2~3월</div><b>뚜렷한 부정 11건 중 5건이 이 두 달에 몰렸습니다</b>(대기 1~2시간, 의사·직원 태도).</li>
+        <li><div class="when">2026년 1월 확장</div>보도자료: "진료 연계를 강화해 대기 시간을 줄일 계획"</li>
+        <li><div class="when">2026년 1·4·7·10월</div>대기 불만은 계속 나옵니다. 의사 태도 불만은 2025년 3월 이후 네이버에 없고, 직원 응대 불만은 1월·7월에 다시 나왔습니다. 확장의 효과는 공간 혼잡에는 있었던 것으로 보이지만, 진료 지연에는 아직 뚜렷하지 않습니다.</li>
+      </ul>
+    </div>
+    <div class="an"><h4>⑤ 병원의 대응</h4>
+      <ul>
+        <li>답글은 모두 사과와 개선 약속이고, 대부분 "대학병원 출신 20년 경력, 최첨단 장비" 문구가 반복됩니다.</li>
+        <li>답글은 몰아서 달렸습니다(25.3.18 · 25.4.15 · 26.1.19 · 26.7.30). 그래서 길게는 3주 이상 걸렸습니다.</li>
+        <li>구체적인 개선 내용(예약 간격 변경, 예상 대기 안내 등)은 답글에서 확인되지 않습니다.</li>
+      </ul>
+    </div>
+    <div class="an"><h4>⑥ 참고: 리뷰가 몰린 패턴</h4>
+      <ul>
+        <li>네이버: 2026년 4월(34건)과 7월(27건)에 리뷰가 몰렸고, 그중 31건은 대기 태그가 없는 한두 문장 긍정 리뷰입니다.</li>
+        <li>카카오: 2025-03-06~12 일주일 사이에 짧은 5점 후기 12건이 몰렸습니다.</li>
+        <li>그래서 전체 평점과 부정 비율이 실제보다 좋게 보일 수 있습니다. 리뷰를 부탁받아 썼는지는 <b>확인하지 못했습니다</b>.</li>
+      </ul>
+    </div>
+    <div class="an"><h4>반대 의견 (균형을 위해)</h4>
+      <ul>
+        <li>"검사기계가 많아 시간은 걸렸지만 정밀하게 보는 거니 신뢰"(2024-10) · "과잉진료 및 검사 없어서 감사"(2025-03) · "필요한 검사만 권해주셔서"(2026-07)</li>
+        <li>"앞 환자분 진료가 오래 걸렸는데 오히려 좋더라. 나도 충분히 물어볼 수 있겠네"(블로그, 2026-08)</li>
+        <li>대기 태그 202건 중 "바로 입장" 63건, "10분 이내" 62건 → 대기는 요일·시간대(특히 토요일)에 따라 차이가 큽니다.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>3-3. 부정 리뷰 원문 요약 (24건)</h3>
+  <div class="filters" id="fType"><span class="label">유형</span></div>
+  <div class="filters" id="fKind"><span class="label">구분</span></div>
+  <div class="filters" id="fSrc"><span class="label">출처</span></div>
+  <div class="count" id="rvCount"></div>
+  <div class="reviews" id="reviews"></div>
+
+  <h2 id="conclusion">4. 결론 <span class="small">리뷰를 바탕으로 정리했으며 단정하지 않습니다</span></h2>
+  <div class="grid">
+    <div class="p"><h4>녹내장·망막·백내장 정밀 진료</h4>눈NOON의 강점 분야입니다. 대기를 감안해 평일 오전 예약을 권합니다.<div class="why">근거: 눈NOON 긍정 리뷰 다수 · 분석 ②</div></div>
+    <div class="p"><h4>가벼운 증상인데 바쁠 때</h4>빠른 입장 90% 이상인 임안과 · 현안과 · 서울라온 · 오아시스 · 참밝은 등이 대기 면에서 유리합니다.<div class="why">근거: 2-2 비교표</div></div>
+    <div class="p"><h4>일요일</h4>서울라온(0.18km) · 임안과(1km) · 다산수 · 삼성밝은 다산 · 밝은희망(오전)<div class="why">근거: 네이버 진료시간</div></div>
+    <div class="p"><h4>평일 저녁</h4>연세(구리) 19시 · 은하수 19시 · 오아시스 월 20시 · 다산수 수 19:30<div class="why">근거: 네이버 진료시간</div></div>
+    <div class="p"><h4>아이 시력·드림렌즈</h4>다산 쪽(은하수 · 오아시스 · 삼성밝은 다산 · 연세하늘)에 관련 리뷰가 많습니다.<div class="why">근거: 패턴 ③</div></div>
+    <div class="p"><h4>눈NOON 방문 시</h4>어떤 검사를 왜 하는지, 비용은 얼마인지 미리 물어보세요. 예약 시간은 "검사 시작" 기준입니다.<div class="why">근거: 분석 ① · 2025-02-05 리뷰</div></div>
+  </div>
+
+  <h2 id="sources">참고한 글 · 출처</h2>
+  <ul class="sources">
+    <li><a href="https://pcmap.place.naver.com/hospital/1195582051/review/visitor?reviewSort=recent" target="_blank" rel="noopener">네이버 플레이스 · 눈NOON안과 방문자 리뷰 262건 (전체)</a></li>
+    <li><a href="https://place.map.kakao.com/1790157056" target="_blank" rel="noopener">카카오맵 · 눈NOON안과의원 후기 30건 (전체)</a></li>
+    <li><a href="https://pcmap.place.naver.com/hospital/list?query=%EA%B5%AC%EB%A6%AC%20%EC%95%88%EA%B3%BC" target="_blank" rel="noopener">네이버 플레이스 · 병원 목록 검색 (지역 검색어 34개)</a></li>
+    <li>네이버 플레이스 · 22곳 각각의 홈(진료시간·전문의)과 방문자 리뷰 최신순 (아래 표의 안과 이름을 누르면 해당 리뷰 페이지로 이동)</li>
+    <li><a href="https://blog.naver.com/yhe306/224384529354" target="_blank" rel="noopener">블로그 · 구리안과 눈NOON안과 첫 방문 후기</a> (2026-08-20)</li>
+    <li><a href="https://blog.naver.com/sssasssa1/224317843298" target="_blank" rel="noopener">블로그 · 눈(NOON)안과의원 정기검진 진료 후기</a> (2026-06-16)</li>
+    <li><a href="https://blog.naver.com/mhj7784/223965866536" target="_blank" rel="noopener">블로그 · 구리역 눈눈안과의원 진료 후기</a> (2025-08-10, 본인 부담 진료라고 밝힘)</li>
+    <li><a href="https://blog.naver.com/gamsahan_mkt/224149333971" target="_blank" rel="noopener">블로그 · 눈NOON안과의원 대규모 확장 [뉴스]</a> (2026-01-16, 병원 제공 보도자료)</li>
+    <li class="small">병원 공식 블로그 글은 광고성이라 분석에서 뺐습니다. 모두닥은 검색 페이지가 404여서 쓰지 못했습니다.</li>
+  </ul>
+
+  <footer>Playwright 브라우저로 직접 수집 · 2026-10-08 · 같은 내용의 마크다운: 구리눈NOON안과 반경5km(2026-10-08).md</footer>
+</div>
+
+<script>
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// ===== Area 안과 22곳 =====
+// sp: 전문의 수(null=미표기), n: 표본 수, tagged: 대기 태그 수, fast/long: 비율(%), neg: 표본 중 부정 수
+const CLINICS = [
+  {id:'1195582051',name:'눈NOON안과의원',base:true,rg:'구리',area:'구리 인창동',d:0,sp:5,vr:262,n:60,per:'26.05~26.10',tagged:43,fast:53,long:7,neg:3,hours:'토 08:30–13, 일 휴무',sun:false,night:false,
+   good:'대학병원 출신 전문의, 정밀검사, 결과를 화면으로 보여주며 설명, 넓고 새 시설',bad:'예약해도 긴 대기, 직원 응대, 검사가 많음 → 3장 분석'},
+  {id:'1172837995',name:'서울이안과의원',rg:'구리',area:'구리 인창동',d:0.10,sp:1,vr:60,n:49,per:'23.03~26.09',tagged:19,fast:63,long:0,neg:10,hours:'셋째·넷째 주 목 휴진',sun:false,night:false,
+   good:'의사 진료는 "친절·꼼꼼"',bad:'데스크 불만 집중(접수 누락, 반말, 예약 취소 처리 오류), 전화 연결이 안 됨, 다이어트약 처방 환자 때문에 안과 진료가 밀린다는 리뷰'},
+  {id:'2041014472',name:'서울라온안과의원',rg:'구리',area:'구리 수택동',d:0.18,sp:3,vr:144,n:40,per:'26.05~26.09',tagged:40,fast:95,long:0,neg:2,hours:'일 09–13',sun:true,night:false,
+   good:'망막 세부전문의, 레이저·주사 치료, 렌즈삽입술·백내장 등 수술 언급이 많음, 바로 입장 95%',bad:'근시억제렌즈를 "강요하는 느낌"(1건), 카운터 직원 불친절(1건)'},
+  {id:'11719049',name:'성모안과의원 구리점',rg:'구리',area:'구리 인창동',d:0.19,sp:7,vr:2294,n:60,per:'24.12~26.08',tagged:47,fast:45,long:17,neg:5,hours:'토 ~13',sun:false,night:false,
+   good:'전문의 7명, 오래 다닌 단골이 많음, "과잉진료 안 함"',bad:'2시간 이상 대기 4건(표본 중 Area 최다), 데스크 불친절, "대충 본다" 2건'},
+  {id:'1962917205',name:'임안과의원',rg:'구리',area:'구리 수택동',d:1.02,sp:1,vr:190,n:48,per:'24.07~26.08',tagged:38,fast:95,long:0,neg:2,hours:'토 휴무 · 일 09–14',sun:true,night:false,
+   good:'녹내장 전문의, 백내장 수술 만족, 아이·드림렌즈, 대기 짧음',bad:'이물질을 못 찾았다는 오진 주장(1건), 수납 직원 불친절(1건)'},
+  {id:'20150243',name:'연세안과의원(구리)',rg:'구리',area:'구리 수택동',d:1.52,sp:1,vr:342,n:40,per:'23.06~26.08',tagged:18,fast:100,long:0,neg:3,hours:'평일 ~19시',sun:false,night:true,
+   good:'"과잉진료 없음", 원장 차분·친절, 평일 저녁 진료',bad:'접수 직원 불친절이 반복(3건, 그중 1건은 "후기가 넘친다"고 언급)'},
+  {id:'37873046',name:'구리강남밝은안과의원',rg:'구리',area:'구리 교문동',d:1.63,sp:1,vr:134,n:38,per:'23.10~26.09',tagged:24,fast:96,long:0,neg:1,hours:'목·토 오전만',sun:false,night:false,
+   good:'검사 화면을 같이 보며 "눈 종합검진" 같은 설명, 다래끼 처치',bad:'주차 불편, 근처에 약국 없음'},
+  {id:'21336517',name:'연세하늘안과의원',rg:'남양주 다산',area:'다산동',d:1.65,sp:1,vr:574,n:20,per:'26.01~26.09',tagged:20,fast:85,long:0,neg:1,hours:'대기 많으면 조기 접수마감',sun:false,night:false,
+   good:'드림렌즈·아이 진료, "명의", "과잉 없이 필요한 것만"',bad:'간호사 말투 불친절(1건), 주차 불편'},
+  {id:'1211459249',name:'다산수안과의원',rg:'남양주 다산',area:'다산동',d:1.79,sp:1,vr:534,n:40,per:'26.07~26.10',tagged:39,fast:90,long:0,neg:0,hours:'수 ~19:30 · 토 휴무 · 일 09–14',sun:true,night:true,
+   good:'친절(32/40), 과잉진료 없음, 헤르페스를 한 번에 진단, 가족 단위 단골',bad:'표본에서 부정 리뷰 없음'},
+  {id:'2033468938',name:'오아시스안과의원',rg:'남양주 다산',area:'다산동',d:2.69,sp:1,vr:756,n:40,per:'26.09~26.10',tagged:39,fast:97,long:0,neg:0,hours:'월 ~20시',sun:false,night:true,
+   good:'설명이 자세함(28/40), 아이 사시 발견, 드림렌즈 시착용, IPL',bad:'표본에서 부정 없음(표본 40건이 한 달에 몰림)'},
+  {id:'1541332810',name:'은하수안과의원',rg:'남양주 다산',area:'다산동',d:2.82,sp:null,vr:1419,n:30,per:'26.09~26.10',tagged:28,fast:54,long:0,neg:0,hours:'평일 ~19시',sun:false,night:true,
+   good:'아이·드림렌즈 중심(23/30), 과잉진료 없음',bad:'"대기가 있다"(30분 이상 4건)'},
+  {id:'1116653573',name:'삼성밝은안과의원 (다산)',rg:'남양주 다산',area:'다산동',d:3.08,sp:4,vr:2010,n:38,per:'26.09~26.10',tagged:37,fast:76,long:3,neg:0,hours:'토·일·공휴일 09:30–14',sun:true,night:false,
+   good:'아이 근시억제(렌즈·안약), 주말·공휴일 진료',bad:'표본 38건이 열흘에 몰려 있음'},
+  {id:'19523910',name:'현안과의원',rg:'서울 중랑',area:'망우동',d:3.50,sp:1,vr:430,n:40,per:'24.05~26.09',tagged:35,fast:97,long:0,neg:0,hours:'토 ~13',sun:false,night:false,
+   good:'바로 입장 97%, "친절"(26/40), 과잉진료 없음, 아이 진료',bad:'표본에서 부정 없음'},
+  {id:'11000806',name:'우리들안과의원',rg:'서울 중랑',area:'망우동',d:3.62,sp:3,vr:730,n:30,per:'24.12~26.09',tagged:21,fast:76,long:10,neg:7,hours:'토 ~14',sun:false,night:false,
+   good:'수술(군날개) 만족 사례',bad:'부정 비율 Area 최고: "대충", "성의 없음", 의사·간호사 불친절, 접수 때 주민번호를 큰 소리로 말함, 접수 순서 문제'},
+  {id:'11839587',name:'신내이안과의원',rg:'서울 중랑',area:'신내동',d:3.94,sp:1,vr:1082,n:49,per:'24.09~26.08',tagged:32,fast:91,long:0,neg:2,hours:'토 ~13',sun:false,night:false,
+   good:'빠름(91%), 바쁜 사람에게 좋음',bad:'진료가 "2분이면 끝", 의사 불친절 2건'},
+  {id:'316401869',name:'삼성밝은안과의원 (갈매)',rg:'구리',area:'구리 갈매동',d:4.00,sp:null,vr:417,n:40,per:'23.04~26.09',tagged:3,fast:null,long:null,neg:2,hours:'월 ~19시',sun:false,night:true,
+   good:'친절, 정기검진 빠름',bad:'2023년 "단순 시력검사에 18,200원, 비싸다" 2건'},
+  {id:'19528431',name:'미래안과의원',rg:'서울 중랑',area:'상봉동',d:4.24,sp:1,vr:268,n:50,per:'23.11~26.09',tagged:32,fast:94,long:0,neg:2,hours:'토 ~15',sun:false,night:false,
+   good:'다래끼·염증 같은 일반진료가 빠름, 아이 단골',bad:'"성의 없는 진료"(1건), "비용이 비싸다"(1건)'},
+  {id:'1210906192',name:'서울퍼시픽안과의원',rg:'서울 중랑',area:'상봉동',d:4.76,sp:2,vr:1068,n:50,per:'25.12~26.09',tagged:46,fast:83,long:2,neg:4,hours:'토 ~16',sun:false,night:false,
+   good:'망막 진료, "양심병원·과잉진료 없음"(3건), 섬세하고 위생적인 시술',bad:'수납 직원 응대(2건), 처방전 오류(1건), 예약해도 대기(1건)'},
+  {id:'11601811',name:'면목현안과의원',rg:'서울 중랑',area:'면목동',d:4.81,sp:1,vr:431,n:40,per:'23.11~25.09',tagged:25,fast:76,long:0,neg:0,hours:'토 ~12',sun:false,night:false,
+   good:'"과잉진료 없고 간결한 진료"',bad:'2025-09 이후 새 리뷰 없음'},
+  {id:'2022359343',name:'참밝은안과의원',rg:'서울 중랑',area:'면목동',d:4.81,sp:1,vr:55,n:40,per:'26.05~26.10',tagged:40,fast:98,long:0,neg:0,hours:'공휴일 진료 · 2026-05 개원',sun:false,night:false,
+   good:'새 시설("카페 같음"), 친절·설명, 아이 진료',bad:'표본에서 부정 없음(개업 초기, 개원 기념품 이야기가 많음)'},
+  {id:'1659905859',name:'밝은에스안과의원',rg:'서울 중랑',area:'면목동',d:4.95,sp:1,vr:1104,n:50,per:'25.07~26.10',tagged:46,fast:67,long:7,neg:0,hours:'토 ~14',sun:false,night:false,
+   good:'안구건조 클리닉, 꼼꼼',bad:'1시간 이상 대기 3건'},
+  {id:'11876461',name:'밝은희망안과의원',rg:'서울 중랑',area:'면목동',d:4.98,sp:2,vr:1175,n:50,per:'26.08~26.10',tagged:48,fast:73,long:4,neg:2,hours:'일 오전 09–12',sun:true,night:false,
+   good:'의사 친절·신뢰, 일요일 오전 진료, 리뷰에 모두 답글',bad:'"예약 안 하면 2시간 반", "스태프는 퉁퉁한 응대"'},
+];
+CLINICS.forEach(c => c.negP = Math.round(c.neg / c.n * 1000) / 10);
+
+function chips(el, opts, state, key, onChange){
+  const box = document.getElementById(el);
+  opts.forEach(([v, label]) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.textContent = label;
+    b.setAttribute('aria-pressed', String(state[key] === v));
+    b.addEventListener('click', () => {
+      state[key] = v;
+      box.querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', 'false'));
+      b.setAttribute('aria-pressed', 'true');
+      onChange();
+    });
+    box.appendChild(b);
+  });
+}
+const pct = (v, cls) => v === null ? '<span class="small">–</span>' :
+  `<div class="mini">${v}%<div class="track"><div class="fill ${cls}" style="width:${Math.min(v, 100)}%"></div></div></div>`;
+
+const cs = {rg:'all', hr:'all', k:'d', dir:1};
+const maxVr = Math.max(...CLINICS.map(c => c.vr));
+function filteredClinics(){
+  return CLINICS.filter(c => (cs.rg === 'all' || c.rg === cs.rg) &&
+    (cs.hr === 'all' || (cs.hr === 'sun' && c.sun) || (cs.hr === 'night' && c.night)));
+}
+function renderClinics(){
+  const key = cs.k === 'neg' ? 'negP' : cs.k;
+  const val = c => c[key] ?? -1;
+  const list = filteredClinics().sort((a, b) => (val(a) > val(b) ? 1 : val(a) < val(b) ? -1 : 0) * cs.dir);
+  document.getElementById('clCount').textContent = `${list.length}곳 표시 / 전체 ${CLINICS.length}곳`;
+  document.getElementById('clinics').innerHTML = list.map(c => `
+    <tr class="${c.base ? 'base' : ''}">
+      <td class="num">${c.d.toFixed(2)} km</td>
+      <td class="name"><a href="https://pcmap.place.naver.com/hospital/${esc(c.id)}/review/visitor?reviewSort=recent" target="_blank" rel="noopener">${esc(c.name)}</a><div class="small">${esc(c.area)}</div></td>
+      <td class="num">${c.sp === null ? '–' : c.sp + '명'}</td>
+      <td class="num">${c.vr.toLocaleString()}<div class="track"><div class="fill" style="width:${c.vr / maxVr * 100}%"></div></div></td>
+      <td>${c.tagged < 10 ? '<span class="small">– (태그 ' + c.tagged + '건)</span>' : pct(c.fast, 'good')}</td>
+      <td>${c.tagged < 10 ? '<span class="small">–</span>' : pct(c.long, 'warn')}</td>
+      <td>${pct(c.negP, 'bad')}<div class="small" style="text-align:right">${c.neg}/${c.n}</div></td>
+      <td>${esc(c.hours)}${c.sun ? ' <span class="tag ok">일요일</span>' : ''}${c.night ? ' <span class="tag src">야간</span>' : ''}</td>
+    </tr>`).join('');
+  document.getElementById('details').innerHTML = filteredClinics().map(c => `
+    <details class="clinic">
+      <summary><b>${esc(c.name)}</b><span class="small">${esc(c.area)} · ${c.d.toFixed(2)}km · 전문의 ${c.sp === null ? '미표기' : c.sp + '명'}</span>
+        ${c.neg / c.n >= 0.15 ? '<span class="tag bad">부정 많음</span>' : ''}${c.long >= 10 ? '<span class="tag warn">대기 김</span>' : ''}${c.sun ? '<span class="tag ok">일요일</span>' : ''}${c.night ? '<span class="tag src">야간</span>' : ''}</summary>
+      <div class="body">
+        <div class="pt good"><b>👍 리뷰에서 자주 나온 강점</b>${esc(c.good)}</div>
+        <div class="pt bad"><b>👎 리뷰에서 나온 약점</b>${esc(c.bad)}</div>
+        <div class="pt info" style="grid-column:1/-1"><b>근거</b>네이버 방문자 리뷰 최신 ${c.n}건 (${esc(c.per)}) · 진료시간: ${esc(c.hours)}</div>
+      </div>
+    </details>`).join('');
+}
+chips('fRegion', [['all','전체'], ['구리','구리'], ['남양주 다산','남양주 다산'], ['서울 중랑','서울 중랑']], cs, 'rg', renderClinics);
+chips('fHours', [['all','전체'], ['sun','일요일 진료'], ['night','평일 19시 이후']], cs, 'hr', renderClinics);
+document.querySelectorAll('th.sortable').forEach(th => th.addEventListener('click', () => {
+  const k = th.dataset.k;
+  cs.dir = cs.k === k ? -cs.dir : (['vr','sp','fast','long','neg'].includes(k) ? -1 : 1);
+  cs.k = k; renderClinics();
+}));
+renderClinics();
+
+// ===== 눈NOON 부정 리뷰 =====
+const CATS = [
+  {k:'wait',  label:'⏱ 대기시간·예약 무의미', n:15, ex:'"예약해도 기본 1~1시간 30분", "이럴 거면 예약을 왜 하나"'},
+  {k:'staff', label:'🙍 직원 응대', n:6, ex:'데스크 응대, 직원끼리 사담, 시끄러운 장난, 무례한 조무사·검안사'},
+  {k:'doc',   label:'🩺 의사 설명·태도', n:4, ex:'"혼내듯 긴 설명", "퉁명스럽고 가르치듯", "말을 끊음"'},
+  {k:'cost',  label:'💸 과잉검사·비용', n:4, ex:'"왜 하는지 설명 없이 매번 검사, 몇만 원", "과잉진료", 물티슈 판매'},
+  {k:'fac',   label:'🪑 시설·주차·좌석', n:3, ex:'대기 좌석 부족, 불편한 소파, 주차 어려움'},
+  {k:'hyg',   label:'🧤 위생·처치 통증', n:2, ex:'맨손으로 눈을 벌림, 핀셋 처치 통증'},
+  {k:'rx',    label:'💊 처방 불만', n:1, ex:'"엄한 인공눈물 처방"'},
+];
+const REVIEWS = [
+  {d:'2026-10-06',src:'네이버',kind:'mixed',wait:'1시간 이상',t:['wait'],reply:false,txt:'환자가 많아서 미리 예약하는 게 좋습니다.',good:'깨끗하고 최신 장비, 의사가 많음'},
+  {d:'2026-07-23',src:'네이버',kind:'mixed',wait:'',t:['wait'],reply:true,txt:'예약을 하고 방문했지만 예상보다 대기시간이 길었습니다. 예약 시스템은 조금 개선되면 좋겠습니다.',good:'원장님 진료는 만족'},
+  {d:'2026-07-11',src:'네이버',kind:'strong',wait:'1시간 이상',t:['wait','staff'],reply:true,txt:'11:30 예약, 11:15 도착 → 11:45에도 앞에 6명. "이럴 거면 예약을 왜 하는 거죠?" 다른 병원에서 15분 만에 진료. "데스크분들이 별로임, 다시는 안 갈 예정"'},
+  {d:'2026-05-04',src:'네이버',kind:'mixed',wait:'30분 이상',t:['wait'],reply:true,txt:'예약하고 방문했는데 대기 환자가 많아 좀 많이 기다렸습니다.',good:'꼼꼼한 상담, 백내장 수술 예약'},
+  {d:'2026-04-18',src:'네이버',kind:'strong',wait:'1시간 이상',t:['wait','hyg'],reply:true,txt:'5분 지각했지만 1시간 10분 이상 대기. "위생장갑도 안 끼고 맨손으로 눈을 벌리심", "손톱으로 아래 눈꺼풀 점막 닿는 느낌"'},
+  {d:'2026-02-03',src:'카카오 ★1',kind:'strong',wait:'',t:['wait','fac'],reply:null,txt:'"대기시간이 언제든 깁니다. 5시 반 접수 종료인데도 대기인원이 있어요." 진료 인원 조절이나 대기시간 고지 요청. 대기 소파가 불편'},
+  {d:'2026-01-16',src:'네이버',kind:'strong',wait:'바로 입장',t:['staff'],reply:true,txt:'"검사는 많이 하는데 제대로 된 안내가 더 있었으면", "직원들끼리 사담이 너무 심함"'},
+  {d:'2026-01-15',src:'네이버',kind:'strong',wait:'30분 이상',t:['wait'],reply:true,txt:'"한 시간 가까이 대기해야 한다면 대체 예약을 왜 받는지", "5분 단위로 받는 것 같은데 최소 15분 단위로 받아야"'},
+  {d:'2025-12-04',src:'네이버',kind:'mixed',wait:'1시간 이상',t:['wait'],reply:true,txt:'예전과 달리 검사 후 1시간 넘게 기다렸다가 진료받음.',good:'친절, 확장 이후 북적대지 않음 (8번째 방문)'},
+  {d:'2025-07-15',src:'네이버',kind:'mixed',wait:'30분 이상',t:['fac'],reply:true,txt:'"주차 너무 힘들어요ㅠㅠ" (두 번 언급)',good:'직원 모두 친절하고 세심'},
+  {d:'2025-05-31',src:'네이버',kind:'strong',wait:'1시간 이상',t:['wait','staff','cost'],reply:true,txt:'"대학병원보다도 더 긴 웨이팅", "간호사들이 시끄럽게 장난치면서 떠들고", "검사는 의무라면서 이것저것", "검사장비도 잘 못 다루는 간호사들"'},
+  {d:'2025-03-25',src:'네이버',kind:'strong',wait:'30분 이상',t:['wait','doc'],reply:true,txt:'예약 없이 방문해 총 1시간 넘게 걸림. "약간 혼내듯 긴 설명", "일반 눈병·눈 감염 치료는 다른 병원이 빠를 듯"'},
+  {d:'2025-03-06',src:'네이버',kind:'strong',wait:'1시간 이상',t:['wait','staff'],reply:true,txt:'"직장인이나 바쁜 분께는 완전 비추", "기본 예약해도 1~1시간 30분", "너무 기다린다고 얘기하니 얘기한 내가 비정상 된 느낌"'},
+  {d:'2025-02-24',src:'네이버',kind:'mixed',wait:'30분 이내',t:['staff'],reply:false,txt:'진료보조 조무사가 "너무 불친절하고 환자나 보호자를 전혀 배려하지 않는 무례한 행동과 언행"',good:'원장 진료·레이저 시술 만족, 다른 직원은 친절'},
+  {d:'2025-02-21',src:'네이버',kind:'strong',wait:'2시간 이상',t:['wait'],reply:true,txt:'"예약하고 갔는데도 시간이 너무 오래 걸렸네요"'},
+  {d:'2025-02-05',src:'네이버',kind:'strong',wait:'',t:['cost','doc'],reply:true,txt:'"과잉진료가 심해요", "검사는 매번 하는데 왜 하는지도, 결과도 말 안 해주고", "갈 때마다 진료비가 몇만 원", "퉁명스럽고 가르치듯", "이제 안 갑니다"'},
+  {d:'2025-02-04',src:'네이버',kind:'strong',wait:'1시간 이상',t:['wait','doc','hyg'],reply:true,txt:'"1시간이나 대기해서 진료 봤는데 환자를 막 쏘아붙이고 계속 말을 끊어서", 원인을 물으니 "생기는 사람은 그냥 생긴다", "핀셋으로 잡아 뜯는데 너무 아팠습니다"'},
+  {d:'2025-02-03',src:'카카오 ★1',kind:'strong',wait:'',t:['staff'],reply:null,txt:'검안사 한 명이 "이거 자세 왜 못하냐, 말을 왜 못 알아듣냐"며 불쾌하게 함. 다른 환자에게도 그랬다고 함'},
+  {d:'2024-06-04',src:'네이버',kind:'mixed',wait:'1시간 이상',t:['wait','fac'],reply:false,txt:'"예약해도 기본 1시간 기다려야 하는데 앉을 곳이 너무 부족합니다. 매번 일어서서 기다립니다"',good:'진료는 전문적'},
+  {d:'2024-05-29',src:'카카오 ★1',kind:'strong',wait:'',t:['cost'],reply:null,txt:'"과잉진료" (한 단어)'},
+  {d:'2024-05-20',src:'네이버',kind:'strong',wait:'',t:['rx'],reply:false,txt:'"눈꺼풀 상처 때문에 갔는데 엄한 인공눈물 처방해주심"'},
+  {d:'2024-05-08',src:'네이버',kind:'mixed',wait:'30분 이상',t:['wait'],reply:false,txt:'예약시간보다 일찍 가도 매번 최소 20분 대기. "예약 환자들을 너무 타이트하게 잡으시는 것 같아 아쉽습니다"',good:'선생님 친절'},
+  {d:'2024-04-27',src:'카카오 ★1',kind:'strong',wait:'',t:['doc'],reply:null,txt:'특정 의사에게 예전 대학병원 시절 불쾌해서 병원을 옮겼다는 내용 (구체적 사유 없음)'},
+  {d:'2024-03-25',src:'네이버',kind:'mixed',wait:'10분 이내',t:['cost'],reply:false,txt:'처방인 줄 알고 수납 때 산 눈 세정 티슈가 그냥 판매 상품이었음. "어 이거 좀? 별론데"',good:'시설, 최신 장비, 상세한 설명'},
+];
+
+const maxCat = Math.max(...CATS.map(c => c.n));
+document.getElementById('cats').innerHTML = CATS.map(c => `
+  <div class="cat"><div>${esc(c.label)}</div>
+  <div class="track"><div class="fill bad" style="width:${c.n / maxCat * 100}%"></div></div>
+  <div class="n">${c.n}</div><div class="ex">${esc(c.ex)}</div></div>`).join('');
+
+const rs = {type:'all', kind:'all', src:'all'};
+const catLabel = Object.fromEntries(CATS.map(c => [c.k, c.label]));
+function renderReviews(){
+  const list = REVIEWS.filter(r =>
+    (rs.type === 'all' || r.t.includes(rs.type)) &&
+    (rs.kind === 'all' || r.kind === rs.kind) &&
+    (rs.src === 'all' || r.src.startsWith(rs.src)));
+  document.getElementById('rvCount').textContent = `${list.length}건 표시 / 전체 ${REVIEWS.length}건`;
+  document.getElementById('reviews').innerHTML = list.map(r => `
+    <div class="rv ${r.kind === 'mixed' ? 'mixed' : ''}">
+      <div class="head"><b>${esc(r.d)}</b>
+        <span class="tag src">${esc(r.src)}</span>
+        <span class="tag ${r.kind === 'strong' ? 'bad' : 'warn'}">${r.kind === 'strong' ? '뚜렷한 부정' : '불만 섞인 긍정'}</span>
+        ${r.wait ? `<span class="tag">대기 ${esc(r.wait)}</span>` : ''}
+        ${r.t.map(k => `<span class="tag">${esc(catLabel[k])}</span>`).join('')}
+        ${r.reply === true ? '<span class="tag ok">병원 답글 있음</span>' : r.reply === false ? '<span class="tag">답글 없음</span>' : ''}
+      </div>
+      <p>${esc(r.txt)}</p>
+      ${r.good ? `<div class="good">좋았던 점: ${esc(r.good)}</div>` : ''}
+    </div>`).join('') || '<div class="count">조건에 맞는 리뷰가 없습니다.</div>';
+}
+chips('fType', [['all','전체'], ...CATS.map(c => [c.k, c.label])], rs, 'type', renderReviews);
+chips('fKind', [['all','전체'], ['strong','뚜렷한 부정'], ['mixed','불만 섞인 긍정']], rs, 'kind', renderReviews);
+chips('fSrc', [['all','전체'], ['네이버','네이버'], ['카카오','카카오맵']], rs, 'src', renderReviews);
+renderReviews();
+
+// 테마
+const root = document.documentElement;
+try { const t = localStorage.getItem('theme'); if (t) root.dataset.theme = t; } catch (e) {}
+document.getElementById('themeBtn').addEventListener('click', () => {
+  const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  root.dataset.theme = dark ? 'light' : 'dark';
+  try { localStorage.setItem('theme', root.dataset.theme); } catch (e) {}
+});
+</script>
+</body>
+</html>

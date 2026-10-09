@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>구로구 망막수술 리서치</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f7f9; --surface:#ffffff; --surface-2:#f0f2f5; --text:#1b1f24; --muted:#5b6470;
+  --border:#e1e5ea; --accent:#2563eb; --bar:#93b4f5; --good:#15803d; --good-soft:#e6f4ea;
+  --bad:#b42318; --bad-soft:#fdecea; --warn:#9a6700; --warn-soft:#fff4d6; --mid:#6b4fbb; --mid-soft:#efeafb;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1216; --surface:#171b21; --surface-2:#1f242c; --text:#e6e9ee; --muted:#9aa3ae;
+    --border:#2a3039; --accent:#7aa2ff; --bar:#3d5ea8; --good:#5cc983; --good-soft:#15291d;
+    --bad:#ff8a80; --bad-soft:#3a1d1b; --warn:#e8c063; --warn-soft:#352a12; --mid:#b9a4f5; --mid-soft:#2a2340;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1216; --surface:#171b21; --surface-2:#1f242c; --text:#e6e9ee; --muted:#9aa3ae;
+  --border:#2a3039; --accent:#7aa2ff; --bar:#3d5ea8; --good:#5cc983; --good-soft:#15291d;
+  --bad:#ff8a80; --bad-soft:#3a1d1b; --warn:#e8c063; --warn-soft:#352a12; --mid:#b9a4f5; --mid-soft:#2a2340;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Noto Sans KR",system-ui,sans-serif;line-height:1.6;font-size:15px}
+a{color:var(--accent)}
+.wrap{max-width:1080px;margin:0 auto;padding:32px 16px 64px}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+h1{font-size:28px;margin:0 0 6px;letter-spacing:-.02em}
+h2{font-size:20px;margin:40px 0 14px;letter-spacing:-.01em}
+.meta{color:var(--muted);font-size:14px}
+.note{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:12px 14px;font-size:14px;margin:18px 0 8px}
+.alert{background:var(--bad-soft);color:var(--bad);border-radius:10px;padding:12px 14px;font-size:14px;margin:8px 0}
+.themebtn{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:8px;padding:5px 10px;font-size:13px;cursor:pointer;font-family:inherit}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:20px}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.tile .k{font-size:13px;color:var(--muted)} .tile .v{font-size:22px;font-weight:700;margin-top:2px} .tile .s{font-size:13px;color:var(--muted)}
+.findings{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:6px 18px}
+.findings li{margin:8px 0}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.filters .label{font-size:13px;color:var(--muted);align-self:center;margin-right:4px;min-width:36px}
+.chip{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer;font-family:inherit}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+th{background:var(--surface-2);font-weight:500;color:var(--muted);white-space:nowrap}
+th.sortable{cursor:pointer;user-select:none} th.sortable:hover{color:var(--text)}
+tr:last-child td{border-bottom:none}
+.name{font-weight:500}
+.tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:999px;background:var(--surface-2);color:var(--muted);margin:2px 4px 0 0;white-space:nowrap}
+.tag.out{background:var(--warn-soft);color:var(--warn)}
+.small{font-size:12px;color:var(--muted)}
+.barcell{min-width:170px}
+.track{background:var(--surface-2);border-radius:4px;height:8px;margin-top:4px}
+.fill{background:var(--accent);border-radius:4px;height:8px}
+.empty{padding:20px;color:var(--muted);text-align:center}
+.clinics{display:grid;gap:12px}
+details.clinic{background:var(--surface);border:1px solid var(--border);border-radius:12px}
+details.clinic summary{cursor:pointer;padding:14px 16px;list-style:none;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+details.clinic summary::-webkit-details-marker{display:none}
+details.clinic summary::before{content:"▸";color:var(--muted);transition:transform .15s}
+details.clinic[open] summary::before{transform:rotate(90deg)}
+.clinic h3{font-size:16px;margin:0}
+.clinic .sub{color:var(--muted);font-size:13px}
+.clinic .body{padding:0 16px 16px 36px;display:grid;gap:10px}
+.pt{border-radius:8px;padding:10px 12px;font-size:14px}
+.pt b{display:block;font-size:12px;margin-bottom:2px}
+.pt ul{margin:0;padding-left:18px}
+.pt.good{background:var(--good-soft)} .pt.good b{color:var(--good)}
+.pt.bad{background:var(--bad-soft)} .pt.bad b{color:var(--bad)}
+.pt.mid{background:var(--mid-soft)} .pt.mid b{color:var(--mid)}
+.pt.info{background:var(--surface-2)} .pt.info b{color:var(--muted)}
+.timeline{position:relative;margin:6px 0 0;padding-left:20px;list-style:none}
+.timeline::before{content:"";position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:var(--border)}
+.timeline li{position:relative;margin:0 0 12px}
+.timeline li::before{content:"";position:absolute;left:-19px;top:7px;width:10px;height:10px;border-radius:50%;background:var(--mid)}
+.timeline .when{font-size:12px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.grid .p{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.grid h3{font-size:15px;margin:0 0 6px}
+.grid .who{font-weight:500} .grid .why{font-size:13px;color:var(--muted);margin-top:4px}
+.sources{font-size:14px} .sources li{margin-bottom:4px}
+footer{margin-top:48px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="toolbar">
+      <h1>구로구 망막수술 리서치</h1>
+      <button class="themebtn" id="themeBtn" type="button">테마 전환</button>
+    </div>
+    <div class="meta">네이버 통합검색 · 네이버 플레이스 리뷰 · 네이버 블로그 · 병원 공식 홈페이지 · 굿닥 · 조사일 2026-10-06</div>
+    <div class="note">리뷰 수·진료시간은 조사 시점 기준입니다. 리뷰는 개인 경험이며 수술 결과를 보장하지 않습니다. 병원이 운영하거나 대행으로 보이는 블로그는 "홍보"로 표시했습니다. 수술 건수·성공률 같은 공식 통계는 확인하지 못했습니다.</div>
+    <div class="alert"><b>응급 신호</b> — 시야 일부가 커튼처럼 가려지거나, 번쩍임·비문증이 갑자기 늘면 망막박리일 수 있습니다. 리뷰를 고르기보다 바로 진료를 받으세요.</div>
+  </header>
+
+  <div class="tiles">
+    <div class="tile"><div class="k">확인한 방문자 리뷰</div><div class="v">2,894건</div><div class="s">5곳 전체 펼침 후 망막 키워드 필터</div></div>
+    <div class="tile"><div class="k">수술 후기가 확인된 구로구 의원</div><div class="v">2곳</div><div class="s">서울눈에빛안과 · 이안과</div></div>
+    <div class="tile"><div class="k">망막 리뷰 최다</div><div class="v">서울눈에빛안과</div><div class="s">22건 / 600건 · 부정 0</div></div>
+    <div class="tile"><div class="k">고대구로 수술비 (블로그)</div><div class="v">약 85만원</div><div class="s">전신마취 + 2박 입원 · 2025년 개인 후기</div></div>
+  </div>
+
+  <h2>핵심 발견</h2>
+  <ol class="findings">
+    <li>구로구 <b>의원급</b>에서 망막수술 후기가 실제로 확인되는 곳은 <b>서울눈에빛안과</b>와 <b>이안과</b>입니다.</li>
+    <li><b>타임안과</b>는 홈페이지에 망막센터·망막수술을 내세우지만, 리뷰 584건 중 망막 <b>수술</b> 후기는 0건이었습니다. 황반원공 수술 사례는 병원 자체 블로그에만 있습니다.</li>
+    <li><b>이안과</b>에는 같은 환자로 보이는 연속 리뷰가 있습니다. 망막박리 수술 뒤 <b>1년이 지나도 초점·글자 왜곡이 남았다</b>는 기록입니다.</li>
+    <li><b>고려대 구로병원</b>은 블로그 후기에서 응급실 → 입원 → 전신마취 수술로 진행됐고, 퇴원 뒤 활동해서 재수술한 사례가 있습니다.</li>
+    <li>"구로구 안과" 검색에는 <b>다른 구 병원</b>이 섞입니다. SNU청안과(관악), 더바른안과(영등포), 서울원·연세스마일안과(광명)입니다.</li>
+  </ol>
+
+  <h2>병원 비교</h2>
+  <div class="filters" id="areaFilters"><span class="label">지역</span></div>
+  <div class="filters" id="needFilters"><span class="label">상황</span></div>
+  <div class="card tablewrap">
+    <table>
+      <thead><tr>
+        <th class="sortable" data-sort="name">병원</th>
+        <th>망막수술 근거</th>
+        <th class="sortable" data-sort="hits">망막 리뷰 ▾</th>
+        <th class="sortable" data-sort="surgery">수술 후기</th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <p class="small">망막 리뷰 = 방문자 리뷰를 모두 펼친 뒤 망막·유리체·황반·박리·비문증·열공 키워드가 들어간 리뷰를 직접 읽고 센 수. 막대는 확인한 리뷰 중 비율입니다. 고대구로는 병원 전체 리뷰라 안과 리뷰가 거의 없습니다.</p>
+
+  <h2>병원별 상세</h2>
+  <div class="clinics" id="clinics"></div>
+
+  <h2>상황별 후보 <span class="small">(리뷰 기반, 단정 아님)</span></h2>
+  <div class="grid" id="situations"></div>
+
+  <h2>리뷰에서 반복된 수술 후 주의점</h2>
+  <div class="grid">
+    <div class="p"><h3>엎드린 자세</h3><div class="why">가스 주입 뒤 몇 주 엎드려 지내야 하고 통증이 있다는 후기가 많습니다.</div></div>
+    <div class="p"><h3>"일상생활"의 뜻 확인</h3><div class="why">공막돌륭술 뒤 외출했다가 3일 만에 재수술한 사례가 있습니다. 활동 범위를 구체적으로 물어보세요.</div></div>
+    <div class="p"><h3>회복은 길 수 있음</h3><div class="why">초점·글자 휨(변시증)이 수개월~1년 이상 남았다는 연속 리뷰가 있습니다.</div></div>
+    <div class="p"><h3>비문증을 가볍게 넘기지 않기</h3><div class="why">"노안 비문증" 진단 1주 뒤 박리로 진행된 사례가 있습니다. 갑자기 늘면 망막 정밀검사(산동검사)를 요청하세요.</div></div>
+  </div>
+
+  <h2>참고한 글</h2>
+  <ul class="sources" id="blogs"></ul>
+
+  <h2>출처</h2>
+  <ul class="sources">
+    <li><a href="https://search.naver.com/search.naver?query=%EA%B5%AC%EB%A1%9C%EA%B5%AC+%EB%A7%9D%EB%A7%89%EC%88%98%EC%88%A0" target="_blank" rel="noopener">네이버 통합검색 "구로구 망막수술"</a></li>
+    <li><a href="https://pcmap.place.naver.com/hospital/list?query=%EA%B5%AC%EB%A1%9C%EA%B5%AC%20%EB%A7%9D%EB%A7%89" target="_blank" rel="noopener">네이버 플레이스 "구로구 망막"</a> · 방문자 리뷰 (병원 이름의 링크)</li>
+    <li>네이버 블로그 검색 8개 검색어 (구로 망막박리 수술 후기, 고대구로병원 망막박리 수술 후기 등)</li>
+    <li>공식 홈페이지: <a href="https://www.seoulnunevit.com/clinicInfoNunevit/retina/retinaCenter.php" target="_blank" rel="noopener">서울눈에빛안과 망막센터</a> · <a href="https://www.seoulnunevit.com/about/doctor.php" target="_blank" rel="noopener">의료진</a> · <a href="https://timeeyeclinic.co.kr/sub/sub_4/sub_2.php" target="_blank" rel="noopener">타임안과 망막수술</a> · <a href="https://guro.kumc.or.kr/kr/doctor-department/doctor/view.do?drNo=7623" target="_blank" rel="noopener">고려대 구로병원 망막·유리체 클리닉</a></li>
+    <li>굿닥 타임안과 소개 (네이버 검색 결과 요약)</li>
+  </ul>
+
+  <footer>Playwright로 네이버·공식 사이트에서 직접 수집 · Research(2026-10-06).md 기반</footer>
+</div>
+
+<script>
+const HOSP = [
+  {name:"서울눈에빛안과의원", area:"구로구", place:"신도림역 1번출구", addr:"구로구 경인로 661 푸르지오1차 104동 4층", tel:"02-6956-0880", id:"1557754900",
+   basis:"공식: 대한망막학회 정회원, 대학병원 망막 전임의·진료교수 출신 원장이 유리체절제술 직접 집도", hits:22, total:600, surgery:7,
+   needs:["응급 박리","동시 수술","황반원공","정기검진"]},
+  {name:"이안과의원", area:"구로구", place:"구로역", addr:"구로구 구로중앙로 217 지하1층, 5~8층", tel:"02-6382-7007", id:"37268817",
+   basis:"플레이스 소개: 7층 수술실·8층 입원실·마취전문의, \"망막 검사와 수술을 원스톱\"", hits:16, total:560, surgery:11, surgeryNote:"6건은 같은 환자로 보임",
+   needs:["응급 박리","정기검진"]},
+  {name:"타임안과의원", area:"구로구", place:"고척동 · 개봉역", addr:"구로구 경인로 387 5층", tel:"02-6342-8000", id:"1096653856",
+   basis:"공식: 망막센터·UNITY VCS 망막 수술장비 / 굿닥: 망막질환 논문·대학병원 교수 출신", hits:5, total:584, surgery:0, surgeryNote:"검사·비문증만",
+   needs:["황반원공","정기검진"]},
+  {name:"고려대학교 구로병원", area:"구로구", place:"구로동 · 종합병원", addr:"구로구 구로동로 148", tel:"02-2626-1114", id:"11686883",
+   basis:"공식: 안과 망막·유리체 클리닉 운영", hits:0, total:580, surgery:3, surgeryNote:"블로그 후기 3편",
+   needs:["응급 박리","입원·전신질환"]},
+  {name:"서울원안과의원", area:"인접(광명)", place:"광명 철산역", addr:"광명시 디지털로 19 오렌지에비뉴 신관 5층", tel:"02-6953-0822", id:"2074620559",
+   basis:"플레이스 소개: 서울대병원·김안과병원 출신 망막전문의 2인", hits:26, total:570, surgery:1, surgeryNote:"3개월치 리뷰",
+   needs:["정기검진"]},
+];
+
+const DETAILS = [
+  {name:"서울눈에빛안과의원", sub:"신도림역 · 망막 리뷰 22 / 600 (2022-05 ~ 2026-10)",
+   good:["다른 병원에서 망막박리 진단 → 스케줄이 다 찼는데 원장님이 점심시간을 반납하고 긴급 수술, 반대쪽 눈 열공은 레이저 (2026-06)",
+         "시야가 검은 장막으로 가려져 방문 → 망막박리 응급수술 + 백내장 동시 수술, 10일차 회복 순조 (2026-03)",
+         "황반원공 수술 + 백내장, 부천에서부터 다님 (2026-08)",
+         "인공수정체 공막고정술 2시간 — 대학병원 대신 망막전문 원장 선택 (2025-03)",
+         "유리체 청소 + 백내장 (2024-12), 당뇨 환자가 대학병원 대기 4~5개월 대신 선택 (2024-11)",
+         "\"개인병원이지만 망막 검사기기 제대로 갖춤\", \"설명이 쉬움\" (정기검진 다수)"],
+   bad:[],
+   mid:["2023-03 리뷰에 \"남편 망막수술 후기를 작성한 이벤트로 무료시술\" 언급 → 과거 리뷰 이벤트 운영 이력"],
+   info:["경력: 서울아산병원 안과 망막 전임의·진료교수, 가톨릭관동의대 전임교수, 한길안과병원 망막 진료과장 (공식 홈페이지)",
+         "1진료실(망막·노안백내장·녹내장) 매주 수요일 휴진 · 월·금 20시 야간진료",
+         "병원 블로그: \"200번째 망막수술\"(2025-06), 백내장·망막 동시수술 장비 소개 — 홍보",
+         "망막 관련 부정 리뷰는 찾지 못함"]},
+  {name:"이안과의원", sub:"구로역 · 망막 리뷰 16 / 560 (2023-08 ~ 2026-10)",
+   good:["망막박리 진단 → 수술 예약이 차 있었는데 대표원장님이 오후 7시에 응급수술, 반대쪽 눈 예방 레이저 (2024-06)",
+         "의료 파업으로 수술이 줄줄이 취소되던 시점에 망막박리 수술 가능 (2024-03)",
+         "다른 곳에 자리가 없어 소개받아 박리 수술 (2025-06) · 공막돌륭술 잘됨 (2024-12) · \"망막 전문 병원 최고\" (2025-06)",
+         "6년째 망막 정기검진, \"동네 작은 안과는 못 다님\" (2026-02)"],
+   bad:["\"박리수술 너무 아프고 몇 주 엎드려 지냄… 요일마다 의사 다르고 친절도도 다름\" (2025-06)",
+        "\"간단 검사였는데 망막검사 받으라 해서 5만원 가까이\" (2023-12)",
+        "\"예약하고 방문했지만 지금까지 제시간에 진료받은 적 없음\" (2026-05)"],
+   timeline:true,
+   info:["7층 클린수술실·회복실, 8층 입원실, 마취전문의, 양·음압 수술실 (플레이스 소개)",
+         "블로그의 \"구로 이안과에서는 ~를 안내합니다\" 형식 망막 정보글은 홍보로 보임"]},
+  {name:"타임안과의원", sub:"고척동 · 망막 리뷰 5 / 584 (2023-01 ~ 2026-09)",
+   good:["\"망막 검사 상세히\", \"부모님 망막검사 차분히 설명\"",
+         "\"비문증 때문에 몇 년간 안과 다녀봤지만 여기가 제일\" (2023-02)"],
+   bad:["망막수술 후기는 리뷰에서 확인되지 않음 (백내장·라섹 후기는 많음)"],
+   info:["홈페이지: 망막센터, 최첨단 망막수술, UNITY VCS 백내장·망막 수술장비, 아르곤 망막 레이저",
+         "굿닥: \"망막질환 다수 논문 연구, 대학병원 교수 출신 전문의가 직접 치료\"",
+         "병원 블로그: 황반원공 유리체절제술 후 교정시력 0.4 → 0.9 사례 (2024-07) — 홍보"]},
+  {name:"고려대학교 구로병원", sub:"종합병원 · 망막·유리체 클리닉",
+   good:["2025년 블로그: 비문증 → 망막박리, 다음날 공막돌륭술(전신마취). 범위가 넓어 5~6시간. 전신마취 + 수술 + 2박 입원 약 85만원",
+         "2022년 블로그: 주말 응급실 → 다음날 수술, 당직 의사가 친절"],
+   bad:["2025년 블로그: \"일상생활 가능\" 안내 뒤 외출 → 3일 만에 재수술(약 60만원대), 2주 외출 금지",
+        "2022년 블로그: 보안·응급실 수납 응대는 아쉬움"],
+   info:["플레이스 방문자 리뷰(병원 전체 580건)에는 망막 언급이 없어 리뷰로는 판단 불가",
+         "2022년 사례: 동네 안과 \"노안 비문증\" 진단 → 광명 철산 서울안과의원에서 박리 진단·의뢰서 → 고대구로"]},
+  {name:"서울원안과의원", sub:"광명 철산역 · 구로구 밖 · 망막 리뷰 26 / 570 (2026-07 ~ 10)",
+   good:["망막열공 레이저, 망막 정밀검진 후기 다수",
+         "\"망막 박리 후 급하게 수술 잘 해주셨습니다\" (2026-09)",
+         "\"생각보다 망막을 전문으로 봐주는 선생님이 많지 않다\" (2026-08)"],
+   bad:[],
+   info:["2026년 개원, 리뷰 570건이 약 3개월치 — 개원 초기라 빠르게 쌓이는 중",
+         "구로구 서쪽(개봉·오류·고척) 주민에게는 거리상 대안"]},
+];
+
+const TIMELINE = [
+  ["2025-07 · 3번째 방문","\"망막수술 잘 되었다고 1주후, 2주후, 이젠 4주후에 오라고\""],
+  ["2025-08 · 4번째","\"2달째, 아직 기체가 남아 있고 초점이 잘 맞지 않아요\""],
+  ["2025-09 · 5번째","\"약 4개월차, 보이는 건 잘 보이나 초점이 아직\""],
+  ["2025-11 · 6번째","\"6개월, 잘 됐다고는 하는데 아직 초점이 안 맞아요\""],
+  ["2026-02 · 7번째","\"8개월, 글자가 퍼져 보여 추가 시술\""],
+  ["2026-05 · 8번째","\"1년, 수술은 잘 됐다는데 글자가 짜그러져 보이는 건 어쩔 수 없다고…\""],
+];
+
+const SITUATIONS = [
+  {t:"망막박리 응급 (시야 가림·커튼)", who:"이안과 · 서울눈에빛안과 · 고대구로 응급실", why:"당일·익일 응급수술 후기가 세 곳 모두 있음"},
+  {t:"망막 + 백내장 동시 수술", who:"서울눈에빛안과", why:"동시 수술 후기 4건 이상, 망막 전문의 직접 집도"},
+  {t:"황반원공·유리체절제술", who:"서울눈에빛안과 (리뷰) · 타임안과 (병원 블로그만)", why:"리뷰 근거 / 홍보 글 근거"},
+  {t:"복잡한 박리·전신마취·당뇨 등 전신질환", who:"고려대 구로병원", why:"종합병원 망막·유리체 클리닉, 입원 수술 후기"},
+  {t:"망막 정기검진·레이저", who:"서울눈에빛안과 · 이안과 · (인접) 서울원안과", why:"검진·레이저 리뷰 다수"},
+];
+
+const BLOGS = [
+  ["망막박리 수술 후기 (2편)｜고대구로병원 실명 위기 넘긴 수술비까지 공개!","https://blog.naver.com/aari_n/223985632802",""],
+  ["비문증 + 망막박리 실명 위기 3편 ... 수술 3일 만에 고대구로에서 재수술한 후기","https://blog.naver.com/aari_n/223997404844",""],
+  ["망막박리 응급수술 고대구로병원, 철산 서울안과의원 감사합니다","https://blog.naver.com/say6012/222620551847",""],
+  ["황반원공으로 수술 받은 분 증상과 결과는?(서울 구로 안과)","https://blog.naver.com/mno18/223508222857","타임안과 블로그 · 홍보"],
+  ["서울눈에빛안과 블로그 (망막수술 A to Z, 200번째 망막수술)","https://blog.naver.com/seoulnunevit","병원 블로그 · 홍보"],
+  ["망막박리 수술 후 가스가 남아 있을 때 엎드린 자세가 필요한 이유","https://blog.naver.com/wernono/224420706796","이안과 관련 정보글 · 홍보로 보임"],
+];
+
+const NEEDS = ["전체","응급 박리","동시 수술","황반원공","입원·전신질환","정기검진"];
+const AREAS = ["전체","구로구","인접(광명)"];
+const state = {area:"전체", need:"전체", sort:"hits", dir:-1};
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const placeUrl = id => `https://pcmap.place.naver.com/hospital/${id}/review/visitor`;
+const tel = t => `<a href="tel:${t.replace(/-/g,"")}">${esc(t)}</a>`;
+
+function chips(el, list, key){
+  list.forEach(v => {
+    const b = document.createElement("button");
+    b.className = "chip"; b.type = "button"; b.textContent = v;
+    b.setAttribute("aria-pressed", String(state[key] === v));
+    b.onclick = () => { state[key] = v; el.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", String(c.textContent === v))); renderTable(); };
+    el.appendChild(b);
+  });
+}
+
+function renderTable(){
+  const rows = HOSP
+    .filter(h => state.area === "전체" || h.area === state.area)
+    .filter(h => state.need === "전체" || h.needs.includes(state.need))
+    .sort((a,b) => state.sort === "name" ? a.name.localeCompare(b.name,"ko") * state.dir * -1 : (a[state.sort] - b[state.sort]) * state.dir);
+  const tb = document.getElementById("tbody");
+  if (!rows.length){ tb.innerHTML = `<tr><td colspan="4" class="empty">조건에 맞는 병원이 없습니다.</td></tr>`; return; }
+  tb.innerHTML = rows.map(h => `
+    <tr>
+      <td><a class="name" href="${placeUrl(h.id)}" target="_blank" rel="noopener">${esc(h.name)}</a>
+        ${h.area !== "구로구" ? '<span class="tag out">구로구 밖</span>' : ""}<br>
+        <span class="small">${esc(h.place)} · ${tel(h.tel)}</span><br>
+        ${h.needs.map(n => `<span class="tag">${esc(n)}</span>`).join("")}</td>
+      <td>${esc(h.basis)}</td>
+      <td class="barcell"><b>${h.hits}</b> <span class="small">/ ${h.total.toLocaleString()}건</span>
+        <div class="track"><div class="fill" style="width:${Math.max(h.hits/h.total*100*12,0).toFixed(1)}%"></div></div>
+        <span class="small">${(h.hits/h.total*100).toFixed(1)}%</span></td>
+      <td><b>${h.surgery}</b>건${h.surgeryNote ? `<br><span class="small">${esc(h.surgeryNote)}</span>` : ""}</td>
+    </tr>`).join("");
+  document.querySelectorAll("th.sortable").forEach(th => {
+    const base = th.textContent.replace(/ [▾▴]$/,"");
+    th.textContent = base + (th.dataset.sort === state.sort ? (state.dir < 0 ? " ▾" : " ▴") : "");
+  });
+}
+document.querySelectorAll("th.sortable").forEach(th => th.onclick = () => {
+  const k = th.dataset.sort;
+  if (state.sort === k) state.dir *= -1; else { state.sort = k; state.dir = k === "name" ? 1 : -1; }
+  renderTable();
+});
+
+const list = items => `<ul>${items.map(i => `<li>${esc(i)}</li>`).join("")}</ul>`;
+document.getElementById("clinics").innerHTML = DETAILS.map((d,i) => {
+  const h = HOSP.find(x => x.name === d.name);
+  return `<details class="clinic"${i < 2 ? " open" : ""}>
+    <summary><h3>${esc(d.name)}</h3><span class="sub">${esc(d.sub)}</span></summary>
+    <div class="body">
+      ${d.good.length ? `<div class="pt good"><b>좋다는 평</b>${list(d.good)}</div>` : ""}
+      ${d.bad.length ? `<div class="pt bad"><b>아쉽다는 평</b>${list(d.bad)}</div>` : ""}
+      ${d.mid ? `<div class="pt mid"><b>주의해서 볼 점</b>${list(d.mid)}</div>` : ""}
+      ${d.timeline ? `<div class="pt mid"><b>같은 환자로 보이는 망막박리 수술 회복 기록 (리뷰 6건)</b>
+        <ul class="timeline">${TIMELINE.map(([w,q]) => `<li><div class="when">${esc(w)}</div>${esc(q)}</li>`).join("")}</ul></div>` : ""}
+      ${d.info.length ? `<div class="pt info"><b>참고</b>${list(d.info)}</div>` : ""}
+      <div class="small">${esc(h.addr)} · ${tel(h.tel)} · <a href="${placeUrl(h.id)}" target="_blank" rel="noopener">네이버 리뷰 보기</a></div>
+    </div>
+  </details>`;
+}).join("");
+
+document.getElementById("situations").innerHTML = SITUATIONS.map(s => `<div class="p"><h3>${esc(s.t)}</h3><div class="who">${esc(s.who)}</div><div class="why">${esc(s.why)}</div></div>`).join("");
+document.getElementById("blogs").innerHTML = BLOGS.map(([t,u,n]) => `<li><a href="${u}" target="_blank" rel="noopener">${esc(t)}</a>${n ? ` <span class="tag">${esc(n)}</span>` : ""}</li>`).join("");
+
+chips(document.getElementById("areaFilters"), AREAS, "area");
+chips(document.getElementById("needFilters"), NEEDS, "need");
+renderTable();
+
+const root = document.documentElement;
+try { const t = localStorage.getItem("theme"); if (t) root.dataset.theme = t; } catch(e){}
+document.getElementById("themeBtn").onclick = () => {
+  const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = dark ? "light" : "dark";
+  try { localStorage.setItem("theme", root.dataset.theme); } catch(e){}
+};
+</script>
+</body>
+</html>

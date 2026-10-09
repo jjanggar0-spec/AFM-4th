@@ -1,0 +1,74 @@
+{
+  "at": "2026-10-09T02:42:23.156Z",
+  "atKst": "2026. 10. 9. 11시 42분 23초",
+  "cash": 1563,
+  "cost": 998437,
+  "coinValue": 1038251.0290369989,
+  "total": 1039814.0290369989,
+  "unrealized": 39814.029036998865,
+  "realized": 0,
+  "totalReturnPct": 3.981402903699882,
+  "orderCount": 8,
+  "rows": [
+    {
+      "symbol": "ETH",
+      "coinId": "ethereum",
+      "qty": 0.1488293866712168,
+      "cost": 503125,
+      "avgPrice": 3380548.7696557376,
+      "price": 3416000,
+      "priceSource": "Upbit KRW-ETH",
+      "value": 508401.18486887665,
+      "pnl": 5276.184868876648,
+      "rate": 1.0486827068574733
+    },
+    {
+      "symbol": "SOL",
+      "coinId": "solana",
+      "qty": 1.37281173808949,
+      "cost": 187500,
+      "avgPrice": 136580.99999999953,
+      "price": 151200,
+      "priceSource": "Upbit KRW-SOL",
+      "value": 207569.13479913087,
+      "pnl": 20069.134799130872,
+      "rate": 10.703538559536474
+    },
+    {
+      "symbol": "BNB",
+      "coinId": "binancecoin",
+      "qty": 0.0577530224081727,
+      "cost": 56250,
+      "avgPrice": 973974.9999999999,
+      "price": 987681,
+      "priceSource": "CoinGecko KRW (업비트 원화 마켓 없음)",
+      "value": 57041.56292512642,
+      "pnl": 791.5629251264181,
+      "rate": 1.4072229780025314
+    },
+    {
+      "symbol": "XRP",
+      "coinId": "ripple",
+      "qty": 68.4078243996303,
+      "cost": 126562,
+      "avgPrice": 1850.11,
+      "price": 1909,
+      "priceSource": "Upbit KRW-XRP",
+      "value": 130590.53677889424,
+      "pnl": 4028.5367788942385,
+      "rate": 3.1830539805741465
+    },
+    {
+      "symbol": "BTC",
+      "coinId": "bitcoin",
+      "qty": 0.001193830934992248,
+      "cost": 125000,
+      "avgPrice": 104704942.99999997,
+      "price": 112787000,
+      "priceSource": "Upbit KRW-BTC",
+      "value": 134648.6096649707,
+      "pnl": 9648.609664970689,
+      "rate": 7.718887731976554
+    }
+  ]
+}

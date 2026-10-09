@@ -1,0 +1,244 @@
+{
+  "decidedAt": "2026-10-09T02:42:16.609Z",
+  "decidedAtKst": "2026. 10. 9. 11시 42분 16초",
+  "today": "2026-10-09",
+  "verdict": "관망",
+  "orders": [],
+  "buys": [
+    {
+      "coin": {
+        "id": "bitcoin",
+        "symbol": "btc",
+        "name": "Bitcoin",
+        "image": "https://coin-images.coingecko.com/coins/images/1/large/bitcoin.png?1696501400"
+      },
+      "market": "KRW-BTC",
+      "weekly": {
+        "today": "2026-10-09",
+        "weekAgo": "2026-10-02",
+        "todayOpen": 112360000,
+        "weekAgoOpen": 115657000,
+        "changePct": -2.85
+      },
+      "checks": [
+        {
+          "label": "원칙 1 · 종목",
+          "ok": true,
+          "text": "BTC는 매수 대상 3종목이에요."
+        },
+        {
+          "label": "원칙 2 · 주간 -3% 이하",
+          "ok": false,
+          "text": "2026-10-02 09:00 115,657,000원 → 2026-10-09 09:00 112,360,000원 = -2.85%"
+        },
+        {
+          "label": "금지 조건 · 이벤트",
+          "ok": true,
+          "text": "오늘은 금지 이벤트의 전날·당일이 아니에요."
+        },
+        {
+          "label": "상한 · 하루 1회",
+          "ok": true,
+          "text": "오늘 매수 기록이 없어요."
+        },
+        {
+          "label": "상한 · 매수 금액",
+          "ok": false,
+          "text": "min(30만 원, 40만 원 − 보유 원가 125,000원, 현금 1,563원) = 1,563원 · 최소 주문 5,000원 미만"
+        }
+      ],
+      "verdict": "skip",
+      "amount": 0
+    },
+    {
+      "coin": {
+        "id": "ethereum",
+        "symbol": "eth",
+        "name": "Ethereum",
+        "image": "https://coin-images.coingecko.com/coins/images/279/large/ethereum.png?1696501628"
+      },
+      "market": "KRW-ETH",
+      "weekly": {
+        "today": "2026-10-09",
+        "weekAgo": "2026-10-02",
+        "todayOpen": 3403000,
+        "weekAgoOpen": 3689000,
+        "changePct": -7.75
+      },
+      "checks": [
+        {
+          "label": "원칙 1 · 종목",
+          "ok": true,
+          "text": "ETH는 매수 대상 3종목이에요."
+        },
+        {
+          "label": "원칙 2 · 주간 -3% 이하",
+          "ok": true,
+          "text": "2026-10-02 09:00 3,689,000원 → 2026-10-09 09:00 3,403,000원 = -7.75%"
+        },
+        {
+          "label": "금지 조건 · 이벤트",
+          "ok": true,
+          "text": "오늘은 금지 이벤트의 전날·당일이 아니에요."
+        },
+        {
+          "label": "상한 · 하루 1회",
+          "ok": true,
+          "text": "오늘 매수 기록이 없어요."
+        },
+        {
+          "label": "상한 · 매수 금액",
+          "ok": false,
+          "text": "min(30만 원, 40만 원 − 보유 원가 503,125원, 현금 1,563원) = 0원 · 최소 주문 5,000원 미만"
+        }
+      ],
+      "verdict": "skip",
+      "amount": 0
+    },
+    {
+      "coin": {
+        "id": "ripple",
+        "symbol": "xrp",
+        "name": "XRP",
+        "image": "https://coin-images.coingecko.com/coins/images/44/large/xrp-symbol-white-128.png?1696501442"
+      },
+      "market": "KRW-XRP",
+      "weekly": {
+        "today": "2026-10-09",
+        "weekAgo": "2026-10-02",
+        "todayOpen": 1897,
+        "weekAgoOpen": 2038,
+        "changePct": -6.92
+      },
+      "checks": [
+        {
+          "label": "원칙 1 · 종목",
+          "ok": true,
+          "text": "XRP는 매수 대상 3종목이에요."
+        },
+        {
+          "label": "원칙 2 · 주간 -3% 이하",
+          "ok": true,
+          "text": "2026-10-02 09:00 2,038원 → 2026-10-09 09:00 1,897원 = -6.92%"
+        },
+        {
+          "label": "금지 조건 · 이벤트",
+          "ok": true,
+          "text": "오늘은 금지 이벤트의 전날·당일이 아니에요."
+        },
+        {
+          "label": "상한 · 하루 1회",
+          "ok": true,
+          "text": "오늘 매수 기록이 없어요."
+        },
+        {
+          "label": "상한 · 매수 금액",
+          "ok": false,
+          "text": "min(30만 원, 40만 원 − 보유 원가 126,562원, 현금 1,563원) = 1,563원 · 최소 주문 5,000원 미만"
+        }
+      ],
+      "verdict": "skip",
+      "amount": 0
+    }
+  ],
+  "sells": [
+    {
+      "coin": {
+        "id": "ethereum",
+        "symbol": "eth",
+        "name": "Ethereum",
+        "image": "https://coin-images.coingecko.com/coins/images/279/large/ethereum.png?1696501628"
+      },
+      "qty": 0.1488293866712168,
+      "cost": 503125,
+      "avgPrice": 3380548.7696557376,
+      "price": 3415000,
+      "priceSource": "Upbit KRW-ETH",
+      "rate": 1.02,
+      "sold": false,
+      "pnl": 5127.355482205399,
+      "verdict": "skip",
+      "action": "보유 유지",
+      "text": "수익률 +1.02% · 손절 -10% / 익절 +20% 사이"
+    },
+    {
+      "coin": {
+        "id": "solana",
+        "symbol": "sol",
+        "name": "Solana",
+        "image": "https://coin-images.coingecko.com/coins/images/4128/large/solana.png?1718769756"
+      },
+      "qty": 1.37281173808949,
+      "cost": 187500,
+      "avgPrice": 136580.99999999953,
+      "price": 151200,
+      "priceSource": "Upbit KRW-SOL",
+      "rate": 10.7,
+      "sold": false,
+      "pnl": 20069.134799130872,
+      "verdict": "skip",
+      "action": "보유 유지",
+      "text": "수익률 +10.70% · 손절 -10% / 익절 +20% 사이"
+    },
+    {
+      "coin": {
+        "id": "binancecoin",
+        "symbol": "bnb",
+        "name": "BNB",
+        "image": "https://coin-images.coingecko.com/coins/images/825/large/bnb-icon2_2x.png?1696501970"
+      },
+      "qty": 0.0577530224081727,
+      "cost": 56250,
+      "avgPrice": 973974.9999999999,
+      "price": 987681,
+      "priceSource": "CoinGecko KRW (업비트 원화 마켓 없음)",
+      "rate": 1.41,
+      "sold": false,
+      "pnl": 791.5629251264181,
+      "verdict": "skip",
+      "action": "보유 유지",
+      "text": "수익률 +1.41% · 손절 -10% / 익절 +20% 사이"
+    },
+    {
+      "coin": {
+        "id": "ripple",
+        "symbol": "xrp",
+        "name": "XRP",
+        "image": "https://coin-images.coingecko.com/coins/images/44/large/xrp-symbol-white-128.png?1696501442"
+      },
+      "qty": 68.4078243996303,
+      "cost": 126562,
+      "avgPrice": 1850.11,
+      "price": 1909,
+      "priceSource": "Upbit KRW-XRP",
+      "rate": 3.18,
+      "sold": false,
+      "pnl": 4028.5367788942385,
+      "verdict": "skip",
+      "action": "보유 유지",
+      "text": "수익률 +3.18% · 손절 -10% / 익절 +20% 사이"
+    },
+    {
+      "coin": {
+        "id": "bitcoin",
+        "symbol": "btc",
+        "name": "Bitcoin",
+        "image": "https://coin-images.coingecko.com/coins/images/1/large/bitcoin.png?1696501400"
+      },
+      "qty": 0.001193830934992248,
+      "cost": 125000,
+      "avgPrice": 104704942.99999997,
+      "price": 112852000,
+      "priceSource": "Upbit KRW-BTC",
+      "rate": 7.78,
+      "sold": false,
+      "pnl": 9726.208675745176,
+      "verdict": "skip",
+      "action": "보유 유지",
+      "text": "수익률 +7.78% · 손절 -10% / 익절 +20% 사이"
+    }
+  ],
+  "blocks": [],
+  "eventsCheckedAt": "2026-10-09",
+  "cash": 1563
+}
